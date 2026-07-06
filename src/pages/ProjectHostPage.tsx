@@ -119,6 +119,15 @@ export function ProjectHostPage() {
           -ms-overflow-style: none !important;
         }
 
+        #topbar > *,
+        #topnav > *,
+        header[data-ui] > *,
+        header.topbar > *,
+        header.home-ui > *,
+        .topbar > * {
+          min-width: 0 !important;
+        }
+
         #topbar::-webkit-scrollbar,
         #topnav::-webkit-scrollbar,
         header[data-ui]::-webkit-scrollbar,
@@ -143,6 +152,14 @@ export function ProjectHostPage() {
           letter-spacing: .08em !important;
         }
 
+        #projBtn,
+        .project-btn,
+        #project {
+          grid-column: 1 !important;
+          grid-row: 1 !important;
+          justify-self: start !important;
+        }
+
         #projMenu,
         .project-menu {
           width: min(238px, calc(100vw - 24px)) !important;
@@ -160,13 +177,15 @@ export function ProjectHostPage() {
           letter-spacing: .12em !important;
           font-size: clamp(24px, 8vw, 34px) !important;
           line-height: 1.15 !important;
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          justify-self: center !important;
+          text-align: center !important;
+          margin-top: 4px !important;
         }
 
         .navside {
-          min-width: 0 !important;
-          justify-content: flex-start !important;
-          gap: 14px !important;
-          overflow-x: auto !important;
+          display: none !important;
         }
 
         .navlink {
@@ -177,6 +196,9 @@ export function ProjectHostPage() {
         }
 
         .navIcons {
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          justify-self: end !important;
           justify-content: flex-start !important;
           gap: 8px !important;
         }
@@ -197,6 +219,19 @@ export function ProjectHostPage() {
           gap: 14px !important;
           padding: 96px 14px 34px !important;
           overflow: visible !important;
+        }
+
+        #home > *,
+        #introLayer > *,
+        #readingLayer > *,
+        #resultLayer > *,
+        #captureLayer > *,
+        #selectLayer > *,
+        #drawLayer > *,
+        #burstLayer > *,
+        #castingStage > * {
+          min-width: 0 !important;
+          max-width: 100% !important;
         }
 
         #leftcol,
@@ -223,6 +258,17 @@ export function ProjectHostPage() {
           min-width: 0 !important;
           margin: 0 !important;
           align-self: stretch !important;
+          grid-column: 1 / -1 !important;
+          grid-row: auto !important;
+          justify-self: stretch !important;
+        }
+
+        .steps-title,
+        .rail-title,
+        .side-title {
+          writing-mode: horizontal-tb !important;
+          text-orientation: mixed !important;
+          white-space: normal !important;
         }
 
         [data-ui],
@@ -257,11 +303,53 @@ export function ProjectHostPage() {
         .result-grid,
         .analysis-grid,
         .reading-grid,
+        .reading-blocks,
+        .result-top,
+        .summary-grid,
+        .summaryGrid,
+        .reportGrid,
+        .planet-grid,
+        .aspect-grid,
+        .birth-grid,
+        .form-grid,
+        .pillar-table,
+        .luck-table,
+        .featureRow,
+        .side-menu,
+        #layoutStep,
+        #layoutStep.show,
         .choice-grid,
         .chips,
         #spreads {
           width: 100% !important;
           max-width: 100% !important;
+        }
+
+        .result-grid,
+        .analysis-grid,
+        .reading-grid,
+        .reading-blocks,
+        .result-top,
+        .summary-grid,
+        .summaryGrid,
+        .reportGrid,
+        .planet-grid,
+        .aspect-grid,
+        .birth-grid,
+        .form-grid,
+        .pillar-table,
+        .luck-table,
+        .featureRow,
+        .side-menu,
+        #layoutStep,
+        #layoutStep.show {
+          grid-template-columns: 1fr !important;
+        }
+
+        .featureRow,
+        .side-menu {
+          display: grid !important;
+          gap: 10px !important;
         }
 
         .choice-grid,
