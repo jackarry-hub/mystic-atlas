@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Globe2, Home, LogIn, Menu, ShoppingBag, Store, UserRound, X } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
@@ -9,6 +9,11 @@ import {
   getProjectSource
 } from "../data/mysticProjects";
 import { languages } from "../lib/i18n";
+
+type ProjectFrameWindow = Window & {
+  __mysticAtlasSyncCleanup?: () => void;
+  ResizeObserver?: typeof ResizeObserver;
+};
 
 export function ProjectHostPage() {
   const { serviceId } = useParams();
@@ -39,6 +44,70 @@ export function ProjectHostPage() {
     }
 
     viewport.content = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+
+    const syncMobileFrameHeight = () => {
+      const hostFrame = iframeRef.current;
+
+      if (!hostFrame) {
+        return;
+      }
+
+      const isMobile = frameWindow.innerWidth <= 760 || window.innerWidth <= 760;
+
+      if (!isMobile) {
+        hostFrame.style.removeProperty("height");
+        hostFrame.style.removeProperty("min-height");
+        return;
+      }
+
+      const nextHeight = Math.ceil(
+        Math.max(
+          frameDocument.documentElement.scrollHeight,
+          frameDocument.body?.scrollHeight ?? 0,
+          frameWindow.innerHeight,
+          window.innerHeight
+        )
+      );
+
+      hostFrame.style.setProperty("height", `${nextHeight}px`);
+      hostFrame.style.setProperty("min-height", "100dvh");
+    };
+
+    const projectFrameWindow = frameWindow as ProjectFrameWindow;
+    projectFrameWindow.__mysticAtlasSyncCleanup?.();
+
+    if (frameWindow.innerWidth <= 760 || window.innerWidth <= 760) {
+      let resizeObserver: ResizeObserver | undefined;
+      const interval = frameWindow.setInterval(syncMobileFrameHeight, 900);
+
+      syncMobileFrameHeight();
+      [120, 360, 900, 1800, 3200].forEach((delay) => {
+        frameWindow.setTimeout(syncMobileFrameHeight, delay);
+      });
+
+      const ResizeObserverCtor = projectFrameWindow.ResizeObserver;
+
+      if (ResizeObserverCtor) {
+        resizeObserver = new ResizeObserverCtor(syncMobileFrameHeight);
+        resizeObserver?.observe(frameDocument.documentElement);
+
+        if (frameDocument.body) {
+          resizeObserver?.observe(frameDocument.body);
+        }
+      }
+
+      frameWindow.addEventListener("resize", syncMobileFrameHeight);
+      frameDocument.addEventListener("click", syncMobileFrameHeight, true);
+      frameDocument.addEventListener("input", syncMobileFrameHeight, true);
+
+      projectFrameWindow.__mysticAtlasSyncCleanup = () => {
+        resizeObserver?.disconnect();
+        frameWindow.clearInterval(interval);
+        frameWindow.removeEventListener("resize", syncMobileFrameHeight);
+        frameDocument.removeEventListener("click", syncMobileFrameHeight, true);
+        frameDocument.removeEventListener("input", syncMobileFrameHeight, true);
+      };
+    }
 
     const dockOffset = frameWindow.innerWidth <= 760 ? "96px" : "126px";
     const existingStyle = frameDocument.getElementById("main-site-dock-align");
@@ -434,6 +503,17 @@ export function ProjectHostPage() {
       // Same-origin iframe is expected; if the browser blocks access, keep the host stable.
     }
   }, [navigate, prepareProjectDocument, serviceId]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        const frameWindow = iframeRef.current?.contentWindow as ProjectFrameWindow | null;
+        frameWindow?.__mysticAtlasSyncCleanup?.();
+      } catch {
+        // Ignore iframe teardown races.
+      }
+    };
+  }, []);
 
   if (!project) {
     return <Navigate replace to="/services" />;

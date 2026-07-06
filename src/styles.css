@@ -3143,6 +3143,31 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
 }
 
 @media (max-width: 760px) {
+  .project-host-page--immersive {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .project-host-page--immersive::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .project-frame-wrap--immersive {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .project-frame-wrap--immersive .project-frame {
+    min-height: 100dvh;
+  }
+
   .top-nav {
     padding: 0 18px;
   }
