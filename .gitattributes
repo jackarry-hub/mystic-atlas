@@ -1,0 +1,11 @@
+*.png binary -delta
+*.jpg binary -delta
+*.jpeg binary -delta
+*.webp binary -delta
+*.gif binary -delta
+*.svg binary -delta
+*.mp4 binary -delta
+*.mov binary -delta
+*.webm binary -delta
+*.mp3 binary -delta
+*.wav binary -delta

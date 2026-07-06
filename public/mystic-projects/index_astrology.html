@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄境 · 星图观测</title>
+<meta name="description" content="沉浸式占星玩法：输入出生日期、时间与地点，生成本命、行运、宫位、相位与专业占星解读。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 6 L58 42 L94 50 L58 58 L50 94 L42 58 L6 50 L42 42 Z' fill='%23d6a85d'/%3E%3C/svg%3E">
+<style>
+:root{
+  --void:#04070d;
+  --midnight:#08101b;
+  --panel:rgba(8,17,28,.66);
+  --panel-strong:rgba(5,11,20,.86);
+  --gold:#c9964d;
+  --gold-hi:#ffe2a1;
+  --gold-soft:rgba(201,150,77,.52);
+  --line:rgba(212,166,91,.42);
+  --blue:#6aa8ff;
+  --violet:#9b6cff;
+  --aqua:#9ce8ff;
+  --ink:#f4e9d2;
+  --muted:#c8bda4;
+  --shadow:rgba(0,0,0,.58);
+  --font-serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --font-display:"STKaiti","KaiTi","Noto Serif SC",serif;
+  --font-roman:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{
+  min-height:100%;
+  overflow:hidden;
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--font-serif);
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+::selection{background:rgba(201,150,77,.3)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:rgba(2,6,12,.8)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold),rgba(126,95,205,.8));border-radius:9px}
+
+#bg,#videoLayer,#shade,#grain,#flash{position:fixed;inset:0}
+#bg{
+  z-index:0;
+  background-image:
+    radial-gradient(900px 560px at 53% 36%,rgba(100,120,220,.16),transparent 62%),
+    radial-gradient(760px 460px at 84% 78%,rgba(201,150,77,.12),transparent 68%),
+    url("assets/astro/astro-bg.png");
+  background-size:cover;
+  background-position:center;
+  transform:scale(1);
+  transition:filter 1s ease,transform 1.4s ease,opacity 1s ease;
+}
+#videoLayer{
+  z-index:1;
+  overflow:hidden;
+  pointer-events:none;
+}
+#videoLayer video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity 1s ease,filter .8s ease;
+}
+#videoLayer video.on{opacity:1}
+#shade{
+  z-index:2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(7,10,20,.12),rgba(0,0,0,.64) 78%),
+    linear-gradient(90deg,rgba(0,0,0,.72),transparent 32%,transparent 66%,rgba(0,0,0,.72)),
+    linear-gradient(180deg,rgba(0,0,0,.55),transparent 24%,rgba(0,0,0,.72));
+  opacity:.78;
+  transition:opacity .9s ease;
+}
+#grain{
+  z-index:3;
+  opacity:.05;
+  mix-blend-mode:screen;
+  pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 12% 19%,#fff,transparent),
+    radial-gradient(1px 1px at 72% 28%,#fff,transparent),
+    radial-gradient(1px 1px at 43% 76%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 88% 84%,#ffe5a7,transparent);
+  background-size:180px 180px;
+  animation:starDrift 120s linear infinite;
+}
+@keyframes starDrift{to{background-position:420px 260px}}
+#flash{
+  z-index:80;
+  opacity:0;
+  pointer-events:none;
+  background:radial-gradient(circle,#fff6cd 0%,rgba(255,226,161,.8) 12%,rgba(148,112,255,.28) 34%,transparent 68%);
+}
+#flash.on{animation:flash .92s ease both}
+@keyframes flash{
+  0%{opacity:0;transform:scale(.78)}
+  30%{opacity:.95;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.18)}
+}
+.frame-line{position:fixed;inset:18px;z-index:7;pointer-events:none;border:1px solid rgba(201,150,77,.18)}
+.corner{
+  position:absolute;
+  width:42px;
+  height:42px;
+  border-color:rgba(255,226,161,.68);
+  filter:drop-shadow(0 0 8px rgba(201,150,77,.45));
+}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.c4{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(255,226,161,.05),transparent 42%),
+    var(--panel);
+  box-shadow:0 16px 38px var(--shadow), inset 0 0 34px rgba(108,80,173,.1);
+  backdrop-filter:blur(8px);
+}
+.pnl::before,.pnl::after{
+  content:"";
+  position:absolute;
+  left:14px;
+  right:14px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:.5;
+}
+.pnl::before{top:8px}.pnl::after{bottom:8px}
+.panel-corners{position:absolute;inset:0;pointer-events:none}
+.panel-corners::before,.panel-corners::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  pointer-events:none;
+  border:1px solid transparent;
+}
+.panel-corners::before{border-top-color:rgba(255,226,161,.34);border-bottom-color:rgba(255,226,161,.18)}
+.panel-corners::after{border-left-color:rgba(255,226,161,.2);border-right-color:rgba(255,226,161,.2)}
+
+#topnav{
+  position:fixed;
+  z-index:30;
+  top:0;
+  left:0;
+  right:0;
+  height:70px;
+  display:grid;
+  grid-template-columns:220px 1fr auto 1fr 118px;
+  align-items:center;
+  gap:18px;
+  padding:0 28px;
+  background:linear-gradient(180deg,rgba(1,6,13,.88),rgba(1,6,13,.5),transparent);
+  border-bottom:1px solid rgba(201,150,77,.25);
+  transition:opacity .72s ease,transform .72s ease;
+}
+#projBtn{
+  position:relative;
+  height:45px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  color:var(--gold-hi);
+  letter-spacing:3px;
+  border:1px solid var(--line);
+  background:rgba(4,9,17,.72);
+  box-shadow:inset 0 0 22px rgba(201,150,77,.12),0 0 16px rgba(0,0,0,.28);
+}
+#projBtn .car{font-size:12px;transition:transform .25s ease}
+#projBtn.open .car{transform:rotate(180deg)}
+#projMenu{
+  position:absolute;
+  left:0;
+  top:54px;
+  min-width:212px;
+  padding:9px;
+  display:none;
+  z-index:42;
+}
+#projMenu.show{display:block;animation:fadeUp .25s ease}
+.pm-it{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  color:var(--muted);
+  border-bottom:1px solid rgba(201,150,77,.12);
+  letter-spacing:2px;
+  cursor:pointer;
+  transition:.22s ease;
+}
+.pm-it:last-child{border-bottom:none}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(126,95,205,.16)}
+.pm-it.cur::after{content:"当前";margin-left:auto;font-size:11px;color:var(--aqua);border:1px solid rgba(156,232,255,.32);padding:1px 6px}
+.mini-ico{display:inline-grid;place-items:center;width:23px;height:23px;color:var(--gold)}
+.mini-ico svg{width:100%;height:100%;display:block}
+.navside{display:flex;align-items:center;justify-content:center;gap:54px;min-width:0}
+.navlink{
+  position:relative;
+  white-space:nowrap;
+  color:var(--muted);
+  letter-spacing:4px;
+  font-size:17px;
+  cursor:pointer;
+  transition:color .25s ease,text-shadow .25s ease;
+}
+.navlink:hover,.navlink.cur{color:var(--gold-hi);text-shadow:0 0 12px rgba(201,150,77,.42)}
+.navlink.cur::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-18px;
+  width:84px;
+  height:2px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,var(--gold-hi),transparent);
+}
+#navTitle{
+  min-width:276px;
+  text-align:center;
+  font-family:var(--font-display);
+  font-size:40px;
+  letter-spacing:10px;
+  color:var(--gold-hi);
+  text-shadow:0 0 14px rgba(201,150,77,.52),0 0 28px rgba(117,96,202,.28);
+}
+.navIcons{display:flex;justify-content:flex-end;gap:14px}
+.navico{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid var(--line);
+  color:var(--gold-hi);
+  background:rgba(3,8,16,.56);
+  transition:.22s ease;
+}
+.navico:hover{transform:translateY(-1px);box-shadow:0 0 16px rgba(201,150,77,.28)}
+.navico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+#home{
+  position:relative;
+  z-index:12;
+  height:100vh;
+  display:block;
+  padding:0;
+  transition:opacity .78s ease,transform .78s ease,filter .78s ease;
+}
+#leftcol{
+  position:absolute;
+  top:122px;
+  left:28px;
+  width:178px;
+  display:block;
+}
+.side-menu{padding:14px 10px}
+.mi{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  min-height:72px;
+  padding:0 14px;
+  color:var(--muted);
+  font-size:22px;
+  letter-spacing:6px;
+  border-bottom:1px solid rgba(201,150,77,.13);
+  cursor:pointer;
+  transition:.22s ease;
+}
+.side-menu.ref-ornate .mini-ico{width:38px;height:38px}
+.mi:last-child{border-bottom:none}
+.mi:hover,.mi.cur{color:var(--gold-hi);background:linear-gradient(90deg,rgba(201,150,77,.12),transparent)}
+.mi.cur{box-shadow:inset 3px 0 0 rgba(255,226,161,.78)}
+.today-tip{
+  position:fixed;
+  left:28px;
+  bottom:34px;
+  width:330px;
+  min-height:128px;
+  padding:24px 24px 21px;
+}
+.tip-title{font-size:21px;color:var(--gold-hi);letter-spacing:4px;margin-bottom:15px}
+.tip-copy{font-size:13px;line-height:1.8;color:var(--muted);letter-spacing:1.4px}
+.tip-orbit{
+  position:absolute;
+  right:20px;
+  bottom:20px;
+  width:46px;
+  height:46px;
+  color:var(--gold);
+  opacity:.82;
+}
+
+#centerPanel{
+  position:absolute;
+  top:126px;
+  left:clamp(216px,15vw,252px);
+  width:clamp(268px,21vw,322px);
+  padding:24px 25px 24px;
+  min-height:390px;
+}
+.steps-title{
+  text-align:center;
+  font-family:var(--font-display);
+  color:var(--gold-hi);
+  font-size:25px;
+  letter-spacing:6px;
+  margin-bottom:14px;
+}
+.step{
+  display:grid;
+  grid-template-columns:40px 1fr;
+  gap:14px;
+  padding:9px 0;
+  position:relative;
+}
+.step:not(:last-child)::after{
+  content:"";
+  position:absolute;
+  left:19px;
+  top:48px;
+  bottom:-9px;
+  width:1px;
+  background:linear-gradient(var(--gold),transparent);
+}
+.num{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid var(--line);
+  color:var(--gold-hi);
+  background:rgba(2,8,16,.72);
+  font-family:var(--font-roman);
+  box-shadow:0 0 12px rgba(201,150,77,.22);
+}
+.step h3{font-size:19px;color:var(--gold-hi);letter-spacing:4px;margin:3px 0 7px}
+.step p{font-size:12.5px;line-height:1.62;color:var(--muted);letter-spacing:1.1px}
+
+#rightcol{
+  position:absolute;
+  top:118px;
+  right:34px;
+  width:clamp(340px,31vw,430px);
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+}
+.feature{
+  min-height:92px;
+  display:grid;
+  grid-template-columns:1fr 94px;
+  gap:18px;
+  align-items:center;
+  padding:15px 18px 14px 22px;
+}
+.feature h2{font-family:var(--font-display);font-size:25px;color:var(--gold-hi);letter-spacing:5px;font-weight:500;margin-bottom:5px}
+.feature p{font-size:12.5px;color:var(--muted);line-height:1.58;letter-spacing:1.2px}
+.round{
+  width:66px;
+  height:66px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--gold);
+  border:1px solid rgba(201,150,77,.28);
+  background:radial-gradient(circle,rgba(201,150,77,.12),rgba(5,11,20,.48));
+}
+.round svg{width:47px;height:47px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+#startBtn{
+  position:relative;
+  min-height:74px;
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:34px;
+  letter-spacing:10px;
+  border:1px solid rgba(255,226,161,.68);
+  background:
+    radial-gradient(circle at center,rgba(201,150,77,.24),transparent 64%),
+    linear-gradient(90deg,rgba(8,16,28,.2),rgba(8,16,28,.74),rgba(8,16,28,.2));
+  text-shadow:0 0 18px rgba(201,150,77,.65);
+  box-shadow:0 0 30px rgba(201,150,77,.18),inset 0 0 26px rgba(201,150,77,.12);
+  transition:.24s ease;
+}
+#startBtn:hover{transform:translateY(-2px);box-shadow:0 0 42px rgba(201,150,77,.32),inset 0 0 30px rgba(201,150,77,.18)}
+.quote{
+  min-height:88px;
+  padding:19px 24px 16px;
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:21px;
+  letter-spacing:4px;
+  line-height:1.65;
+}
+.quote.ref-bottom-right{margin-top:0}
+.quote .mark{font-family:Georgia,serif;font-size:32px;color:var(--gold);vertical-align:-10px;margin-right:8px}
+.quote small{display:block;color:var(--muted);font-family:var(--font-serif);font-size:11.5px;letter-spacing:2px;margin-top:2px}
+#tapHint{
+  position:fixed;
+  z-index:20;
+  left:50%;
+  bottom:28px;
+  transform:translateX(-50%);
+  color:rgba(255,226,161,.86);
+  font-size:13px;
+  letter-spacing:4px;
+  text-shadow:0 0 12px rgba(201,150,77,.72);
+  transition:opacity .6s ease,transform .6s ease;
+  animation:hintPulse 2.4s ease-in-out infinite;
+}
+@keyframes hintPulse{50%{opacity:.45;transform:translateX(-50%) translateY(3px)}}
+
+.layer{
+  position:fixed;
+  inset:0;
+  z-index:18;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .72s ease;
+}
+body[data-stage="intro"] #introLayer,
+body[data-stage="burst"] #burstLayer,
+body[data-stage="reading"] #readingLayer{opacity:1;pointer-events:auto}
+body:not([data-stage="home"]) #home,
+body:not([data-stage="home"]) #topnav,
+body:not([data-stage="home"]) #tapHint{
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(-16px);
+  filter:blur(3px);
+}
+body:not([data-stage="home"]) #bg{filter:saturate(1.08) contrast(1.05) brightness(.62);transform:scale(1.025)}
+body[data-stage="intro"] #openingVid,
+body[data-stage="burst"] #climaxVid{opacity:1;filter:contrast(1.12) saturate(1.08) brightness(1.04)}
+body[data-stage="intro"] #shade,
+body[data-stage="burst"] #shade{opacity:.5}
+body[data-stage="reading"] #shade{opacity:.86}
+body[data-stage="reading"] #bg{filter:saturate(.86) contrast(1.05) brightness(.42);transform:scale(1.02)}
+
+#introLayer{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0 30px 42px;
+}
+#ritualPanel{
+  width:min(1040px,calc(100vw - 42px));
+  padding:26px 28px 28px;
+}
+.ritual-head{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:16px;
+  align-items:start;
+  margin-bottom:20px;
+}
+.ritual-head h1{
+  font-family:var(--font-display);
+  color:var(--gold-hi);
+  font-size:31px;
+  letter-spacing:7px;
+  font-weight:500;
+  margin-bottom:8px;
+}
+.ritual-head p{color:var(--muted);line-height:1.76;letter-spacing:1.4px;font-size:14px}
+#exitRitual,#skipBtn{
+  min-width:116px;
+  height:40px;
+  border:1px solid var(--line);
+  color:var(--muted);
+  background:rgba(3,8,16,.62);
+  letter-spacing:3px;
+  transition:.22s ease;
+}
+#exitRitual:hover,#skipBtn:hover{color:var(--gold-hi);border-color:var(--gold)}
+.choice-area{
+  display:grid;
+  grid-template-columns:1.08fr .92fr .74fr;
+  gap:16px;
+}
+.choice-group{min-width:0}
+.group-title{
+  color:var(--gold-hi);
+  letter-spacing:4px;
+  font-size:15px;
+  margin-bottom:10px;
+}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.choice-grid.tight{grid-template-columns:1fr}
+.choice{
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:9px;
+  padding:10px 12px;
+  border:1px solid rgba(201,150,77,.24);
+  color:var(--muted);
+  background:rgba(4,10,18,.52);
+  transition:.2s ease;
+  text-align:left;
+}
+.choice b{font-weight:500;color:var(--ink);font-size:14px;letter-spacing:1.8px}
+.choice span{font-size:12px;color:rgba(200,189,164,.82)}
+.choice:hover,.choice.sel{border-color:rgba(255,226,161,.68);background:rgba(201,150,77,.12);color:var(--gold-hi)}
+.choice.sel b{color:var(--gold-hi)}
+.birth-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.birth-grid.tight{grid-template-columns:1fr 1fr}
+.astro-field{
+  min-height:50px;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:9px;
+  padding:9px 11px;
+  border:1px solid rgba(201,150,77,.24);
+  background:rgba(4,10,18,.52);
+  color:var(--muted);
+}
+.astro-field span{
+  color:var(--gold-hi);
+  font-size:12px;
+  letter-spacing:2px;
+  white-space:nowrap;
+}
+.astro-field input,.astro-field select{
+  min-width:0;
+  width:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--ink);
+  font-family:var(--font-serif);
+  font-size:14px;
+  letter-spacing:.8px;
+}
+.astro-field input::-webkit-calendar-picker-indicator{filter:invert(1) sepia(1);opacity:.72}
+.astro-field:focus-within{border-color:rgba(255,226,161,.68);background:rgba(201,150,77,.1)}
+#continueBtn{
+  width:100%;
+  min-height:68px;
+  margin-top:17px;
+  border:1px solid rgba(255,226,161,.58);
+  color:var(--gold-hi);
+  background:linear-gradient(90deg,rgba(201,150,77,.08),rgba(201,150,77,.24),rgba(201,150,77,.08));
+  font-family:var(--font-display);
+  font-size:28px;
+  letter-spacing:9px;
+  text-shadow:0 0 12px rgba(201,150,77,.52);
+}
+#introHint{
+  text-align:center;
+  margin-top:14px;
+  color:rgba(255,226,161,.78);
+  letter-spacing:4px;
+  font-size:12px;
+}
+
+#burstLayer{
+  display:grid;
+  place-items:center;
+  padding:28px;
+}
+#skipBtn{
+  position:absolute;
+  right:32px;
+  bottom:32px;
+  z-index:3;
+}
+#burstLine{
+  max-width:920px;
+  text-align:center;
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:clamp(27px,4.6vw,58px);
+  letter-spacing:12px;
+  line-height:1.45;
+  text-shadow:0 0 18px rgba(201,150,77,.82),0 0 44px rgba(110,92,214,.45);
+  animation:breath 2.8s ease-in-out infinite;
+}
+@keyframes breath{50%{opacity:.62;transform:scale(.985)}}
+
+#readingLayer{
+  overflow:auto;
+  background:
+    radial-gradient(circle at 50% 15%,rgba(104,114,220,.2),transparent 44%),
+    linear-gradient(180deg,rgba(4,8,15,.2),rgba(2,5,9,.82));
+}
+#readingInner{
+  width:min(1220px,calc(100vw - 44px));
+  min-height:100%;
+  margin:0 auto;
+  padding:44px 0 54px;
+}
+.reading-head{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:20px;
+  align-items:center;
+  margin-bottom:20px;
+}
+.reading-head h1{
+  font-family:var(--font-display);
+  color:var(--gold-hi);
+  font-size:42px;
+  letter-spacing:10px;
+  font-weight:500;
+}
+#readingMeta{
+  color:var(--muted);
+  letter-spacing:2px;
+  font-size:14px;
+  margin-top:7px;
+}
+.seal{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,226,161,.56);
+  color:var(--gold-hi);
+  background:radial-gradient(circle,rgba(201,150,77,.22),rgba(6,12,20,.45));
+  box-shadow:0 0 28px rgba(201,150,77,.22);
+}
+.seal b{font-family:var(--font-display);font-size:32px;font-weight:400}
+.result-top{
+  display:grid;
+  grid-template-columns:390px 1fr;
+  gap:20px;
+  align-items:stretch;
+}
+.chart-card{padding:24px;min-height:430px}
+#chartWheel{
+  width:100%;
+  aspect-ratio:1;
+  max-height:352px;
+  display:block;
+  filter:drop-shadow(0 0 18px rgba(201,150,77,.24));
+}
+.chart-caption{margin-top:15px;text-align:center;color:var(--muted);font-size:13px;letter-spacing:2px}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:18px;
+}
+.summary-card{
+  min-height:104px;
+  padding:20px 17px 16px;
+}
+.summary-card .k{color:var(--muted);font-size:12px;letter-spacing:3px;margin-bottom:9px}
+.summary-card .v{font-family:var(--font-display);color:var(--gold-hi);font-size:25px;letter-spacing:4px;line-height:1.32}
+.summary-card .d{color:rgba(200,189,164,.84);font-size:12px;line-height:1.55;letter-spacing:1px;margin-top:6px}
+.section-title{
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:30px;
+  letter-spacing:7px;
+  margin:28px 0 14px;
+}
+.planet-grid,.aspect-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.result-card{
+  padding:18px 17px 16px;
+  min-height:132px;
+}
+.result-card h3{
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:25px;
+  letter-spacing:5px;
+  font-weight:500;
+  margin-bottom:10px;
+}
+.tagrow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.tag{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:2px 8px;
+  border:1px solid rgba(201,150,77,.24);
+  color:var(--gold-hi);
+  background:rgba(201,150,77,.08);
+  font-size:12px;
+  letter-spacing:1.5px;
+}
+.result-card p{font-size:13px;line-height:1.68;color:var(--muted);letter-spacing:1.1px}
+.reading-blocks{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:16px;
+}
+.analysis{
+  padding:22px 23px 20px;
+}
+.analysis h3{font-family:var(--font-display);color:var(--gold-hi);font-size:27px;letter-spacing:6px;font-weight:500;margin-bottom:13px}
+.analysis p{font-size:14px;line-height:1.72;color:var(--muted);letter-spacing:1.2px;margin:7px 0}
+.notice{color:rgba(200,189,164,.72)!important;font-size:12px!important}
+#rdActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:center;
+  margin-top:28px;
+}
+.act{
+  min-width:146px;
+  min-height:44px;
+  padding:0 18px;
+  border:1px solid rgba(201,150,77,.32);
+  color:var(--muted);
+  background:rgba(5,11,20,.68);
+  letter-spacing:3px;
+  transition:.22s ease;
+}
+.act:hover,.act.primary{color:var(--gold-hi);border-color:rgba(255,226,161,.62);background:rgba(201,150,77,.13)}
+#soundBtn{
+  position:fixed;
+  z-index:50;
+  right:24px;
+  bottom:24px;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  color:var(--gold-hi);
+  background:rgba(3,8,16,.68);
+}
+#soundBtn.off{opacity:.45}
+#toast{
+  position:fixed;
+  z-index:90;
+  left:50%;
+  bottom:86px;
+  transform:translateX(-50%) translateY(16px);
+  min-width:220px;
+  max-width:min(520px,calc(100vw - 40px));
+  padding:11px 16px;
+  color:var(--gold-hi);
+  background:rgba(4,9,17,.92);
+  border:1px solid var(--line);
+  text-align:center;
+  letter-spacing:2px;
+  opacity:0;
+  pointer-events:none;
+  transition:.24s ease;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mobile-only{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Minimal reference-card skin: sparse layout, original UI-style gold line cards. */
+body[data-stage="intro"] #shade{opacity:.36}
+body[data-stage="intro"] #bg{filter:saturate(.95) contrast(1.04) brightness(.72);transform:scale(1.012)}
+.pnl{
+  background:rgba(5,10,18,.46);
+  box-shadow:none;
+  backdrop-filter:blur(3px);
+}
+.pnl::before,.pnl::after{opacity:.28}
+.panel-corners::before{border-top-color:rgba(255,226,161,.28);border-bottom-color:rgba(255,226,161,.12)}
+.panel-corners::after{border-left-color:rgba(255,226,161,.14);border-right-color:rgba(255,226,161,.14)}
+.feature,.today-tip,.quote,#centerPanel,.side-menu,.summary-card,.result-card,.analysis,.chart-card{
+  background:rgba(5,10,18,.42);
+  border-color:rgba(255,226,161,.34);
+}
+.feature::before,.today-tip::before,.quote::before,#centerPanel::before,.side-menu::before,.summary-card::before,.result-card::before,.analysis::before,.chart-card::before{
+  opacity:.34;
+}
+.feature::after,.today-tip::after,.quote::after,#centerPanel::after,.side-menu::after,.summary-card::after,.result-card::after,.analysis::after,.chart-card::after{
+  opacity:.18;
+}
+#introLayer{
+  align-items:flex-end;
+  padding:0 48px 58px;
+}
+#ritualPanel{
+  width:min(1180px,calc(100vw - 96px));
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+#ritualPanel::before,#ritualPanel::after{display:none}
+.ritual-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin:0 0 18px;
+  padding:0 2px;
+}
+.ritual-head h1{
+  font-size:34px;
+  letter-spacing:8px;
+  margin-bottom:6px;
+  text-shadow:0 0 18px rgba(0,0,0,.72);
+}
+.ritual-head p{
+  max-width:620px;
+  color:rgba(244,233,210,.78);
+  line-height:1.55;
+  letter-spacing:2px;
+  font-size:13px;
+}
+#exitRitual,#skipBtn{
+  height:48px;
+  min-width:128px;
+  background:rgba(5,10,18,.38);
+  border-color:rgba(255,226,161,.42);
+  color:rgba(244,233,210,.74);
+}
+.choice-area{
+  display:grid;
+  grid-template-columns:1fr 1.1fr .84fr;
+  gap:18px;
+  align-items:stretch;
+}
+.choice-group{
+  position:relative;
+  min-width:0;
+  padding:18px;
+  border:1px solid rgba(255,226,161,.34);
+  background:rgba(5,10,18,.56);
+  backdrop-filter:blur(2px);
+}
+.choice-group::before,.choice-group::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  left:12px;
+  right:12px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,226,161,.6),transparent);
+  opacity:.36;
+}
+.choice-group::before{top:9px}
+.choice-group::after{bottom:9px}
+.group-title{
+  margin-bottom:14px;
+  color:var(--gold-hi);
+  font-family:var(--font-display);
+  font-size:18px;
+  letter-spacing:5px;
+}
+.choice-grid{gap:11px}
+.choice{
+  position:relative;
+  min-height:62px;
+  padding:12px 16px;
+  border:1px solid rgba(255,226,161,.24);
+  background:rgba(3,8,15,.5);
+}
+.choice::after{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border:1px solid rgba(255,226,161,.06);
+  pointer-events:none;
+}
+.choice b{
+  color:rgba(244,233,210,.9);
+  font-family:var(--font-serif);
+  font-size:16px;
+  letter-spacing:1.5px;
+}
+.choice span{
+  color:rgba(200,189,164,.7);
+  font-size:12px;
+  letter-spacing:1px;
+}
+.birth-grid{gap:11px}
+.astro-field{
+  position:relative;
+  min-height:62px;
+  padding:12px 14px;
+  border:1px solid rgba(255,226,161,.24);
+  background:rgba(3,8,15,.5);
+}
+.astro-field::after{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border:1px solid rgba(255,226,161,.06);
+  pointer-events:none;
+}
+.astro-field span{
+  color:rgba(255,226,161,.86);
+  font-size:12px;
+}
+.astro-field input,.astro-field select{
+  position:relative;
+  z-index:1;
+  color:rgba(244,233,210,.94);
+}
+.choice:hover,.choice.sel{
+  border-color:rgba(255,226,161,.72);
+  background:linear-gradient(90deg,rgba(201,150,77,.2),rgba(5,10,18,.58));
+}
+.choice.sel::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:9px;
+  bottom:9px;
+  width:2px;
+  background:var(--gold-hi);
+}
+#continueBtn{
+  min-height:80px;
+  margin-top:18px;
+  background:rgba(5,10,18,.5);
+  border-color:rgba(255,226,161,.5);
+  box-shadow:none;
+  font-size:32px;
+  letter-spacing:10px;
+}
+#continueBtn:hover{
+  background:rgba(201,150,77,.12);
+}
+#introHint{
+  margin-top:14px;
+  color:rgba(255,226,161,.68);
+  text-shadow:0 0 14px rgba(0,0,0,.7);
+}
+.summary-card,.result-card,.analysis{
+  padding:18px;
+}
+.summary-card .v,.result-card h3,.analysis h3{
+  text-shadow:none;
+}
+
+/* Keep the opening animation visible: controls collapse into a low observation rail. */
+body[data-stage="intro"] #shade{
+  opacity:.2;
+}
+#introLayer{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0 42px 34px;
+  overflow:hidden;
+}
+#introLayer *{pointer-events:none}
+body[data-stage="intro"] #ritualPanel,
+body[data-stage="intro"] #ritualPanel *{pointer-events:auto}
+body[data-stage="intro"] #introHint{pointer-events:none}
+#ritualPanel{
+  position:relative;
+  width:min(1160px,calc(100vw - 84px));
+  padding:12px 16px 14px;
+  background:rgba(5,10,18,.46);
+  border-color:rgba(255,226,161,.36);
+}
+.ritual-head{
+  position:relative;
+  left:auto;
+  top:auto;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:18px;
+  max-width:none;
+  margin:0 0 8px;
+}
+.ritual-head h1{font-size:22px;letter-spacing:6px;margin:0}
+.ritual-head p{font-size:11px;line-height:1.35;letter-spacing:1.4px;margin-top:3px}
+#exitRitual{
+  position:relative;
+  right:auto;
+  top:auto;
+  min-width:108px;
+  height:38px;
+}
+.choice-area{
+  display:grid;
+  grid-template-columns:1fr 1.15fr .85fr;
+  gap:12px;
+  align-items:start;
+}
+.choice-group{
+  position:relative;
+  width:auto;
+  padding:0;
+  border:0;
+  background:transparent;
+  backdrop-filter:none;
+  margin:0;
+  transform:none;
+}
+.choice-group::before,.choice-group::after{display:none}
+.choice-grid{
+  grid-template-columns:repeat(auto-fit,minmax(58px,1fr));
+  gap:7px;
+}
+.choice-grid.tight{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.group-title{
+  font-size:13px;
+  letter-spacing:3px;
+  margin-bottom:7px;
+}
+.choice{
+  min-height:36px;
+  justify-content:center;
+  padding:6px 9px;
+}
+#introLayer .choice b{font-size:14px;letter-spacing:1px}
+#introLayer .choice span{display:none}
+#introLayer .birth-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+#introLayer .astro-field{
+  min-height:36px;
+  padding:6px 9px;
+}
+#introLayer .astro-field span{
+  font-size:11px;
+  letter-spacing:1px;
+}
+#introLayer .astro-field input,
+#introLayer .astro-field select{
+  font-size:13px;
+  letter-spacing:0;
+}
+#continueBtn{
+  position:relative;
+  left:auto;
+  bottom:auto;
+  width:100%;
+  min-height:40px;
+  margin-top:9px;
+  transform:none;
+  font-size:21px;
+  letter-spacing:7px;
+}
+#introHint{
+  position:relative;
+  left:auto;
+  bottom:auto;
+  width:auto;
+  transform:none;
+  margin:7px 0 0;
+  pointer-events:none;
+  font-size:10px;
+}
+
+@media (max-width:1180px){
+  #topnav{grid-template-columns:190px 1fr auto 1fr 96px;padding:0 20px;gap:10px}
+  .navside{gap:28px}
+  #navTitle{font-size:33px;min-width:234px;letter-spacing:7px}
+  #home{grid-template-columns:188px minmax(230px,1fr) minmax(300px,380px);gap:18px;padding-left:24px;padding-right:24px}
+  .feature h2{font-size:25px}
+  #startBtn{font-size:36px;letter-spacing:9px}
+  .choice-area{grid-template-columns:1fr 1fr}
+  .choice-group:last-child{grid-column:1/3}
+  .choice-grid.tight{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  body{overflow:auto}
+  #topnav{height:auto;min-height:78px;grid-template-columns:1fr auto;align-items:start;padding:12px 16px}
+  #projBtn{grid-column:1;grid-row:2;width:178px}
+  #navTitle{grid-column:1/3;grid-row:1;font-size:31px;min-width:0;letter-spacing:7px}
+  #topnav .navside{display:none}
+  .navIcons{grid-column:2;grid-row:2}
+  #home{
+    display:grid;
+    min-height:100vh;
+    height:auto;
+    grid-template-columns:1fr;
+    align-items:start;
+    padding:118px 18px 82px;
+  }
+  #centerPanel{position:relative;top:auto;left:auto;width:auto;order:2;margin-top:0;min-height:auto}
+  #leftcol{position:relative;top:auto;left:auto;width:auto;order:3}
+  #rightcol{position:relative;top:auto;right:auto;width:auto;order:1}
+  .side-menu{display:grid;grid-template-columns:repeat(2,1fr);gap:0}
+  .mi{font-size:18px;min-height:56px}
+  .today-tip{display:none}
+  .feature{grid-template-columns:1fr 74px}
+  .round{width:62px;height:62px}
+  #startBtn{min-height:70px;font-size:31px;letter-spacing:7px}
+  #tapHint{width:100%;text-align:center;font-size:12px;letter-spacing:2px;padding:0 20px}
+  #ritualPanel{padding:22px 18px}
+  .ritual-head{grid-template-columns:1fr}
+  .choice-area,.choice-group:last-child{display:block}
+  .choice-group{margin-bottom:15px}
+  .choice-grid,.choice-grid.tight{grid-template-columns:1fr}
+  #continueBtn{font-size:24px;letter-spacing:6px}
+  .result-top,.reading-blocks{grid-template-columns:1fr}
+  .summary-grid,.planet-grid,.aspect-grid{grid-template-columns:1fr}
+  .reading-head h1{font-size:32px;letter-spacing:7px}
+  .seal{display:none}
+}
+@media (max-width:860px){
+  body[data-stage="intro"] #introLayer{
+    align-items:flex-end;
+    padding:0 16px 18px;
+    overflow:hidden;
+  }
+  body[data-stage="intro"] #ritualPanel{
+    width:calc(100vw - 32px);
+    max-height:none;
+    padding:11px 12px 12px;
+  }
+  body[data-stage="intro"] .ritual-head{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:8px;
+    margin-bottom:7px;
+  }
+  body[data-stage="intro"] .ritual-head h1{
+    font-size:18px;
+    letter-spacing:4px;
+  }
+  body[data-stage="intro"] .ritual-head p{display:none}
+  body[data-stage="intro"] #exitRitual{
+    min-width:82px;
+    height:30px;
+    font-size:12px;
+    letter-spacing:1px;
+  }
+  body[data-stage="intro"] .choice-area{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-auto-flow:row;
+    gap:6px;
+    justify-items:stretch;
+  }
+  body[data-stage="intro"] .choice-group{
+    display:block;
+    grid-column:1 / -1;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    justify-self:stretch;
+    margin:0;
+  }
+  body[data-stage="intro"] .group-title{
+    font-size:11px;
+    letter-spacing:2px;
+    margin-bottom:4px;
+  }
+  body[data-stage="intro"] .choice-grid{
+    display:grid;
+    width:100%;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+  }
+  body[data-stage="intro"] #birthInputs,
+  body[data-stage="intro"] #placeInputs{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;
+  }
+  body[data-stage="intro"] .astro-field{
+    min-height:28px;
+    padding:4px 5px;
+    gap:4px;
+  }
+  body[data-stage="intro"] .astro-field span{
+    font-size:10px;
+    letter-spacing:0;
+  }
+  body[data-stage="intro"] .astro-field input,
+  body[data-stage="intro"] .astro-field select{
+    font-size:11px;
+  }
+  body[data-stage="intro"] .choice{
+    min-width:0;
+    min-height:28px;
+    padding:4px 2px;
+    white-space:nowrap;
+  }
+  body[data-stage="intro"] .choice b{
+    font-size:12px;
+    letter-spacing:0;
+    white-space:nowrap;
+  }
+  body[data-stage="intro"] #continueBtn{
+    min-height:34px;
+    margin-top:7px;
+    font-size:17px;
+    letter-spacing:5px;
+  }
+  body[data-stage="intro"] #introHint{
+    margin-top:5px;
+    font-size:9px;
+    letter-spacing:2px;
+  }
+}
+
+/* unified 12-project menu */
+#projMenu,.project-menu{max-height:min(68vh,520px);overflow-y:auto;scrollbar-width:thin}
+#projMenu::-webkit-scrollbar,.project-menu::-webkit-scrollbar{width:6px}
+#projMenu::-webkit-scrollbar-thumb,.project-menu::-webkit-scrollbar-thumb{background:rgba(201,164,106,.42);border-radius:999px}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg"></div>
+<div id="videoLayer">
+  <video id="openingVid" muted playsinline preload="auto" src="assets/astro/astro-opening.mp4"></video>
+  <video id="climaxVid" muted playsinline preload="none" src="assets/astro/astro-climax.mp4"></video>
+</div>
+<div id="shade"></div>
+<div id="grain"></div>
+<div class="frame-line"><i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div>
+<div id="flash"></div>
+
+<header id="topnav" data-ui>
+  <button id="projBtn" data-ui aria-haspopup="true" aria-expanded="false">
+    玄学项目 <span class="car">▽</span>
+    <div id="projMenu" class="pnl" data-ui></div>
+  </button>
+  <nav class="navside" data-ui>
+    <span class="navlink cur" data-nav="home">首页</span>
+    <span class="navlink" data-nav="fate">命理</span>
+    <span class="navlink" data-nav="service">服务</span>
+  </nav>
+  <div id="navTitle">星图观测</div>
+  <nav class="navside" data-ui>
+    <span class="navlink" data-nav="daily">每日运势</span>
+    <span class="navlink" data-nav="archive">档案</span>
+    <span class="navlink" data-nav="about">关于我们</span>
+  </nav>
+  <div class="navIcons" data-ui>
+    <button class="navico" data-nav="profile" title="个人星盘"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.2-4.1 4-6.1 7.5-6.1s6.3 2 7.5 6.1"/></svg></button>
+    <button class="navico" data-nav="settings" title="观测设置"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5 6.8 15M17.2 9l2.6-1.5"/></svg></button>
+  </div>
+</header>
+
+<main id="home" data-ref-ui="star-map-observation">
+  <aside id="leftcol" data-ui>
+    <section class="pnl side-menu ref-ornate">
+      <div class="panel-corners"></div>
+      <div class="mi cur" data-side="star"><span class="mini-ico" data-icon="wheel"></span><span>星图</span></div>
+      <div class="mi" data-side="chart"><span class="mini-ico" data-icon="star"></span><span>星盘</span></div>
+      <div class="mi" data-side="planet"><span class="mini-ico" data-icon="planet"></span><span>行星</span></div>
+      <div class="mi" data-side="aspect"><span class="mini-ico" data-icon="aspect"></span><span>相位</span></div>
+      <div class="mi" data-side="report"><span class="mini-ico" data-icon="scroll"></span><span>报告</span></div>
+    </section>
+    <section class="pnl today-tip ref-bottom-left">
+      <div class="panel-corners"></div>
+      <div class="tip-title">今日宇宙提示</div>
+      <div class="tip-copy">月亮入天秤，重平衡与和谐。</div>
+      <svg class="tip-orbit" viewBox="0 0 80 80" fill="none" stroke="currentColor"><circle cx="40" cy="40" r="23"/><path d="M40 9v11M40 60v11M9 40h11M60 40h11"/><path d="M40 27l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="currentColor" stroke="none"/></svg>
+    </section>
+  </aside>
+
+  <section id="centerPanel" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="steps-title">观星步骤</div>
+    <div class="step"><div class="num">1</div><div><h3>定心</h3><p>静心凝神，平息杂念</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>入盘</h3><p>输入信息，生成星盘</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>观象</h3><p>观测星象，洞悉宇宙</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>解读</h3><p>综合分析，指引方向</p></div></div>
+  </section>
+
+  <section id="rightcol" data-ui>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div><h2>本命星盘</h2><p>解析先天星图，洞悉自我本质。</p></div>
+      <div class="round"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="27"/><circle cx="40" cy="40" r="12"/><path d="M40 13v54M13 40h54M21 21l38 38M59 21 21 59"/></svg></div>
+    </article>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div><h2>行运趋势</h2><p>把握行运变化，预见未来趋势。</p></div>
+      <div class="round"><svg viewBox="0 0 80 80"><path d="M12 53c10-21 27-29 56-28"/><path d="M56 16l12 9-13 8"/><circle cx="26" cy="45" r="4"/><circle cx="44" cy="33" r="3"/></svg></div>
+    </article>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div><h2>宇宙讯号</h2><p>接收宇宙讯息，指引当下选择。</p></div>
+      <div class="round"><svg viewBox="0 0 80 80"><path d="M40 12v36"/><path d="M25 58c5-8 25-8 30 0"/><path d="M18 67c9-13 35-13 44 0"/><circle cx="40" cy="18" r="6"/><path d="M40 30l4 7 7 3-7 3-4 7-4-7-7-3 7-3z"/></svg></div>
+    </article>
+    <button id="startBtn" data-nav="start">展开星图</button>
+    <article class="pnl quote ref-bottom-right">
+      <div class="panel-corners"></div>
+      <span class="mark">“</span>星光有迹，命运有声。
+      <small>观星不是等待答案，而是学会辨认方向。</small>
+    </article>
+  </section>
+</main>
+<div id="tapHint">轻点空白处，展开星图</div>
+
+<section id="introLayer" class="layer">
+  <div id="ritualPanel" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="ritual-head">
+      <div>
+        <h1>校准你的星图</h1>
+        <p>输入出生日期、准确时间与地点，系统自动推算命主星与重点相位。</p>
+      </div>
+      <button id="exitRitual" data-ui>退出仪式</button>
+    </div>
+    <div class="choice-area">
+      <div class="choice-group">
+        <div class="group-title">星盘类型</div>
+        <div id="topicChoices" class="choice-grid"></div>
+      </div>
+      <div class="choice-group">
+        <div class="group-title">出生资料</div>
+        <div id="birthInputs" class="birth-grid">
+          <label class="astro-field"><span>日期</span><input id="birthDate" data-field="birthDate" type="date" value="1998-08-12"></label>
+          <label class="astro-field"><span>时间</span><input id="birthTime" data-field="birthTime" type="time" value="14:30"></label>
+        </div>
+      </div>
+      <div class="choice-group">
+        <div class="group-title">地点宫制</div>
+        <div id="placeInputs" class="birth-grid tight">
+          <label class="astro-field"><span>地点</span><input id="birthPlace" data-field="birthPlace" type="text" value="杭州" autocomplete="off"></label>
+          <label class="astro-field"><span>宫制</span><select id="houseSystem" data-field="houseSystem"><option value="placidus">Placidus</option><option value="whole">整宫制</option><option value="equal">等宫制</option></select></label>
+        </div>
+      </div>
+    </div>
+    <button id="continueBtn">继续观测</button>
+    <div id="introHint">时间越准，上升与宫位越准</div>
+  </div>
+</section>
+
+<section id="burstLayer" class="layer">
+  <div id="burstLine">行星归位，星盘展开</div>
+  <button id="skipBtn" data-ui>跳过动画</button>
+</section>
+
+<section id="readingLayer" class="layer" data-ui>
+  <div id="readingInner">
+    <header class="reading-head">
+      <div>
+        <h1>星图解读</h1>
+        <p id="readingMeta">观测结果生成中</p>
+      </div>
+      <div class="seal"><b>星</b></div>
+    </header>
+
+    <div class="result-top">
+      <article class="pnl chart-card">
+        <div class="panel-corners"></div>
+        <svg id="chartWheel" viewBox="0 0 400 400" aria-label="占星星盘图"></svg>
+        <div class="chart-caption" id="chartCaption"></div>
+      </article>
+      <div>
+        <div id="summaryGrid" class="summary-grid"></div>
+        <div class="section-title">行星落点</div>
+        <div id="planetCards" class="planet-grid"></div>
+      </div>
+    </div>
+
+    <div class="section-title">相位与行运</div>
+    <div id="aspectCards" class="aspect-grid"></div>
+
+    <div class="section-title">综合解读</div>
+    <div class="reading-blocks">
+      <article id="analysisMain" class="pnl analysis"></article>
+      <article id="analysisAdvice" class="pnl analysis"></article>
+    </div>
+
+    <div id="rdActions">
+      <button class="act primary" data-act="copy">复制解读文本</button>
+      <button class="act" data-act="again">重新观测</button>
+      <button class="act" data-act="homeback">回到首页</button>
+    </div>
+  </div>
+</section>
+
+<button id="soundBtn" data-ui title="音效开关">♪</button>
+<div id="toast"></div>
+
+<script>
+const PROJECTS = [
+  {key:'tarot', label:'塔罗互动占卜', icon:'star', href:'index_6.html'},
+  {key:'astrology', label:'星盘占星', icon:'wheel', current:true},
+  {key:'bazi', label:'八字命盘', icon:'bagua', href:'index_bazi.html'},
+  {key:'liuyao', label:'六爻问卦', icon:'bagua', href:'index_liuyao.html'},
+  {key:'ziwei', label:'紫微斗数', icon:'wheel', href:'index_ziwei.html'},
+  {key:'lingqian', label:'灵签求问', icon:'lotus', href:'index_lingqian.html'},
+  {key:'zhougong', label:'周公解梦', icon:'star', href:'index_zhougong.html'},
+  {key:'zodiac', label:'生肖运势', icon:'wheel', href:'index_zodiac.html'},
+  {key:'fengshui', label:'风水堪舆', icon:'bagua', href:'index_fengshui.html'},
+  {key:'palm', label:'手相解读', icon:'star', href:'index_palm.html'},
+  {key:'mianxiang', label:'面相解读', icon:'star', href:'index_mianxiang.html'},
+  {key:'nameDate', label:'取名择日', icon:'scroll', href:'index_name_date.html'}
+];
+
+const ASTRO_TOPICS = [
+  {key:'natal', label:'本命盘', desc:'出生星图'},
+  {key:'transit', label:'行运盘', desc:'当前天象'},
+  {key:'synastry', label:'关系盘', desc:'关系互动'},
+  {key:'election', label:'择时盘', desc:'行动时机'}
+];
+
+const HOUSE_SYSTEMS = [
+  {key:'placidus', label:'Placidus'},
+  {key:'whole', label:'整宫制'},
+  {key:'equal', label:'等宫制'}
+];
+
+const TRANSIT_WINDOW = {label:'当前行运', desc:'近势'};
+
+const SIGNS = ['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
+const ELEMENTS = ['火象','土象','风象','水象'];
+const SIGN_RULERS = {
+  白羊座:'火星',
+  金牛座:'金星',
+  双子座:'水星',
+  巨蟹座:'月亮',
+  狮子座:'太阳',
+  处女座:'水星',
+  天秤座:'金星',
+  天蝎座:'冥王星',
+  射手座:'木星',
+  摩羯座:'土星',
+  水瓶座:'天王星',
+  双鱼座:'海王星'
+};
+const HOUSES = [
+  ['第一宫','身份 / 启动'],
+  ['第二宫','资源 / 价值'],
+  ['第三宫','表达 / 学习'],
+  ['第四宫','根系 / 安全'],
+  ['第五宫','创造 / 恋爱'],
+  ['第六宫','秩序 / 身心'],
+  ['第七宫','伴侣 / 合作'],
+  ['第八宫','信任 / 转化'],
+  ['第九宫','远方 / 信念'],
+  ['第十宫','事业 / 声望'],
+  ['第十一宫','社群 / 愿景'],
+  ['第十二宫','潜意识 / 疗愈']
+];
+const ASPECTS = [
+  ['合相','聚焦，直面主题'],
+  ['三分相','顺流，适合推进'],
+  ['四分相','有压，调整策略'],
+  ['对分相','拉扯，重设平衡'],
+  ['六合相','有机，主动回应']
+];
+const PLANET_MEANING = {
+  太阳:'确认意志，收回能量。',
+  月亮:'承认需要，安顿情绪。',
+  水星:'整理信息，校准表达。',
+  金星:'看见价值，柔软连接。',
+  火星:'愿望落地，避免躁动。',
+  木星:'扩展视野，放大机会。',
+  土星:'设定边界，交给时间。',
+  天王星:'打破惯性，更新模式。',
+  海王星:'辨认理想，留心投射。',
+  冥王星:'穿透表象，完成转化。'
+};
+const ACTIONS = {
+  natal:['写下一个反复主题。','把愿望拆成七日动作。'],
+  transit:['减少无效消耗。','用小实验校准方向。'],
+  synastry:['先确认需求，再表达期待。','把反应改写成请求。'],
+  election:['选一个清晰目标。','在合适窗口启动行动。']
+};
+
+const $ = (selector, root=document) => root.querySelector(selector);
+const $$ = (selector, root=document) => [...root.querySelectorAll(selector)];
+const state = {stage:'home', topic:'natal', birthDate:'1998-08-12', birthTime:'14:30', birthPlace:'杭州', houseSystem:'placidus', result:null, sound:true, burstDone:false};
+const V = {opening:$('#openingVid'), climax:$('#climaxVid')};
+let toastTimer = 0;
+let audioCtx = null;
+
+function iconSVG(key){
+  const common = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const paths = {
+    wheel:`<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6 6 18"/>`,
+    star:`<path d="M12 3l1.8 7.2L21 12l-7.2 1.8L12 21l-1.8-7.2L3 12l7.2-1.8z"/>`,
+    planet:`<circle cx="12" cy="12" r="5.2"/><path d="M3.8 15.2c4.8 2.1 12.6.5 16.4-3.4M5.2 8.8c4.2-2.1 11.1-1.1 14.1 1.8"/>`,
+    aspect:`<path d="M5 18 12 5l7 13z"/><circle cx="5" cy="18" r="1.8"/><circle cx="12" cy="5" r="1.8"/><circle cx="19" cy="18" r="1.8"/>`,
+    scroll:`<path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M8 8h8M8 12h8M8 16h5"/>`,
+    bagua:`<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M4.6 8h4M15.4 8h4M4.6 16h4M15.4 16h4"/>`,
+    lotus:`<path d="M12 19c-4-3-6-6-6-10 3 1 5 3 6 6 1-3 3-5 6-6 0 4-2 7-6 10Z"/><path d="M12 19c-2.5-3.5-2.5-7 0-11 2.5 4 2.5 7.5 0 11Z"/>`
+  };
+  return `<svg viewBox="0 0 24 24" ${common}>${paths[key] || paths.star}</svg>`;
+}
+
+function installIcons(){
+  $$('.mini-ico[data-icon]').forEach(el => { el.innerHTML = iconSVG(el.dataset.icon); });
+}
+
+function buildProjectMenu(){
+  $('#projMenu').innerHTML = PROJECTS.map(p => `
+    <div class="pm-it${p.current ? ' cur' : ''}" data-proj="${p.key}">
+      <span class="mini-ico">${iconSVG(p.icon)}</span>${p.label}
+    </div>
+  `).join('');
+}
+
+function choiceHTML(kind, option){
+  return `<button class="choice" data-kind="${kind}" data-key="${option.key}"><b>${option.label}</b><span>${option.desc}</span></button>`;
+}
+
+function buildChoices(){
+  $('#topicChoices').innerHTML = ASTRO_TOPICS.map(item => choiceHTML('topic', item)).join('');
+  syncBirthFields();
+  refreshChoices();
+}
+
+function refreshChoices(){
+  $$('.choice').forEach(btn => {
+    const active = state[btn.dataset.kind] === btn.dataset.key;
+    btn.classList.toggle('sel', active);
+  });
+}
+
+function syncBirthFields(){
+  ['birthDate','birthTime','birthPlace','houseSystem'].forEach(key => {
+    const el = $(`[data-field="${key}"]`);
+    if (el) el.value = state[key];
+  });
+}
+
+function updateBirthField(target){
+  const key = target?.dataset?.field;
+  if (!key || !(key in state)) return;
+  state[key] = target.value.trim ? target.value.trim() : target.value;
+}
+
+function setStage(stage){
+  state.stage = stage;
+  document.body.dataset.stage = stage;
+}
+
+function playVideo(which){
+  Object.entries(V).forEach(([key, video]) => {
+    if (!video) return;
+    if (key === which) {
+      video.classList.add('on');
+      try { video.currentTime = 0; } catch(e) {}
+      const p = video.play();
+      if (p) p.catch(() => toast('浏览器已拦截自动播放，轻点继续即可'));
+    } else {
+      video.classList.remove('on');
+      try { video.pause(); } catch(e) {}
+    }
+  });
+}
+
+function stopVideos(){
+  Object.values(V).forEach(video => {
+    if (!video) return;
+    try { video.pause(); video.currentTime = 0; } catch(e) {}
+    video.classList.remove('on');
+    video.onended = null;
+  });
+}
+
+function audio(){
+  if (!state.sound) return null;
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function tone(freq, dur=.28, delay=0, vol=.06, type='sine'){
+  const ctx = audio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const t = ctx.currentTime + delay;
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t + .03);
+  gain.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + dur + .04);
+}
+
+function sfx(kind){
+  if (kind === 'gate') { tone(196,.42,0,.07); tone(392,.52,.05,.05); tone(587,.5,.13,.04); }
+  if (kind === 'soft') { tone(330,.22,0,.04); tone(440,.28,.08,.035); }
+  if (kind === 'flash') { tone(220,.2,0,.07,'triangle'); tone(660,.42,.06,.06); }
+}
+
+function toast(message){
+  const t = $('#toast');
+  t.textContent = message;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2300);
+}
+
+function toIntro(){
+  if (state.stage !== 'home') return;
+  sfx('gate');
+  setStage('intro');
+  playVideo('opening');
+}
+
+function toBurst(){
+  if (state.stage !== 'intro') return;
+  sfx('soft');
+  state.burstDone = false;
+  setStage('burst');
+  playVideo('climax');
+  V.climax.onended = finishBurst;
+  setTimeout(() => {
+    if (state.stage === 'burst' && !state.burstDone && (!V.climax.duration || V.climax.currentTime < .5)) {
+      toast('动画仍在加载，可直接跳过进入解读');
+    }
+  }, 2400);
+}
+
+function finishBurst(){
+  if (state.burstDone) return;
+  state.burstDone = true;
+  state.result = buildResult();
+  const flash = $('#flash');
+  flash.classList.remove('on');
+  void flash.offsetWidth;
+  flash.classList.add('on');
+  sfx('flash');
+  setTimeout(() => {
+    stopVideos();
+    setStage('reading');
+    renderReading();
+    $('#readingLayer').scrollTop = 0;
+  }, 440);
+}
+
+function backHome(){
+  stopVideos();
+  setStage('home');
+}
+
+function seededNumber(seed){
+  let h = 2166136261;
+  for (let i=0;i<seed.length;i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h >>> 0);
+}
+
+function pick(list, seed, offset=0){
+  return list[(seededNumber(seed) + offset) % list.length];
+}
+
+function getOption(list, key){
+  return list.find(item => item.key === key) || list[0];
+}
+
+function buildResult(){
+  const topic = getOption(ASTRO_TOPICS, state.topic);
+  const houseSystem = getOption(HOUSE_SYSTEMS, state.houseSystem);
+  const birth = {
+    date: state.birthDate || '1998-08-12',
+    time: state.birthTime || '14:30',
+    place: state.birthPlace || '杭州'
+  };
+  const seedBase = `${state.topic}-${birth.date}-${birth.time}-${birth.place}-${houseSystem.key}`;
+  const sun = pick(SIGNS, seedBase, 0);
+  const moon = pick(SIGNS, seedBase, 3);
+  const rising = pick(SIGNS, seedBase, 7);
+  const dominant = SIGN_RULERS[rising] || '水星';
+  const house = pick(HOUSES, seedBase, 11);
+  const aspect = pick(ASPECTS, seedBase, 17);
+  const transitSign = pick(SIGNS, seedBase, 23);
+  const secondaryPlanet = pick(['水星','金星','火星','木星','土星','天王星','海王星','冥王星'], seedBase, 31);
+  const element = ELEMENTS[SIGNS.indexOf(sun) % 4];
+  const pressure = pick(['边界感','表达方式','节奏管理','信任议题','资源分配','身份更新'], seedBase, 41);
+  const gift = pick(['直觉敏锐','创造力','秩序感','行动力','协调力','洞察力'], seedBase, 53);
+  const actions = ACTIONS[state.topic] || ACTIONS.natal;
+  return {topic, houseSystem, birth, windowOpt: TRANSIT_WINDOW, sun, moon, rising, dominant, house, aspect, transitSign, secondaryPlanet, element, pressure, gift, actions};
+}
+
+function drawChartWheel(result){
+  const svg = $('#chartWheel');
+  const signs = SIGNS;
+  const planetAngles = [18,76,132,188,236,302];
+  svg.innerHTML = `
+    <defs>
+      <radialGradient id="wheelGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffe2a1" stop-opacity=".3"/>
+        <stop offset="38%" stop-color="#6aa8ff" stop-opacity=".1"/>
+        <stop offset="100%" stop-color="#04070d" stop-opacity=".08"/>
+      </radialGradient>
+    </defs>
+    <circle cx="200" cy="200" r="176" fill="url(#wheelGlow)" stroke="rgba(255,226,161,.54)" stroke-width="1.3"/>
+    <circle cx="200" cy="200" r="136" fill="none" stroke="rgba(201,150,77,.5)" stroke-width="1"/>
+    <circle cx="200" cy="200" r="88" fill="rgba(5,11,20,.42)" stroke="rgba(201,150,77,.42)" stroke-width="1"/>
+    <circle cx="200" cy="200" r="34" fill="rgba(255,226,161,.1)" stroke="rgba(255,226,161,.62)" stroke-width="1"/>
+  `;
+  for (let i=0;i<12;i++) {
+    const a = (i * 30 - 90) * Math.PI / 180;
+    const x1 = 200 + Math.cos(a) * 88;
+    const y1 = 200 + Math.sin(a) * 88;
+    const x2 = 200 + Math.cos(a) * 176;
+    const y2 = 200 + Math.sin(a) * 176;
+    const tx = 200 + Math.cos(a + Math.PI/12) * 156;
+    const ty = 200 + Math.sin(a + Math.PI/12) * 156;
+    svg.insertAdjacentHTML('beforeend', `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="rgba(201,150,77,.28)" stroke-width="1"/>`);
+    svg.insertAdjacentHTML('beforeend', `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="rgba(255,226,161,.78)" font-size="10" text-anchor="middle" dominant-baseline="middle">${signs[i].replace('座','')}</text>`);
+  }
+  planetAngles.forEach((deg, i) => {
+    const a = (deg - 90) * Math.PI / 180;
+    const x = 200 + Math.cos(a) * (58 + i * 18 % 80);
+    const y = 200 + Math.sin(a) * (58 + i * 18 % 80);
+    const label = ['日','月','升','金','火','土'][i];
+    svg.insertAdjacentHTML('beforeend', `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12" fill="rgba(5,11,20,.82)" stroke="rgba(255,226,161,.72)"/><text x="${x.toFixed(1)}" y="${(y+1).toFixed(1)}" fill="#ffe2a1" font-size="12" text-anchor="middle" dominant-baseline="middle">${label}</text>`);
+  });
+  svg.insertAdjacentHTML('beforeend', `<path d="M94 200 C144 108 254 96 306 200 C255 298 143 304 94 200Z" fill="none" stroke="rgba(156,232,255,.34)" stroke-width="1.2"/><path d="M128 122 L272 278 M272 122 L128 278" stroke="rgba(155,108,255,.28)" stroke-width="1"/>`);
+  $('#chartCaption').textContent = `${result.topic.label} · 上升${result.rising} · 命主星${result.dominant}`;
+}
+
+function renderReading(){
+  const r = state.result || buildResult();
+  state.result = r;
+  $('#readingMeta').textContent = `${r.topic.label} / ${r.birth.date} ${r.birth.time} / ${r.birth.place} · ${r.houseSystem.label}`;
+  drawChartWheel(r);
+
+  const summary = [
+    ['命主星', r.dominant, PLANET_MEANING[r.dominant] || '观察它的落座与相位。'],
+    ['上升星座', r.rising, '定义入世方式。'],
+    ['重点宫位', r.house[0], r.house[1]],
+    ['相位张力', r.pressure, `用${r.gift}化开。`]
+  ];
+  $('#summaryGrid').innerHTML = summary.map(item => `
+    <article class="pnl summary-card">
+      <div class="panel-corners"></div>
+      <div class="k">${item[0]}</div>
+      <div class="v">${item[1]}</div>
+      <div class="d">${item[2]}</div>
+    </article>
+  `).join('');
+
+  const planetCards = [
+    ['太阳', r.sun, '我要什么'],
+    ['月亮', r.moon, '我怕什么'],
+    ['上升', r.rising, '我如何出现']
+  ];
+  $('#planetCards').innerHTML = planetCards.map(card => `
+    <article class="pnl result-card">
+      <div class="panel-corners"></div>
+      <h3>${card[0]}</h3>
+      <div class="tagrow"><span class="tag">${card[1]}</span></div>
+      <p>${card[2]}</p>
+    </article>
+  `).join('');
+
+  const aspectCards = [
+    ['主相位', r.aspect[0], r.aspect[1]],
+    ['行运讯号', `${r.secondaryPlanet}过境${r.transitSign}`, `近势留意${r.house[1]}。`],
+    ['宫制', r.houseSystem.label, `以${r.birth.place}与${r.birth.time}校盘。`]
+  ];
+  $('#aspectCards').innerHTML = aspectCards.map(card => `
+    <article class="pnl result-card">
+      <div class="panel-corners"></div>
+      <h3>${card[0]}</h3>
+      <div class="tagrow"><span class="tag">${card[1]}</span></div>
+      <p>${card[2]}</p>
+    </article>
+  `).join('');
+
+  $('#analysisMain').innerHTML = `
+    <div class="panel-corners"></div>
+    <h3>星盘主线</h3>
+    <p>${r.topic.label}以${r.birth.date} ${r.birth.time}，${r.birth.place}校盘。上升${r.rising}，命主星${r.dominant}。</p>
+    <p>太阳${r.sun}，月亮${r.moon}，重点落在${r.house[0]}。先看${r.pressure}，再定行动。</p>
+  `;
+  $('#analysisAdvice').innerHTML = `
+    <div class="panel-corners"></div>
+    <h3>行动建议</h3>
+    <p>${r.aspect[0]}：${r.aspect[1]}</p>
+    <p>宜：${r.actions[0]}</p>
+    <p>忌：把${r.pressure}拖成沉默。</p>
+    <p class="notice">占星解读用于自我观察与文化娱乐，不替代医疗、法律、投资或人生重大决策中的专业意见。</p>
+  `;
+}
+
+function readingText(){
+  const r = state.result || buildResult();
+  return `星图观测结果
+星盘：${r.topic.label}
+资料：${r.birth.date} ${r.birth.time}，${r.birth.place}
+宫制：${r.houseSystem.label}
+
+太阳：${r.sun}
+月亮：${r.moon}
+上升：${r.rising}
+命主星：${r.dominant}
+宫位：${r.house[0]}
+相位：${r.aspect[0]}，${r.aspect[1]}
+行运：${r.secondaryPlanet}过境${r.transitSign}
+
+主线：先看${r.pressure}，再定行动。答案落在${r.house[1]}。
+
+宜：${r.actions[0]}
+忌：把感受拖成沉默
+
+仅供自我观察与文化娱乐。`;
+}
+
+function copyReading(){
+  const text = readingText();
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('解读已复制'); } catch(e) { toast('复制失败，请手动保存'); }
+    ta.remove();
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('解读已复制')).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+function handleProject(key){
+  const p = PROJECTS.find(item => item.key === key);
+  if (!p) return;
+  if (p.current) { toast('你已在星盘占星'); return; }
+  if (p.href) {
+    window.location.href = p.href;
+  } else {
+    toast(`${p.label}模块即将开放`);
+  }
+}
+
+document.addEventListener('click', event => {
+  const target = event.target;
+
+  if (target.closest('#projMenu')) {
+    const item = target.closest('.pm-it');
+    if (item) {
+      handleProject(item.dataset.proj);
+      $('#projMenu').classList.remove('show');
+      $('#projBtn').classList.remove('open');
+      $('#projBtn').setAttribute('aria-expanded','false');
+    }
+    return;
+  }
+
+  if (target.closest('#projBtn')) {
+    const open = !$('#projMenu').classList.contains('show');
+    $('#projMenu').classList.toggle('show', open);
+    $('#projBtn').classList.toggle('open', open);
+    $('#projBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    return;
+  }
+
+  if (!target.closest('[data-ui]')) {
+    $('#projMenu').classList.remove('show');
+    $('#projBtn').classList.remove('open');
+    $('#projBtn').setAttribute('aria-expanded','false');
+  }
+
+  const nav = target.closest('[data-nav]');
+  if (nav) {
+    const key = nav.dataset.nav;
+    if (key === 'start') { toIntro(); return; }
+    if (key === 'home') { backHome(); return; }
+    if (key === 'daily') { toast('今日提示已在左下角同步'); return; }
+    if (key === 'archive') { toast('星盘档案将在后续版本开放'); return; }
+    if (key === 'about') { toast('玄境星图观测：以占星语言帮助你整理当下选择'); return; }
+    toast('该导航模块即将开放');
+    return;
+  }
+
+  const side = target.closest('.mi');
+  if (side) {
+    $$('.mi').forEach(item => item.classList.toggle('cur', item === side));
+    toast(`${side.innerText.trim()}观测已聚焦`);
+    return;
+  }
+
+  const choice = target.closest('.choice');
+  if (choice) {
+    state[choice.dataset.kind] = choice.dataset.key;
+    refreshChoices();
+    sfx('soft');
+    return;
+  }
+
+  if (target.closest('#continueBtn')) { toBurst(); return; }
+  if (target.closest('#exitRitual')) { backHome(); return; }
+  if (target.closest('#skipBtn')) { finishBurst(); return; }
+  if (target.closest('#soundBtn')) {
+    state.sound = !state.sound;
+    $('#soundBtn').classList.toggle('off', !state.sound);
+    toast(state.sound ? '音效已开启' : '音效已静默');
+    return;
+  }
+
+  const act = target.closest('[data-act]');
+  if (act) {
+    const a = act.dataset.act;
+    if (a === 'copy') copyReading();
+    if (a === 'again') { stopVideos(); setStage('intro'); playVideo('opening'); }
+    if (a === 'homeback') backHome();
+    return;
+  }
+
+  if (state.stage === 'home' && !target.closest('[data-ui]')) {
+    toIntro();
+  }
+});
+
+document.addEventListener('input', event => {
+  updateBirthField(event.target);
+});
+
+document.addEventListener('change', event => {
+  updateBirthField(event.target);
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && state.stage !== 'home') backHome();
+  if (event.key === 'Enter' && state.stage === 'intro') toBurst();
+});
+
+Object.values(V).forEach(video => {
+  if (!video) return;
+  video.addEventListener('error', () => toast('视频素材未能加载，已使用静态星图继续'));
+});
+
+(function init(){
+  installIcons();
+  buildProjectMenu();
+  buildChoices();
+})();
+</script>
+</body>
+</html>

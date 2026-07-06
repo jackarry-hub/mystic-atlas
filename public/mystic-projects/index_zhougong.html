@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄境 · 周公解梦</title>
+<meta name="description" content="沉浸式周公解梦体验：记梦、取象、辨境、合参、明意，以传统梦象规则结合现实关切生成梦境解读。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 L58 42 L95 50 L58 58 L50 95 L42 58 L5 50 L42 42 Z' fill='%23d7a96a'/%3E%3C/svg%3E">
+<style>
+:root{
+  --void:#03070b;
+  --panel:rgba(5,13,20,.66);
+  --panel-strong:rgba(5,11,17,.88);
+  --panel-soft:rgba(18,28,34,.46);
+  --gold:#c99558;
+  --gold-hi:#f2d49a;
+  --gold-low:rgba(201,149,88,.42);
+  --line:rgba(215,169,106,.38);
+  --ink:#f1e2c8;
+  --muted:#cbb894;
+  --teal:#6ac6bf;
+  --red:#b96855;
+  --shadow:0 22px 70px rgba(0,0,0,.56);
+  --f-serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --f-display:"STKaiti","KaiTi","Noto Serif SC",serif;
+  --f-roman:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  color:var(--ink);
+  background:var(--void);
+  font-family:var(--f-serif);
+  overflow:hidden;
+  user-select:none;
+}
+body[data-stage="reading"]{overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+textarea{resize:none}
+::selection{background:rgba(201,149,88,.34)}
+
+#bg,#videoLayer,#shade,#grain,#flash{position:fixed;inset:0}
+#bg{
+  z-index:0;
+  background:
+    radial-gradient(900px 620px at 51% 43%,rgba(242,212,154,.07),transparent 64%),
+    radial-gradient(840px 560px at 84% 50%,rgba(106,198,191,.06),transparent 62%),
+    url("assets/zhougong/bg.png") center center/cover no-repeat;
+  transform:scale(1.01);
+  transition:filter 1s ease,transform 1.2s ease,opacity .9s ease;
+}
+#videoLayer{z-index:1;overflow:hidden;pointer-events:none}
+#videoLayer video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1s ease,filter .8s ease,transform 1s ease;
+  filter:contrast(1.08) saturate(1.05) brightness(1.02);
+}
+#videoLayer video.on{opacity:1}
+#shade{
+  z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 26%,rgba(0,0,0,.44) 74%,rgba(0,0,0,.82)),
+    linear-gradient(90deg,rgba(0,0,0,.75),rgba(0,0,0,.08) 34%,rgba(0,0,0,.1) 62%,rgba(0,0,0,.76)),
+    linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.02) 24%,rgba(0,0,0,.76));
+  transition:opacity .9s ease;
+}
+#grain{
+  z-index:3;pointer-events:none;opacity:.08;mix-blend-mode:screen;
+  background-image:
+    radial-gradient(circle at 18% 20%,rgba(255,233,190,.5),transparent 1.3px),
+    radial-gradient(circle at 74% 30%,rgba(255,255,255,.32),transparent 1px),
+    radial-gradient(circle at 40% 72%,rgba(106,198,191,.28),transparent 1px),
+    linear-gradient(112deg,transparent 0 48%,rgba(242,212,154,.13) 49%,transparent 51%);
+  background-size:210px 210px,260px 260px,180px 180px,220px 220px;
+  animation:grainDrift 70s linear infinite;
+}
+#flash{
+  z-index:90;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at center,rgba(255,238,190,.92),rgba(242,212,154,.18) 35%,transparent 72%);
+}
+#flash.on{animation:flash .9s ease both}
+@keyframes grainDrift{to{transform:translate3d(120px,64px,0)}}
+@keyframes flash{0%{opacity:0;transform:scale(.85)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
+
+.frame-line{position:fixed;z-index:8;inset:16px;border:1px solid rgba(201,149,88,.22);pointer-events:none}
+.corner{position:absolute;width:38px;height:38px;border-color:rgba(242,212,154,.62)}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.c4{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(242,212,154,.045),transparent 42%),
+    linear-gradient(145deg,rgba(8,18,27,.72),rgba(2,8,13,.82));
+  box-shadow:var(--shadow),inset 0 0 28px rgba(201,149,88,.08);
+  backdrop-filter:blur(7px);
+}
+.pnl::before{
+  content:"";position:absolute;inset:7px;border:1px solid rgba(201,149,88,.16);pointer-events:none;
+}
+.pnl::after{
+  content:"";position:absolute;left:50%;top:-6px;width:9px;height:9px;
+  transform:translateX(-50%) rotate(45deg);
+  border:1px solid rgba(242,212,154,.58);background:rgba(7,13,18,.92);
+  box-shadow:0 0 12px rgba(201,149,88,.42);
+}
+.corners{position:absolute;inset:0;pointer-events:none}
+.corners::before,.corners::after{
+  content:"";position:absolute;width:24px;height:24px;border-color:rgba(242,212,154,.5);
+}
+.corners::before{left:9px;top:9px;border-left:1px solid;border-top:1px solid}
+.corners::after{right:9px;bottom:9px;border-right:1px solid;border-bottom:1px solid}
+
+#topnav{
+  position:fixed;z-index:28;top:0;left:0;right:0;height:76px;
+  display:grid;grid-template-columns:214px 1fr auto 1fr 136px;align-items:center;
+  gap:14px;padding:0 36px;
+  background:linear-gradient(180deg,rgba(2,8,13,.9),rgba(2,8,13,.38) 74%,transparent);
+  border-bottom:1px solid rgba(201,149,88,.2);
+  transition:opacity .82s ease,transform .82s ease,filter .82s ease;
+}
+#projBtn{
+  position:relative;width:176px;height:44px;display:flex;align-items:center;justify-content:center;gap:10px;
+  border:1px solid var(--line);background:rgba(4,12,18,.68);color:var(--gold-hi);
+  letter-spacing:4px;font-size:15px;box-shadow:inset 0 0 18px rgba(201,149,88,.08);
+}
+#projBtn svg{width:18px;height:18px;transition:transform .25s ease}
+#projBtn.open svg{transform:rotate(180deg)}
+#projMenu{display:none;position:absolute;left:0;top:54px;width:230px;padding:8px;z-index:42}
+#projMenu.show{display:block;animation:fadeUp .25s ease}
+.pm-it{
+  height:40px;display:flex;align-items:center;gap:11px;padding:0 12px;cursor:pointer;
+  color:var(--muted);font-size:14px;letter-spacing:2px;transition:.2s ease;
+}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(201,149,88,.1)}
+.pm-it.cur::after{content:"当前";margin-left:auto;font-size:11px;color:var(--teal)}
+.mini-ico,.navico svg,.round svg{display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mini-ico{width:22px;height:22px;color:var(--gold-hi)}
+.navside{display:flex;align-items:center;justify-content:center;gap:64px;min-width:0}
+.navlink{
+  position:relative;color:var(--gold-hi);font-size:16px;letter-spacing:5px;white-space:nowrap;cursor:pointer;
+  text-shadow:0 0 10px rgba(201,149,88,.28);transition:.22s ease;
+}
+.navlink:hover,.navlink.cur{color:#ffe7ae;text-shadow:0 0 14px rgba(201,149,88,.55)}
+.navlink.cur::after{
+  content:"";position:absolute;left:50%;bottom:-20px;width:80px;height:2px;transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,var(--gold-hi),transparent);
+}
+#navTitle{
+  position:relative;min-width:330px;text-align:center;font-family:var(--f-display);
+  font-size:43px;line-height:1;color:var(--gold-hi);letter-spacing:13px;text-indent:13px;
+  text-shadow:0 5px 18px rgba(0,0,0,.75),0 0 16px rgba(201,149,88,.36);
+}
+#navTitle::before,#navTitle::after{
+  content:"";position:absolute;top:50%;width:116px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(242,212,154,.68),transparent);
+}
+#navTitle::before{right:calc(100% - 2px)}
+#navTitle::after{left:calc(100% - 2px)}
+.navIcons{display:flex;align-items:center;justify-content:flex-end;gap:16px}
+.navico{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--line);background:rgba(4,12,18,.58);color:var(--gold-hi);
+  transition:.22s ease;
+}
+.navico:hover{transform:translateY(-1px);box-shadow:0 0 17px rgba(201,149,88,.3)}
+.navico svg{width:24px;height:24px}
+
+#home{
+  position:fixed;z-index:12;inset:0;
+  transition:opacity .86s ease,transform .86s ease,filter .86s ease;
+}
+#leftcol{
+  position:absolute;top:148px;left:39px;width:138px;
+}
+.side-menu{padding:12px 0}
+.mi{
+  min-height:80px;display:grid;grid-template-columns:36px 1fr;align-items:center;gap:8px;
+  padding:0 12px;border-bottom:1px solid rgba(201,149,88,.18);
+  color:var(--muted);font-family:var(--f-display);font-size:20px;letter-spacing:5px;cursor:pointer;transition:.22s ease;
+}
+.mi:last-child{border-bottom:0}
+.mi:hover,.mi.cur{color:var(--gold-hi);background:linear-gradient(90deg,rgba(201,149,88,.15),transparent)}
+.mi.cur{box-shadow:inset 3px 0 0 rgba(242,212,154,.72)}
+.mi .mini-ico{width:29px;height:29px;color:var(--gold-hi)}
+
+#stepsPanel{
+  position:absolute;top:150px;left:219px;width:250px;
+  min-height:456px;padding:28px 24px 18px;
+}
+.steps-title{
+  text-align:center;font-family:var(--f-display);font-size:27px;font-weight:500;
+  color:var(--gold-hi);letter-spacing:7px;margin-bottom:18px;
+}
+.steps-title::after{
+  content:"";display:block;height:1px;margin:14px 8px 0;
+  background:linear-gradient(90deg,transparent,var(--gold-low),transparent);
+}
+.step{
+  position:relative;display:grid;grid-template-columns:43px 1fr;gap:13px;
+  padding:8px 0 10px;min-height:70px;
+}
+.step:not(:last-child)::after{
+  content:"";position:absolute;left:21px;top:48px;bottom:-10px;width:1px;background:linear-gradient(var(--gold-low),transparent);
+}
+.num{
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(242,212,154,.7);color:var(--gold-hi);
+  background:rgba(4,12,18,.68);font-family:var(--f-roman);font-size:22px;
+  box-shadow:inset 0 0 18px rgba(201,149,88,.12),0 0 12px rgba(201,149,88,.22);
+}
+.step h3{font-family:var(--f-display);font-size:19px;color:var(--gold-hi);letter-spacing:4px;font-weight:500;margin-bottom:6px}
+.step p{font-size:12px;line-height:1.62;color:var(--muted);letter-spacing:1.1px}
+
+#rightcol{
+  position:absolute;top:147px;right:48px;width:365px;
+  display:flex;flex-direction:column;gap:28px;
+}
+.feature{
+  width:345px;margin-left:auto;
+  min-height:132px;display:grid;grid-template-columns:94px 1fr 34px;align-items:center;gap:13px;
+  padding:16px 17px;cursor:pointer;transition:.24s ease;
+}
+.feature:hover{transform:translateX(-4px);border-color:rgba(242,212,154,.62);box-shadow:0 20px 76px rgba(0,0,0,.62),0 0 24px rgba(201,149,88,.16)}
+.round{
+  width:72px;height:72px;border-radius:50%;display:grid;place-items:center;
+  color:var(--gold-hi);border:1px solid rgba(201,149,88,.48);
+  background:radial-gradient(circle,rgba(201,149,88,.14),rgba(6,14,20,.36));
+}
+.round svg{width:44px;height:44px}
+.feature h2{font-family:var(--f-display);font-size:25px;color:var(--gold-hi);font-weight:500;letter-spacing:5px;margin-bottom:7px}
+.feature p{font-size:12px;line-height:1.62;color:var(--muted);letter-spacing:1.15px}
+.go{
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--gold-hi);
+  border:1px solid rgba(201,149,88,.45);font-family:Georgia,serif;font-size:20px;
+}
+#startBtn{
+  min-height:94px;margin-top:22px;color:var(--gold-hi);font-family:var(--f-display);font-size:36px;letter-spacing:14px;text-indent:14px;
+  border:1px solid rgba(242,212,154,.68);
+  background:
+    radial-gradient(circle at center,rgba(201,149,88,.22),transparent 64%),
+    linear-gradient(90deg,rgba(8,17,24,.34),rgba(12,21,27,.86),rgba(8,17,24,.34));
+  text-shadow:0 0 18px rgba(201,149,88,.72);
+  box-shadow:0 0 30px rgba(201,149,88,.18),inset 0 0 26px rgba(201,149,88,.12);
+  transition:.24s ease;
+}
+#startBtn:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(201,149,88,.33),inset 0 0 30px rgba(201,149,88,.18)}
+.quote{
+  min-height:91px;margin-top:8px;padding:17px 22px 13px;color:var(--gold-hi);
+  font-family:var(--f-display);font-size:21px;letter-spacing:4px;line-height:1.58;
+}
+.quote .mark{font-family:Georgia,serif;font-size:32px;color:var(--gold);vertical-align:-10px;margin-right:8px}
+.quote small{display:none;color:var(--muted);font-family:var(--f-serif);font-size:11.5px;letter-spacing:2px;margin-top:2px;text-align:right}
+.today-tip{
+  position:fixed;left:34px;bottom:55px;width:386px;min-height:168px;padding:31px 30px 24px 76px;z-index:13;
+}
+.tip-moon{position:absolute;left:25px;top:35px;width:37px;height:37px;color:var(--gold-hi)}
+.tip-title{font-family:var(--f-display);font-size:24px;letter-spacing:5px;color:var(--gold-hi);margin-bottom:16px}
+.tip-copy{font-size:14px;line-height:1.82;color:var(--muted);letter-spacing:1.4px}
+#tapHint{
+  position:fixed;z-index:16;left:50%;bottom:28px;transform:translateX(-50%);
+  display:none;color:rgba(242,212,154,.88);font-size:13px;letter-spacing:5px;
+  text-shadow:0 0 14px rgba(201,149,88,.72);
+  transition:.72s ease;animation:hintPulse 2.6s ease-in-out infinite;
+}
+@keyframes hintPulse{50%{opacity:.45;transform:translateX(-50%) translateY(3px)}}
+
+.layer{position:fixed;inset:0;z-index:18;opacity:0;pointer-events:none;transition:opacity .85s ease}
+body[data-stage="intro"] #introLayer,
+body[data-stage="burst"] #burstLayer,
+body[data-stage="reading"] #readingLayer{opacity:1;pointer-events:auto!important}
+.layer,.layer *{pointer-events:none!important}
+body[data-stage="intro"] #introLayer,
+body[data-stage="intro"] #introLayer *,
+body[data-stage="burst"] #burstLayer,
+body[data-stage="burst"] #burstLayer *,
+body[data-stage="reading"] #readingLayer,
+body[data-stage="reading"] #readingLayer *{pointer-events:auto!important}
+body:not([data-stage="home"]) #home,
+body:not([data-stage="home"]) #topnav,
+body:not([data-stage="home"]) #tapHint{
+  opacity:0;pointer-events:none;transform:translateY(-12px);filter:blur(3px);
+}
+body:not([data-stage="home"]) #bg{filter:saturate(1.08) contrast(1.08) brightness(.58);transform:scale(1.028)}
+body[data-stage="intro"] #openingVid,
+body[data-stage="burst"] #climaxVid{opacity:1}
+body[data-stage="intro"] #shade,
+body[data-stage="burst"] #shade{opacity:.66}
+body[data-stage="intro"] #grain,
+body[data-stage="burst"] #grain{opacity:.05}
+body[data-stage="reading"] #bg{filter:saturate(.88) contrast(1.04) brightness(.42);transform:scale(1.02)}
+body[data-stage="reading"] #shade{opacity:.86}
+
+#introLayer{display:block;padding:0}
+#ritualPanel{
+  position:absolute;inset:0;width:auto;padding:0;border:0;background:transparent;
+  box-shadow:none;backdrop-filter:none;
+}
+#ritualPanel::before,#ritualPanel::after,#ritualPanel>.corners{display:none}
+.ritual-grid{
+  position:absolute;inset:0;display:block;pointer-events:none;
+}
+.ritual-copy{
+  position:absolute;left:34px;top:126px;width:318px;padding:0 0 0 18px;
+  border-left:1px solid rgba(242,212,154,.42);pointer-events:auto;
+}
+.ritual-copy h1{
+  font-family:var(--f-display);font-size:34px;color:var(--gold-hi);font-weight:500;letter-spacing:9px;margin-bottom:13px;
+}
+.ritual-copy p{font-size:12.5px;line-height:1.82;color:var(--muted);letter-spacing:1.4px;margin:7px 0}
+.group-title{font-size:14px;color:var(--gold-hi);letter-spacing:4px;margin:0 0 10px}
+.choice-block{
+  margin:0;padding:12px 13px;border:1px solid rgba(201,149,88,.24);
+  background:rgba(2,9,14,.34);backdrop-filter:blur(4px);
+  box-shadow:0 14px 48px rgba(0,0,0,.25),inset 0 0 18px rgba(201,149,88,.045);
+}
+.dream-choices{
+  position:absolute;left:34px;bottom:46px;width:min(510px,calc(54vw - 52px));
+  display:grid;gap:10px;pointer-events:auto;
+}
+.dream-submit{
+  position:absolute;right:34px;bottom:46px;width:min(332px,34vw);
+  display:grid;gap:12px;pointer-events:auto;
+}
+.choice-grid{display:flex;flex-wrap:wrap;gap:7px}
+.choice{
+  min-height:30px;padding:6px 9px;border:1px solid rgba(201,149,88,.28);
+  color:var(--muted);background:rgba(4,12,18,.42);font-size:12px;letter-spacing:1.6px;transition:.2s ease;
+}
+.choice:hover,.choice.sel{color:var(--gold-hi);border-color:rgba(242,212,154,.66);background:rgba(201,149,88,.13)}
+.dream-note{
+  width:100%;height:104px;padding:11px 12px;outline:none;border:1px solid rgba(201,149,88,.3);
+  background:rgba(3,10,15,.42);color:var(--ink);font-size:12.5px;line-height:1.65;letter-spacing:1.1px;
+}
+.dream-note:focus{border-color:rgba(242,212,154,.68);box-shadow:0 0 16px rgba(201,149,88,.16)}
+#continueBtn{
+  width:100%;min-height:56px;margin-top:0;border:1px solid rgba(242,212,154,.58);
+  color:var(--gold-hi);font-family:var(--f-display);font-size:25px;letter-spacing:9px;text-indent:9px;
+  background:linear-gradient(90deg,rgba(201,149,88,.04),rgba(201,149,88,.18),rgba(201,149,88,.04));
+  text-shadow:0 0 12px rgba(201,149,88,.52);transition:.22s ease;
+}
+#continueBtn:hover{transform:translateY(-2px)}
+.ritual-hint{text-align:center;margin-top:0;color:rgba(242,212,154,.76);font-size:12px;letter-spacing:4px}
+body[data-stage="intro"] #ritualPanel,
+body[data-stage="intro"] .ritual-grid{pointer-events:none!important}
+body[data-stage="intro"] .ritual-copy,
+body[data-stage="intro"] .dream-choices,
+body[data-stage="intro"] .dream-submit,
+body[data-stage="intro"] #exitRitual{pointer-events:auto!important}
+#exitRitual,#skipBtn{
+  position:fixed;z-index:24;right:30px;top:96px;
+  min-width:110px;padding:10px 14px;border:1px solid rgba(201,149,88,.36);
+  color:var(--muted);background:rgba(4,12,18,.64);font-size:13px;letter-spacing:3px;transition:.2s ease;
+}
+#skipBtn{top:auto;bottom:32px}
+#exitRitual:hover,#skipBtn:hover{color:var(--gold-hi);border-color:rgba(242,212,154,.62)}
+
+#burstLayer{display:grid;place-items:center;text-align:center;padding:32px}
+#burstLine{
+  max-width:880px;font-family:var(--f-display);font-size:clamp(34px,4.7vw,62px);
+  color:var(--gold-hi);letter-spacing:14px;line-height:1.48;
+  text-shadow:0 0 22px rgba(201,149,88,.72),0 0 50px rgba(106,198,191,.32);
+  padding:30px;background:radial-gradient(ellipse at center,rgba(0,0,0,.32),transparent 72%);
+  animation:breath 2.8s ease-in-out infinite;
+}
+@keyframes breath{50%{opacity:.58;transform:scale(.985)}}
+
+#readingLayer{
+  z-index:22;overflow:auto;padding:84px 38px 50px;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(201,149,88,.14),transparent 52%),
+    linear-gradient(180deg,rgba(0,0,0,.2),rgba(0,0,0,.82));
+}
+#readingInner{width:min(1160px,100%);margin:0 auto}
+.reading-head{
+  display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;margin-bottom:22px;
+}
+.reading-head h1{font-family:var(--f-display);font-size:42px;letter-spacing:10px;color:var(--gold-hi);font-weight:500}
+.reading-head p{margin-top:8px;color:var(--muted);font-size:14px;letter-spacing:2px;line-height:1.82}
+.seal{
+  width:96px;height:96px;border-radius:50%;display:grid;place-items:center;color:var(--gold-hi);
+  border:1px solid rgba(242,212,154,.6);background:rgba(8,18,24,.62);
+  box-shadow:inset 0 0 30px rgba(201,149,88,.16),0 0 28px rgba(201,149,88,.18);
+}
+.seal b{font-family:var(--f-display);font-size:38px;font-weight:400}
+#summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.summary-card{min-height:98px;padding:17px 16px 14px}
+.summary-card .k{font-size:12px;color:var(--muted);letter-spacing:4px;margin-bottom:8px}
+.summary-card .v{font-family:var(--f-display);font-size:24px;color:var(--gold-hi);letter-spacing:4px}
+.summary-card .d{font-size:12px;color:rgba(203,184,148,.86);letter-spacing:1.2px;line-height:1.55;margin-top:6px}
+.section-title{
+  display:flex;align-items:center;gap:13px;margin:24px 0 12px;
+  font-family:var(--f-display);font-size:28px;letter-spacing:7px;color:var(--gold-hi);
+}
+.section-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--gold-low),transparent)}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.result-card{padding:19px 18px 17px;min-height:174px}
+.result-card h3{font-family:var(--f-display);font-size:27px;color:var(--gold-hi);letter-spacing:6px;font-weight:500;margin-bottom:10px}
+.result-card p{font-size:13.5px;line-height:1.78;color:var(--muted);letter-spacing:1.1px;margin:7px 0}
+.tagrow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+.tag{border:1px solid rgba(201,149,88,.32);color:var(--gold-hi);background:rgba(201,149,88,.1);font-size:11px;letter-spacing:1.6px;padding:3px 8px}
+.reading-blocks{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;margin-top:14px}
+.analysis{padding:22px 22px 20px}
+.analysis h3{font-family:var(--f-display);font-size:27px;color:var(--gold-hi);letter-spacing:6px;font-weight:500;margin-bottom:10px}
+.analysis p{font-size:14px;line-height:1.9;color:var(--ink);letter-spacing:1.2px;margin:8px 0}
+.notice{color:var(--muted)!important;font-size:12.5px!important}
+#rdActions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:24px}
+.act{
+  min-width:132px;min-height:42px;display:grid;place-items:center;padding:0 18px;
+  border:1px solid rgba(201,149,88,.38);background:rgba(4,12,18,.6);color:var(--muted);
+  letter-spacing:3px;font-size:14px;cursor:pointer;transition:.2s ease;
+}
+.act:hover,.act.primary{color:var(--gold-hi);border-color:rgba(242,212,154,.62);background:rgba(201,149,88,.14)}
+
+#detailModal{
+  position:fixed;z-index:70;inset:0;display:none;place-items:center;padding:24px;background:rgba(0,0,0,.46);
+}
+#detailModal.show{display:grid;animation:fadeIn .22s ease}
+.modal-box{width:min(470px,calc(100vw - 36px));padding:26px 26px 22px}
+.modal-box h2{font-family:var(--f-display);font-size:31px;font-weight:500;letter-spacing:7px;color:var(--gold-hi);margin-bottom:12px}
+.modal-box p{font-size:14px;line-height:1.85;color:var(--muted);letter-spacing:1.2px;margin:8px 0}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+#toast{
+  position:fixed;left:50%;bottom:28px;z-index:100;transform:translateX(-50%) translateY(14px);
+  min-width:220px;max-width:84vw;padding:12px 22px;text-align:center;
+  border:1px solid rgba(201,149,88,.42);background:rgba(4,12,18,.9);color:var(--gold-hi);
+  font-size:14px;letter-spacing:2px;opacity:0;pointer-events:none;transition:.32s ease;box-shadow:var(--shadow);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#soundBtn{
+  position:fixed;left:24px;bottom:24px;z-index:60;width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;color:var(--gold-hi);border:1px solid rgba(201,149,88,.42);
+  background:rgba(4,12,18,.62);cursor:pointer;
+}
+body[data-stage="home"] #soundBtn{display:none}
+#soundBtn.off{opacity:.5}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+@media (min-width:1041px) and (max-height:880px){
+  #leftcol{top:130px;width:132px}
+  .side-menu{padding:8px 0}
+  .mi{min-height:68px;grid-template-columns:32px 1fr;font-size:19px;letter-spacing:4px}
+  .mi .mini-ico{width:26px;height:26px}
+
+  #stepsPanel{top:132px;width:250px;min-height:390px;padding:22px 22px 16px}
+  .steps-title{font-size:25px;margin-bottom:11px}
+  .steps-title::after{margin-top:10px}
+  .step{grid-template-columns:40px 1fr;gap:11px;min-height:59px;padding:5px 0 7px}
+  .step:not(:last-child)::after{left:19px;top:42px;bottom:-7px}
+  .num{width:38px;height:38px;font-size:20px}
+  .step h3{font-size:18px;margin-bottom:3px}
+  .step p{font-size:11.5px;line-height:1.45}
+
+  .today-tip{left:34px;bottom:28px;width:350px;min-height:128px;padding:24px 24px 18px 68px}
+  .tip-moon{left:22px;top:29px;width:30px;height:30px}
+  .tip-title{font-size:22px;margin-bottom:8px}
+  .tip-copy{font-size:13px;line-height:1.65}
+
+  #rightcol{top:132px;right:48px;width:365px;gap:17px}
+  .feature{width:345px;min-height:112px;grid-template-columns:80px 1fr 30px;padding:12px 14px}
+  .round{width:62px;height:62px}
+  .round svg{width:38px;height:38px}
+  .feature h2{font-size:24px;margin-bottom:4px}
+  .feature p{font-size:11.5px;line-height:1.5}
+  #startBtn{min-height:76px;margin-top:8px;font-size:32px}
+  .quote{min-height:72px;margin-top:0;padding:13px 18px;font-size:19px;line-height:1.45}
+}
+
+@media (max-width:1320px){
+  #topnav{grid-template-columns:224px 1fr auto 1fr 120px;padding:0 26px;gap:12px}
+  .navside{gap:38px}
+  #navTitle{font-size:38px;min-width:270px}
+  #stepsPanel{left:210px;width:270px}
+  #rightcol{right:24px;width:342px}
+  .feature{grid-template-columns:70px 1fr 28px}
+}
+@media (max-width:1040px){
+  body{overflow-y:auto}
+  #topnav{height:auto;min-height:76px;grid-template-columns:1fr auto;gap:10px;padding:14px 18px}
+  #navTitle{grid-column:1/3;grid-row:1;font-size:32px;min-width:0}
+  #projBtn{grid-column:1;grid-row:2;width:176px}
+  #topnav .navside{display:none}
+  .navIcons{grid-column:2;grid-row:2}
+  #home{position:relative;min-height:100%;height:auto;display:flex;flex-direction:column;gap:16px;padding:150px 18px 82px}
+  #leftcol,#stepsPanel,#rightcol,.today-tip{position:relative;top:auto;left:auto;right:auto;bottom:auto;width:min(460px,100%);margin:0 auto}
+  #leftcol{order:2}.side-menu{display:grid;grid-template-columns:repeat(2,1fr)}
+  .mi{min-height:60px;font-size:20px}
+  #stepsPanel{order:1;min-height:0}
+  #rightcol{order:3}
+  .today-tip{order:4}
+  #tapHint{display:none}
+  #introLayer{display:flex;align-items:flex-end;justify-content:center;padding:0 14px 18px}
+  #ritualPanel{
+    position:relative;inset:auto;width:100%;max-height:78vh;overflow:auto;padding:17px;
+    border:1px solid var(--line);
+    background:linear-gradient(145deg,rgba(8,18,27,.72),rgba(2,8,13,.84));
+    box-shadow:var(--shadow),inset 0 0 28px rgba(201,149,88,.08);
+    backdrop-filter:blur(7px);
+  }
+  #ritualPanel>.corners{display:block}
+  .ritual-grid{position:relative;inset:auto;display:grid;grid-template-columns:1fr;gap:14px;pointer-events:auto}
+  .ritual-copy,.dream-choices,.dream-submit{
+    position:relative;left:auto;right:auto;top:auto;bottom:auto;width:auto;pointer-events:auto;
+  }
+  .ritual-copy{padding:8px 8px 8px 12px;border-left:0}
+  .dream-choices,.dream-submit{display:grid;gap:12px}
+  .dream-note{height:92px}
+  #continueBtn{min-height:58px}
+  #readingLayer{padding:112px 16px 42px}
+  .reading-head{grid-template-columns:1fr}
+  .seal{display:none}
+  #summaryGrid,.result-grid,.reading-blocks{grid-template-columns:1fr}
+  .reading-head h1{font-size:34px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;transition-duration:.12s!important}
+}
+
+/* unified 12-project menu */
+#projMenu,.project-menu{max-height:min(68vh,520px);overflow-y:auto;scrollbar-width:thin}
+#projMenu::-webkit-scrollbar,.project-menu::-webkit-scrollbar{width:6px}
+#projMenu::-webkit-scrollbar-thumb,.project-menu::-webkit-scrollbar-thumb{background:rgba(201,164,106,.42);border-radius:999px}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg"></div>
+<div id="videoLayer">
+  <video id="openingVid" muted playsinline preload="auto" src="assets/zhougong/opening.mp4"></video>
+  <video id="climaxVid" muted playsinline preload="none" src="assets/zhougong/climax.mp4"></video>
+</div>
+<div id="shade"></div>
+<div id="grain"></div>
+<div id="flash"></div>
+<div class="frame-line"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span></div>
+
+<header id="topnav" data-ui>
+  <button id="projBtn" aria-expanded="false" aria-label="玄学项目菜单">
+    <svg viewBox="0 0 48 48"><path d="M12 18h24l-12 13Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    玄学项目
+    <div id="projMenu" class="pnl"></div>
+  </button>
+  <nav class="navside">
+    <span class="navlink cur" data-nav="home">首页</span>
+    <span class="navlink" data-nav="dream">命理</span>
+    <span class="navlink" data-nav="service">服务</span>
+  </nav>
+  <div id="navTitle">周公解梦</div>
+  <nav class="navside">
+    <span class="navlink" data-nav="daily">每日运势</span>
+    <span class="navlink" data-nav="archive">档案</span>
+    <span class="navlink" data-nav="about">关于我们</span>
+  </nav>
+  <div class="navIcons">
+    <button class="navico" data-nav="profile" title="档案"><span data-icon="person"></span></button>
+    <button class="navico" data-nav="daily" title="今日梦讯"><span data-icon="star"></span></button>
+  </div>
+</header>
+
+<main id="home">
+  <aside id="leftcol" data-ui>
+    <div class="pnl side-menu">
+      <div class="corners"></div>
+      <button class="mi cur" data-home-tab="method"><span class="mini-ico" data-icon="moon"></span>解梦</button>
+      <button class="mi" data-home-tab="scene"><span class="mini-ico" data-icon="cloud"></span>梦境</button>
+      <button class="mi" data-home-tab="sign"><span class="mini-ico" data-icon="house"></span>象征</button>
+      <button class="mi" data-home-tab="fortune"><span class="mini-ico" data-icon="lotus"></span>运势</button>
+      <button class="mi" data-home-tab="guide"><span class="mini-ico" data-icon="compass"></span>指引</button>
+    </div>
+  </aside>
+
+  <section id="stepsPanel" class="pnl" data-ui>
+    <div class="corners"></div>
+    <h1 class="steps-title">解梦步骤</h1>
+    <article class="step"><div class="num">1</div><div><h3>记梦</h3><p>回忆梦境，记录要点</p></div></article>
+    <article class="step"><div class="num">2</div><div><h3>观象</h3><p>梳理梦象，提取细节</p></div></article>
+    <article class="step"><div class="num">3</div><div><h3>对照</h3><p>参照典籍，分析象征</p></div></article>
+    <article class="step"><div class="num">4</div><div><h3>明意</h3><p>解析寓意，洞察启示</p></div></article>
+  </section>
+
+  <section id="rightcol" data-ui>
+    <article class="pnl feature" data-feature="meaning">
+      <div class="corners"></div>
+      <div class="round"><span data-icon="moon"></span></div>
+      <div><h2>梦象释义</h2><p>解析梦中景象，探寻征兆隐意。</p></div>
+      <div class="go">›</div>
+    </article>
+    <article class="pnl feature" data-feature="fortune">
+      <div class="corners"></div>
+      <div class="round"><span data-icon="compass"></span></div>
+      <div><h2>吉凶线索</h2><p>辨吉凶之兆，知顺逆之机。</p></div>
+      <div class="go">›</div>
+    </article>
+    <article class="pnl feature" data-feature="mind">
+      <div class="corners"></div>
+      <div class="round"><span data-icon="lotus"></span></div>
+      <div><h2>心念提示</h2><p>观心念之所向，得修行之指引。</p></div>
+      <div class="go">›</div>
+    </article>
+    <button id="startBtn">解开梦境</button>
+    <div class="pnl quote">
+      <div class="corners"></div>
+      <span class="mark">“</span>梦有来处，意有所归。
+      <small>先取其象，再照其心。</small>
+    </div>
+  </section>
+
+  <section class="pnl today-tip" data-ui>
+    <div class="corners"></div>
+    <div class="tip-moon" data-icon="crescent"></div>
+    <div class="tip-title">今夜梦讯</div>
+    <p class="tip-copy" id="homeTip">月落星沉夜未央，<br>梦随清辉入幽长。</p>
+  </section>
+</main>
+<div id="tapHint">轻点空白处，入梦问兆</div>
+
+<section id="introLayer" class="layer">
+  <button id="exitRitual" data-ui>退出仪式</button>
+  <div id="ritualPanel" class="pnl" data-ui>
+    <div class="corners"></div>
+    <div class="ritual-grid">
+      <div class="ritual-copy">
+        <h1>入梦取象</h1>
+        <p>周公解梦重在合参：先定主象，再看梦境情绪与现实关切。若梦很杂，只取最强烈、醒后最难忘的一象。</p>
+        <p>选择越具体，解读越能落到可执行的提醒。</p>
+      </div>
+      <div class="dream-choices">
+        <div class="choice-block">
+          <div class="group-title">梦象类型</div>
+          <div id="typeChoices" class="choice-grid"></div>
+        </div>
+        <div class="choice-block">
+          <div class="group-title">核心意象</div>
+          <div id="symbolChoices" class="choice-grid"></div>
+        </div>
+        <div class="choice-block">
+          <div class="group-title">梦后情绪</div>
+          <div id="moodChoices" class="choice-grid"></div>
+        </div>
+      </div>
+      <div class="dream-submit">
+        <div class="choice-block">
+          <div class="group-title">现实关切</div>
+          <div id="concernChoices" class="choice-grid"></div>
+        </div>
+        <div class="choice-block">
+          <div class="group-title">补充梦境</div>
+          <textarea id="dreamText" class="dream-note" placeholder="可写一句梦中最清晰的画面，例如：梦见在夜水边捡到一枚旧钱。"></textarea>
+        </div>
+        <button id="continueBtn">合参成象</button>
+        <div class="ritual-hint">也可按 Enter 继续</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="burstLayer" class="layer">
+  <button id="skipBtn" data-ui>跳过动画</button>
+  <div id="burstLine">象已显，意将明</div>
+</section>
+
+<section id="readingLayer" class="layer" data-ui>
+  <div id="readingInner">
+    <header class="reading-head">
+      <div>
+        <h1>周公解梦结果</h1>
+        <p id="readingMeta"></p>
+      </div>
+      <div class="seal"><b>梦</b></div>
+    </header>
+    <div id="summaryGrid"></div>
+    <h2 class="section-title">梦象合参</h2>
+    <div id="resultCards" class="result-grid"></div>
+    <div class="reading-blocks">
+      <section id="analysisMain" class="pnl analysis"></section>
+      <section id="analysisAdvice" class="pnl analysis"></section>
+    </div>
+    <div id="rdActions">
+      <button class="act primary" data-act="again">再解一梦</button>
+      <button class="act" data-act="copy">复制解读</button>
+      <button class="act" data-act="homeback">返回首页</button>
+    </div>
+  </div>
+</section>
+
+<div id="detailModal">
+  <div class="pnl modal-box" data-ui>
+    <div class="corners"></div>
+    <h2 id="modalTitle"></h2>
+    <p id="modalBody"></p>
+    <p id="modalNote"></p>
+    <div class="modal-actions">
+      <button class="act" data-modal="close">收起</button>
+      <button class="act primary" data-modal="start">开始解梦</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<button id="soundBtn" title="音效开关">♪</button>
+
+<script>
+'use strict';
+
+const PROJECTS = [
+  {key:'tarot', label:'塔罗互动占卜', icon:'star', href:'index_6.html'},
+  {key:'astrology', label:'星盘占星', icon:'compass', href:'index_astrology.html'},
+  {key:'bazi', label:'八字命盘', icon:'bagua', href:'index_bazi.html'},
+  {key:'liuyao', label:'六爻问卦', icon:'bagua', href:'index_liuyao.html'},
+  {key:'ziwei', label:'紫微斗数', icon:'compass', href:'index_ziwei.html'},
+  {key:'lingqian', label:'灵签求问', icon:'lotus', href:'index_lingqian.html'},
+  {key:'zhougong', label:'周公解梦', icon:'moon', current:true},
+  {key:'zodiac', label:'生肖运势', icon:'moon', href:'index_zodiac.html'},
+  {key:'fengshui', label:'风水堪舆', icon:'house', href:'index_fengshui.html'},
+  {key:'palm', label:'手相解读', icon:'person', href:'index_palm.html'},
+  {key:'mianxiang', label:'面相解读', icon:'person', href:'index_mianxiang.html'},
+  {key:'nameDate', label:'取名择日', icon:'scroll', href:'index_name_date.html'}
+];
+
+const HOME_TABS = {
+  method:'记梦、取象、辨境、合参，才是完整解梦。',
+  scene:'同一梦象在不同梦境里，吉凶可完全不同。',
+  sign:'取主象，不取杂象；看醒后情绪，不只看画面。',
+  fortune:'吉梦宜顺势，凶梦宜修正；梦不替人决断。',
+  guide:'梦是心识与现实的交界，解梦重在明意。'
+};
+
+const FEATURE_INFO = {
+  meaning:{
+    title:'梦象释义',
+    body:'传统解梦先看梦中主象：人、物、地、动静、得失。主象不是越多越好，而是取醒后仍有余感的一象。',
+    note:'专业规则：象为表，境为里；单象不可独断。'
+  },
+  fortune:{
+    title:'吉凶线索',
+    body:'吉凶不只由梦象决定，还要看梦中情绪、结果走向和现实处境。得而心安多为顺，失而释然未必为凶。',
+    note:'专业规则：先辨顺逆，再看可应之事。'
+  },
+  mind:{
+    title:'心念提示',
+    body:'梦常把压下去的念头换成象来显现。解梦不是制造恐惧，而是把潜在心事翻译成可处理的提醒。',
+    note:'专业规则：梦兆最终要落到修正、等待、沟通或行动。'
+  }
+};
+
+const TYPES = [
+  ['people','人物','人事牵连'],['animal','动物','欲念与本能'],['water','山水','气运流动'],['object','器物','资源得失'],
+  ['body','身体','内在警讯'],['home','家宅','根基关系'],['spirit','神异','心念召唤'],['disaster','灾异','压力显象']
+];
+const SYMBOLS = [
+  ['water','水','财气与情绪'],['fire','火','名声与急势'],['snake','蛇','暗事与转化'],['fish','鱼','余庆与机会'],
+  ['oldfriend','故人','旧缘与未竟'],['fly','飞行','上升与脱困'],['fall','坠落','失控与警醒'],['teeth','牙齿','口舌与家人'],
+  ['house','房屋','根基与身份'],['money','钱财','交换与价值'],['exam','考试','检验与压力'],['road','道路','去向与选择']
+];
+const MOODS = [
+  ['calm','安','心安为顺'],['joy','喜','喜中见机'],['fear','惊','惊则有警'],['worry','忧','忧则事滞'],['rush','急','急则勿躁'],['empty','空','空则待补']
+];
+const CONCERNS = [
+  ['career','事业','职位与名声'],['wealth','财运','资源与交易'],['love','感情','关系与牵挂'],['home','家宅','亲缘与根基'],
+  ['health','健康','身心与节律'],['study','学业','考试与成长'],['people','人际','合作与口舌'],['self','心念','内在修整']
+];
+
+const SYMBOL_RULES = {
+  water:{classic:'梦水多关财气与情绪。水清则事理渐明，水浊则心事未定。', fortune:'偏流动', action:'先理清账目与情绪，再决定是否推进。'},
+  fire:{classic:'梦火多主声名、急势与外显之象。火明为显达，火乱则易躁。', fortune:'先盛后急', action:'宜借势表达，但忌急言急断。'},
+  snake:{classic:'梦蛇多与隐伏之事、转化之机相关。畏蛇为心中有惧，见蛇不伤则暗事可解。', fortune:'暗中有变', action:'把不敢说的问题摊开，小处先处理。'},
+  fish:{classic:'梦鱼常取余庆、机会与生机之意。鱼得水则顺，离水则机缘需护。', fortune:'偏吉', action:'机会出现时先接住，再谈扩大。'},
+  oldfriend:{classic:'梦故人多主旧事回响、旧缘未尽或心中挂念。', fortune:'旧事来问', action:'适合复盘关系，不宜沉溺过去。'},
+  fly:{classic:'梦飞多为脱困、升迁、心气上扬之象。飞稳为进，飞坠则志急。', fortune:'上行之兆', action:'可以主动争取，但要补足落地计划。'},
+  fall:{classic:'梦坠多为失控感、根基不稳或压力骤降的显象。', fortune:'虚惊有警', action:'先稳住节奏，重要决定延后确认。'},
+  teeth:{classic:'梦齿多关口舌、家人、身体节律与承受力。', fortune:'慎言慎养', action:'少争辩，多休息，家中长辈之事宜问候。'},
+  house:{classic:'梦屋宅多关根基、身份、安全感与家庭关系。', fortune:'根基待整', action:'整理居处与关系边界，会带动心气安定。'},
+  money:{classic:'梦钱财不只论财，也论交换、亏欠、价值与取舍。', fortune:'有进有出', action:'交易需留痕，承诺需写清。'},
+  exam:{classic:'梦考试多为现实检验、责任压力与自我要求。', fortune:'压力成课', action:'把大目标拆成可复习、可交付的小段。'},
+  road:{classic:'梦道路多主去向、选择与行程。路宽则可行，路断则需改道。', fortune:'去向将明', action:'先定方向，再看资源是否匹配。'}
+};
+
+const CONCERN_RULES = {
+  career:'事业上宜先稳名分与职责，少做含糊承诺，主动争取可见成果。',
+  wealth:'财运上宜重视现金流、账目与交换边界，忌凭情绪做大额决定。',
+  love:'感情上宜问真实需求，不宜用试探代替沟通，旧情绪需要正面处理。',
+  home:'家宅上宜修补沟通、整理空间、关照长辈，根基安则外事顺。',
+  health:'健康上宜调整睡眠与饮食节律，梦境惊扰频繁时先减压休息。',
+  study:'学业上宜回到计划与复盘，近期的压力可以转为清晰进度。',
+  people:'人际上宜慎言，减少误会，合作事项要把规则摆在前面。',
+  self:'心念上宜静观，不急着求答案，先把重复出现的情绪写下来。'
+};
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const state = {stage:'home', type:'water', symbol:'water', mood:'calm', concern:'career', dreamText:'', result:null, burstDone:false};
+const V = {opening:$('#openingVid'), climax:$('#climaxVid')};
+let soundOn = true;
+let audioCtx = null;
+let toastTimer = null;
+
+function iconSVG(key){
+  const paths = {
+    star:'<path d="M24 5 28 20l15 4-15 4-4 15-4-15-15-4 15-4 4-15Z"/>',
+    moon:'<path d="M31 7a18 18 0 1 0 10 28 15 15 0 1 1-10-28Z"/>',
+    crescent:'<path d="M31 7a18 18 0 1 0 10 28 15 15 0 1 1-10-28Z"/><path d="M12 35c7 4 17 4 24 0"/>',
+    cloud:'<path d="M16 33h21a8 8 0 0 0 0-16 12 12 0 0 0-23-2 9 9 0 0 0 2 18Z"/><path d="M14 39c5 2 13 2 20 0"/>',
+    house:'<path d="M8 23 24 10l16 13v17H12V23Z"/><path d="M19 40V28h10v12"/>',
+    lotus:'<path d="M24 38c-8-5-12-11-12-20 7 2 11 8 12 15 1-7 5-13 12-15 0 9-4 15-12 20Z"/><path d="M24 38c-4-6-4-13 0-21 4 8 4 15 0 21Z"/>',
+    compass:'<circle cx="24" cy="24" r="17"/><path d="M30 18 26 28l-8 4 4-10 8-4Z"/><circle cx="24" cy="24" r="2"/>',
+    person:'<circle cx="24" cy="16" r="7"/><path d="M11 40c2.2-8 7-12 13-12s10.8 4 13 12"/>',
+    scroll:'<path d="M13 10h22v28H13z"/><path d="M17 16h14M17 23h14M17 30h10"/><path d="M13 10c-5 0-5 8 0 8M35 30c5 0 5 8 0 8"/>',
+    bagua:'<circle cx="24" cy="24" r="17"/><path d="M24 7c8 5 8 29 0 34M24 7c-8 5-8 29 0 34"/><circle cx="24" cy="16" r="2"/><circle cx="24" cy="32" r="2"/>'
+  };
+  return `<svg viewBox="0 0 48 48">${paths[key] || paths.star}</svg>`;
+}
+
+function installIcons(){
+  $$('[data-icon]').forEach(el => { el.innerHTML = iconSVG(el.dataset.icon); });
+  $$('.navico span[data-icon]').forEach(el => { el.outerHTML = iconSVG(el.dataset.icon); });
+}
+
+function buildProjectMenu(){
+  $('#projMenu').innerHTML = PROJECTS.map(p => `
+    <div class="pm-it${p.current ? ' cur' : ''}" data-proj="${p.key}">
+      <span class="mini-ico">${iconSVG(p.icon)}</span>${p.label}
+    </div>
+  `).join('');
+}
+
+function buildChoices(){
+  $('#typeChoices').innerHTML = TYPES.map(o => choiceHTML('type', o)).join('');
+  $('#symbolChoices').innerHTML = SYMBOLS.map(o => choiceHTML('symbol', o)).join('');
+  $('#moodChoices').innerHTML = MOODS.map(o => choiceHTML('mood', o)).join('');
+  $('#concernChoices').innerHTML = CONCERNS.map(o => choiceHTML('concern', o)).join('');
+  refreshChoices();
+}
+
+function choiceHTML(kind, option){
+  return `<button class="choice" data-kind="${kind}" data-key="${option[0]}">${option[1]}</button>`;
+}
+
+function labelOf(list, key){
+  const item = list.find(x => x[0] === key) || list[0];
+  return {key:item[0], label:item[1], desc:item[2]};
+}
+
+function refreshChoices(){
+  $$('.choice').forEach(btn => btn.classList.toggle('sel', state[btn.dataset.kind] === btn.dataset.key));
+}
+
+function setStage(stage){
+  state.stage = stage;
+  document.body.dataset.stage = stage;
+}
+
+function audio(){
+  if (!soundOn) return null;
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function tone(freq, dur=.28, delay=0, vol=.06, type='sine'){
+  const ctx = audio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const t = ctx.currentTime + delay;
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(.0001, t);
+  gain.gain.exponentialRampToValueAtTime(vol, t + .03);
+  gain.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + dur + .04);
+}
+
+function sfx(kind){
+  if (kind === 'gate') { tone(196,.5,0,.08,'triangle'); tone(392,.56,.08,.06); tone(784,.62,.16,.04); }
+  if (kind === 'soft') { tone(440,.22,0,.04); tone(660,.28,.07,.035); }
+  if (kind === 'finish') { tone(262,.36,0,.06); tone(523,.42,.09,.055); tone(1046,.52,.18,.04); }
+}
+
+function toast(message){
+  const t = $('#toast');
+  t.textContent = message;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function playVideo(which){
+  Object.entries(V).forEach(([key, video]) => {
+    if (!video) return;
+    if (key === which) {
+      video.classList.add('on');
+      try { video.currentTime = 0; } catch(e) {}
+      const p = video.play();
+      if (p) p.catch(() => toast('浏览器拦截自动播放，轻点继续即可'));
+    } else {
+      video.classList.remove('on');
+      try { video.pause(); } catch(e) {}
+    }
+  });
+}
+
+function stopVideos(){
+  Object.values(V).forEach(video => {
+    if (!video) return;
+    try { video.pause(); video.currentTime = 0; } catch(e) {}
+    video.classList.remove('on');
+    video.onended = null;
+  });
+}
+
+function toIntro(){
+  if (state.stage !== 'home') return;
+  sfx('gate');
+  setStage('intro');
+  playVideo('opening');
+  V.climax.preload = 'auto';
+  try { V.climax.load(); } catch(e) {}
+}
+
+function toBurst(){
+  if (state.stage !== 'intro') return;
+  state.dreamText = $('#dreamText').value.trim();
+  state.burstDone = false;
+  setStage('burst');
+  sfx('gate');
+  playVideo('climax');
+  V.climax.onended = finishBurst;
+  setTimeout(() => {
+    if (!state.burstDone && state.stage === 'burst' && V.climax.paused) finishBurst();
+  }, 1700);
+}
+
+function finishBurst(){
+  if (state.burstDone) return;
+  state.burstDone = true;
+  state.result = buildResult();
+  $('#flash').classList.remove('on');
+  void $('#flash').offsetWidth;
+  $('#flash').classList.add('on');
+  sfx('finish');
+  setTimeout(() => {
+    renderReading();
+    stopVideos();
+    setStage('reading');
+    $('#readingLayer').scrollTop = 0;
+  }, 420);
+}
+
+function backHome(){
+  state.burstDone = false;
+  stopVideos();
+  setStage('home');
+}
+
+function buildResult(){
+  const type = labelOf(TYPES, state.type);
+  const symbol = labelOf(SYMBOLS, state.symbol);
+  const mood = labelOf(MOODS, state.mood);
+  const concern = labelOf(CONCERNS, state.concern);
+  const rule = SYMBOL_RULES[state.symbol] || SYMBOL_RULES.water;
+  const moodShift = {
+    calm:'醒后心安，主象多取顺势，宜稳步推进。',
+    joy:'醒后有喜，主象可视为机会，但喜极亦要防轻率。',
+    fear:'醒后惊惧，此梦先作警讯看，重在避急与修正。',
+    worry:'醒后忧重，现实多有牵挂未解，宜先梳理心事。',
+    rush:'醒后急促，说明事情催逼，越急越要分步处理。',
+    empty:'醒后空落，梦在提示缺口，先补心力再求外事。'
+  }[state.mood];
+  const verdict = pickVerdict(rule.fortune, state.mood);
+  const text = state.dreamText || `梦见${symbol.label}，醒后感到${mood.label}`;
+  return {type, symbol, mood, concern, rule, moodShift, verdict, text};
+}
+
+function pickVerdict(base, mood){
+  if (mood === 'fear' || mood === 'rush') return `${base}，宜慎`;
+  if (mood === 'joy' || mood === 'calm') return `${base}，可顺`;
+  if (mood === 'empty') return `${base}，待补`;
+  return `${base}，先解心事`;
+}
+
+function renderReading(){
+  const r = state.result || buildResult();
+  $('#readingMeta').textContent = `主象：${r.symbol.label}　|　梦类：${r.type.label}　|　梦后：${r.mood.label}　|　关切：${r.concern.label}`;
+  const summary = [
+    ['梦象类型', r.type.label, r.type.desc],
+    ['核心意象', r.symbol.label, r.symbol.desc],
+    ['梦后情绪', r.mood.label, r.mood.desc],
+    ['吉凶判断', r.verdict, '趋势参考，不作定数']
+  ];
+  $('#summaryGrid').innerHTML = summary.map(item => `
+    <article class="pnl summary-card">
+      <div class="corners"></div>
+      <div class="k">${item[0]}</div>
+      <div class="v">${item[1]}</div>
+      <div class="d">${item[2]}</div>
+    </article>
+  `).join('');
+  const cards = [
+    ['梦象释义', ['古义','取象'], r.rule.classic],
+    ['吉凶线索', ['合参','顺逆'], `${r.moodShift}因此此梦不宜只看“${r.symbol.label}”一象，还要结合醒后余感判断。`],
+    ['现实映照', [r.concern.label,'应事'], CONCERN_RULES[r.concern.key]]
+  ];
+  $('#resultCards').innerHTML = cards.map(card => `
+    <article class="pnl result-card">
+      <div class="corners"></div>
+      <h3>${card[0]}</h3>
+      <div class="tagrow">${card[1].map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      <p>${card[2]}</p>
+    </article>
+  `).join('');
+  $('#analysisMain').innerHTML = `
+    <div class="corners"></div>
+    <h3>综合解读</h3>
+    <p>你记录的梦境为：“${escapeHTML(r.text)}”。此梦以“${r.symbol.label}”为主象，归入“${r.type.label}”一类。传统解梦中，先看主象所指，再看梦后情绪。${r.rule.classic}</p>
+    <p>${r.moodShift}若近期正关注${r.concern.label}，此梦更像是在提醒你：${CONCERN_RULES[r.concern.key]}</p>
+    <p>本次判断为“${r.verdict}”。它不是绝对预言，而是对当下心念、处境与行动节奏的提示。</p>
+  `;
+  $('#analysisAdvice').innerHTML = `
+    <div class="corners"></div>
+    <h3>明意与行事</h3>
+    <p><b>三日内：</b>${r.rule.action}</p>
+    <p><b>七日内：</b>${CONCERN_RULES[r.concern.key]}</p>
+    <p><b>心念提示：</b>若梦反复出现，先记录出现次数、醒后情绪和现实事件，不急着求凶吉，先看它让你注意什么。</p>
+    <p class="notice">周公解梦为传统文化体验与自我观察参考，不替代医疗、法律、投资等专业意见；若噩梦长期影响睡眠，请优先关注身心健康。</p>
+  `;
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function readingText(){
+  const r = state.result;
+  if (!r) return '';
+  return `周公解梦结果
+梦境：${r.text}
+梦象类型：${r.type.label}（${r.type.desc}）
+核心意象：${r.symbol.label}（${r.symbol.desc}）
+梦后情绪：${r.mood.label}（${r.mood.desc}）
+现实关切：${r.concern.label}
+吉凶判断：${r.verdict}
+
+梦象释义：${r.rule.classic}
+吉凶线索：${r.moodShift}
+现实映照：${CONCERN_RULES[r.concern.key]}
+三日建议：${r.rule.action}
+
+本内容为传统文化体验与自我观察参考，不替代专业意见。`;
+}
+
+function copyReading(){
+  const text = readingText();
+  if (!text) return toast('暂无可复制的解读');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('解读已复制'); } catch(e) { toast('复制失败，请手动选择文本'); }
+    ta.remove();
+  };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('解读已复制')).catch(fallback);
+  else fallback();
+}
+
+function openFeature(key){
+  const info = FEATURE_INFO[key];
+  if (!info) return;
+  $('#modalTitle').textContent = info.title;
+  $('#modalBody').textContent = info.body;
+  $('#modalNote').textContent = info.note;
+  $('#detailModal').classList.add('show');
+}
+
+function closeModal(){
+  $('#detailModal').classList.remove('show');
+}
+
+function handleProject(key){
+  const p = PROJECTS.find(item => item.key === key);
+  if (!p) return;
+  if (p.current) { toast('你已在周公解梦'); return; }
+  if (p.href) location.href = p.href;
+  else toast(`${p.label}将在后续开发中补充`);
+}
+
+document.addEventListener('click', event => {
+  const target = event.target;
+
+  const modalAction = target.closest('[data-modal]');
+  if (modalAction) {
+    if (modalAction.dataset.modal === 'close') closeModal();
+    if (modalAction.dataset.modal === 'start') { closeModal(); toIntro(); }
+    return;
+  }
+  if (target.id === 'detailModal') { closeModal(); return; }
+
+  const item = target.closest('.pm-it');
+  if (item) {
+    handleProject(item.dataset.proj);
+    $('#projMenu').classList.remove('show');
+    $('#projBtn').classList.remove('open');
+    $('#projBtn').setAttribute('aria-expanded','false');
+    return;
+  }
+  if (target.closest('#projBtn')) {
+    const open = !$('#projMenu').classList.contains('show');
+    $('#projMenu').classList.toggle('show', open);
+    $('#projBtn').classList.toggle('open', open);
+    $('#projBtn').setAttribute('aria-expanded', String(open));
+    return;
+  } else if (!target.closest('#projMenu')) {
+    $('#projMenu').classList.remove('show');
+    $('#projBtn').classList.remove('open');
+    $('#projBtn').setAttribute('aria-expanded','false');
+  }
+
+  if (target.closest('#soundBtn')) {
+    soundOn = !soundOn;
+    $('#soundBtn').classList.toggle('off', !soundOn);
+    toast(soundOn ? '音效已开启' : '音效已静默');
+    return;
+  }
+
+  const nav = target.closest('[data-nav]');
+  if (nav) {
+    const key = nav.dataset.nav;
+    if (key === 'home') { backHome(); return; }
+    if (key === 'dream' || key === 'service') { toIntro(); return; }
+    if (key === 'daily') { toast('今日梦讯已在左下角'); return; }
+    if (key === 'archive') { toast('梦境档案将在后续开发中补充'); return; }
+    if (key === 'about') { toast('周公解梦以梦象合参为核心，仅供文化体验'); return; }
+    toast('该模块将在后续开发中补充');
+    return;
+  }
+
+  const homeTab = target.closest('[data-home-tab]');
+  if (homeTab) {
+    $$('.mi').forEach(btn => btn.classList.toggle('cur', btn === homeTab));
+    $('#homeTip').textContent = HOME_TABS[homeTab.dataset.homeTab] || HOME_TABS.method;
+    sfx('soft');
+    return;
+  }
+
+  const feature = target.closest('[data-feature]');
+  if (feature) { openFeature(feature.dataset.feature); return; }
+  if (target.closest('#startBtn')) { toIntro(); return; }
+
+  const choice = target.closest('.choice');
+  if (choice) {
+    state[choice.dataset.kind] = choice.dataset.key;
+    refreshChoices();
+    sfx('soft');
+    return;
+  }
+  if (target.closest('#continueBtn')) { toBurst(); return; }
+  if (target.closest('#exitRitual')) { backHome(); return; }
+  if (target.closest('#skipBtn')) { finishBurst(); return; }
+
+  const act = target.closest('[data-act]');
+  if (act) {
+    const a = act.dataset.act;
+    if (a === 'copy') copyReading();
+    if (a === 'again') { setStage('home'); requestAnimationFrame(() => toIntro()); }
+    if (a === 'homeback') backHome();
+    return;
+  }
+
+  if (state.stage === 'home' && !target.closest('[data-ui]')) toIntro();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    if ($('#detailModal').classList.contains('show')) { closeModal(); return; }
+    if (state.stage === 'burst') finishBurst();
+    else if (state.stage !== 'home') backHome();
+  }
+  if (event.key === 'Enter' && state.stage === 'intro') toBurst();
+});
+
+Object.values(V).forEach(video => {
+  if (!video) return;
+  video.addEventListener('error', () => {
+    toast('视频素材未能加载，已切换为静态流程');
+    if (state.stage === 'burst') setTimeout(finishBurst, 900);
+  });
+});
+
+(function init(){
+  installIcons();
+  buildProjectMenu();
+  buildChoices();
+})();
+</script>
+</body>
+</html>

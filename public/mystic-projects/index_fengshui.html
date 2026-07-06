@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄境 · 风水堪舆</title>
+<meta name="description" content="沉浸式风水堪舆体验：观势、定向、上传布局、标注气口，以八卦九宫、四象山水与五行调和生成传统文化参考解读。">
+<link rel="icon" href="data:,">
+<link rel="preload" as="image" href="assets/fengshui/bg.png">
+<style>
+:root{
+  --void:#020806;
+  --deep:#06110d;
+  --panel:rgba(5,16,13,.72);
+  --panel-strong:rgba(3,10,9,.9);
+  --panel-soft:rgba(16,34,26,.52);
+  --gold:#c8974f;
+  --gold-hi:#f1d59b;
+  --gold-low:rgba(200,151,79,.42);
+  --jade:#6fd6a7;
+  --jade-deep:#16583f;
+  --line:rgba(213,167,93,.42);
+  --ink:#f2e4c8;
+  --muted:#c8b895;
+  --warn:#d88f68;
+  --good:#bfe6b8;
+  --shadow:0 24px 80px rgba(0,0,0,.62);
+  --f-serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --f-display:"STKaiti","KaiTi","Noto Serif SC",serif;
+  --f-roman:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  color:var(--ink);
+  background:var(--void);
+  font-family:var(--f-serif);
+  overflow:hidden;
+  user-select:none;
+}
+body[data-stage="reading"]{overflow-y:auto}
+button,input{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+::selection{background:rgba(200,151,79,.35)}
+
+#bg,#videoLayer,#shade,#grain,#flash{position:fixed;inset:0}
+#bg{
+  z-index:0;
+  background:
+    radial-gradient(1100px 700px at 53% 34%,rgba(111,214,167,.08),transparent 62%),
+    radial-gradient(900px 620px at 77% 72%,rgba(200,151,79,.1),transparent 66%),
+    url("assets/fengshui/bg.png") center center/cover no-repeat;
+  transform:scale(1.012);
+  animation:bgBreath 18s ease-in-out infinite alternate;
+  transition:opacity .9s ease,filter .9s ease,transform 1s ease;
+}
+#bg::after{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.05) 32%,rgba(0,0,0,.14) 66%,rgba(0,0,0,.72)),
+    linear-gradient(180deg,rgba(0,0,0,.68),rgba(0,0,0,.08) 28%,rgba(0,0,0,.76));
+}
+@keyframes bgBreath{to{transform:scale(1.042)}}
+#videoLayer{z-index:1;overflow:hidden;pointer-events:none}
+#videoLayer video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1s ease,filter 1s ease;
+  filter:contrast(1.08) saturate(1.06) brightness(.96);
+}
+#videoLayer video.on{opacity:1}
+#shade{
+  z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 43%,rgba(0,0,0,0) 30%,rgba(0,0,0,.54) 78%,rgba(0,0,0,.86)),
+    linear-gradient(180deg,rgba(2,8,6,.74),rgba(2,8,6,.06) 31%,rgba(2,8,6,.72));
+  transition:opacity .9s ease;
+}
+#grain{
+  z-index:3;pointer-events:none;opacity:.15;mix-blend-mode:screen;
+  background-image:
+    radial-gradient(circle at 18% 23%,rgba(241,213,155,.62) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 76% 18%,rgba(255,255,255,.46) 0 1px,transparent 1.4px),
+    radial-gradient(circle at 48% 70%,rgba(111,214,167,.38) 0 1.1px,transparent 1.6px),
+    linear-gradient(112deg,transparent 0 47%,rgba(241,213,155,.13) 49%,transparent 51%);
+  background-size:250px 250px,360px 360px,290px 290px,220px 220px;
+  animation:grainDrift 64s linear infinite;
+}
+@keyframes grainDrift{to{transform:translate3d(110px,54px,0)}}
+#flash{
+  z-index:90;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at center,rgba(255,246,219,.96),rgba(241,213,155,.25) 38%,rgba(111,214,167,.15) 56%,transparent 76%);
+}
+#flash.on{animation:flash .95s ease both}
+@keyframes flash{0%{opacity:0;transform:scale(.86)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
+
+.frame-line{position:fixed;z-index:8;inset:15px;border:1px solid rgba(213,167,93,.28);pointer-events:none}
+.corner{position:absolute;width:38px;height:38px;border-color:rgba(241,213,155,.68)}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.c4{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(241,213,155,.045),transparent 42%),
+    linear-gradient(145deg,rgba(9,24,20,.72),rgba(2,9,8,.86));
+  box-shadow:var(--shadow),inset 0 0 28px rgba(200,151,79,.08);
+  backdrop-filter:blur(7px);
+}
+.pnl::before{
+  content:"";position:absolute;inset:7px;border:1px solid rgba(213,167,93,.16);pointer-events:none;
+}
+.pnl::after{
+  content:"";position:absolute;left:50%;top:-6px;width:9px;height:9px;
+  transform:translateX(-50%) rotate(45deg);
+  border:1px solid rgba(241,213,155,.62);background:rgba(4,13,11,.94);
+  box-shadow:0 0 12px rgba(200,151,79,.42);
+}
+.corners{position:absolute;inset:0;pointer-events:none}
+.corners::before,.corners::after{
+  content:"";position:absolute;width:24px;height:24px;border-color:rgba(241,213,155,.52);
+}
+.corners::before{left:9px;top:9px;border-left:1px solid;border-top:1px solid}
+.corners::after{right:9px;bottom:9px;border-right:1px solid;border-bottom:1px solid}
+
+#topnav{
+  position:fixed;z-index:28;top:0;left:0;right:0;height:76px;
+  display:grid;grid-template-columns:214px 1fr auto 1fr 140px;align-items:center;
+  gap:14px;padding:0 36px;
+  background:linear-gradient(180deg,rgba(2,8,7,.91),rgba(2,8,7,.38) 74%,transparent);
+  border-bottom:1px solid rgba(200,151,79,.2);
+  transition:opacity .82s ease,transform .82s ease,filter .82s ease;
+}
+#projBtn{
+  position:relative;width:176px;height:44px;display:flex;align-items:center;justify-content:center;gap:10px;
+  border:1px solid var(--line);background:rgba(4,13,11,.68);color:var(--gold-hi);
+  letter-spacing:4px;font-size:15px;box-shadow:inset 0 0 18px rgba(200,151,79,.08);
+}
+#projBtn svg{width:18px;height:18px;transition:transform .25s ease}
+#projBtn.open svg{transform:rotate(180deg)}
+#projMenu{display:none;position:absolute;left:0;top:54px;width:230px;padding:8px;z-index:42}
+#projMenu.show{display:block;animation:fadeUp .25s ease}
+.pm-it{
+  height:40px;display:flex;align-items:center;gap:11px;padding:0 12px;cursor:pointer;
+  color:var(--muted);font-size:14px;letter-spacing:2px;transition:.2s ease;
+}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(200,151,79,.1)}
+.pm-it.cur::after{content:"当前";margin-left:auto;font-size:11px;color:var(--jade)}
+.mini-ico,.navico svg,.round svg{display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mini-ico{width:22px;height:22px;color:var(--gold-hi)}
+.navside{display:flex;align-items:center;justify-content:center;gap:64px;min-width:0}
+.navlink{
+  position:relative;color:var(--gold-hi);font-size:16px;letter-spacing:5px;white-space:nowrap;cursor:pointer;
+  text-shadow:0 0 10px rgba(200,151,79,.28);transition:.22s ease;
+}
+.navlink:hover,.navlink.cur{color:#ffe7ae;text-shadow:0 0 14px rgba(200,151,79,.55)}
+.navlink.cur::after{
+  content:"";position:absolute;left:50%;bottom:-20px;width:82px;height:2px;transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,var(--gold-hi),var(--jade),transparent);
+}
+#navTitle{
+  position:relative;min-width:330px;text-align:center;font-family:var(--f-display);
+  font-size:43px;line-height:1;color:var(--gold-hi);letter-spacing:13px;text-indent:13px;
+  text-shadow:0 5px 18px rgba(0,0,0,.75),0 0 16px rgba(200,151,79,.36);
+}
+#navTitle::before,#navTitle::after{
+  content:"";position:absolute;top:50%;width:116px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(241,213,155,.68),transparent);
+}
+#navTitle::before{right:calc(100% - 2px)}
+#navTitle::after{left:calc(100% - 2px)}
+.navIcons{display:flex;align-items:center;justify-content:flex-end;gap:16px}
+.navico{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--line);background:rgba(4,13,11,.58);color:var(--gold-hi);
+  transition:.22s ease;
+}
+.navico:hover{transform:translateY(-1px);box-shadow:0 0 17px rgba(200,151,79,.3)}
+.navico svg{width:24px;height:24px}
+
+#home{
+  position:fixed;z-index:12;inset:0;
+  display:grid;grid-template-columns:420px minmax(300px,1fr) 592px;grid-template-rows:minmax(0,1fr) auto;
+  gap:18px 36px;padding:148px 40px 30px;
+  align-items:start;
+  transition:opacity .86s ease,transform .86s ease,filter .86s ease;
+}
+
+#stepsPanel{
+  position:relative;grid-column:1;grid-row:1;width:330px;
+  min-height:0;padding:28px 24px 18px;align-self:start;
+  justify-self:start;
+}
+.steps-title{
+  text-align:center;font-family:var(--f-display);font-size:27px;font-weight:500;
+  color:var(--gold-hi);letter-spacing:7px;margin-bottom:18px;
+}
+.steps-title::after{
+  content:"";display:block;height:1px;margin:14px 8px 0;
+  background:linear-gradient(90deg,transparent,var(--gold-low),transparent);
+}
+.step{
+  position:relative;display:grid;grid-template-columns:43px 1fr;gap:13px;
+  padding:8px 0 10px;min-height:70px;
+}
+.step:not(:last-child)::after{
+  content:"";position:absolute;left:21px;top:48px;bottom:-10px;width:1px;background:linear-gradient(var(--gold-low),transparent);
+}
+.num{
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(241,213,155,.7);color:var(--gold-hi);
+  background:rgba(4,13,11,.68);font-family:var(--f-roman);font-size:22px;
+  box-shadow:inset 0 0 18px rgba(200,151,79,.12),0 0 12px rgba(200,151,79,.22);
+}
+.step h3{font-family:var(--f-display);font-size:19px;color:var(--gold-hi);letter-spacing:4px;font-weight:500;margin-bottom:6px}
+.step p{font-size:12px;line-height:1.62;color:var(--muted);letter-spacing:1.1px}
+
+#rightcol{position:relative;grid-column:3;grid-row:1 / span 2;width:100%;display:flex;flex-direction:column;align-items:center;gap:18px;align-self:center;justify-self:end}
+.featureRow{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.feature{
+  min-height:198px;padding:24px 15px 17px;text-align:center;cursor:pointer;transition:.25s ease;
+}
+.feature:hover{transform:translateY(-4px);border-color:rgba(241,213,155,.72);box-shadow:0 18px 50px rgba(0,0,0,.56),0 0 18px rgba(111,214,167,.18)}
+.feature .round{width:82px;height:82px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;
+  color:var(--gold-hi);border:1px solid rgba(200,151,79,.55);
+  background:radial-gradient(circle,rgba(111,214,167,.15),rgba(4,13,11,.72) 70%);
+}
+.feature h3{font-family:var(--f-display);font-size:22px;letter-spacing:5px;color:var(--gold-hi);font-weight:500;margin-bottom:10px}
+.feature p{font-size:12px;letter-spacing:1.2px;line-height:1.65;color:var(--muted)}
+#gate{
+  width:min(430px,100%);height:82px;display:grid;place-items:center;cursor:pointer;
+  background:linear-gradient(180deg,#f3dca8 0%,#b98942 50%,#60451e 100%);
+  clip-path:polygon(38px 0,calc(100% - 38px) 0,100% 50%,calc(100% - 38px) 100%,38px 100%,0 50%);
+  filter:drop-shadow(0 0 22px rgba(111,214,167,.42)) drop-shadow(0 8px 16px rgba(0,0,0,.65));
+  transition:.28s ease;animation:gateBreath 3.6s ease-in-out infinite;
+}
+#gate::before{
+  content:"";position:absolute;inset:3px;
+  clip-path:polygon(35px 0,calc(100% - 35px) 0,100% 50%,calc(100% - 35px) 100%,35px 100%,0 50%);
+  background:radial-gradient(88% 180% at 50% 50%,rgba(111,214,167,.55),rgba(16,76,54,.9) 42%,rgba(5,22,18,.97) 84%);
+  box-shadow:inset 0 0 34px rgba(241,213,155,.22);
+}
+#gate span{position:relative;z-index:1;font-family:var(--f-display);font-size:38px;letter-spacing:14px;text-indent:14px;color:#ffe9b4;text-shadow:0 0 18px rgba(241,213,155,.72),0 0 34px rgba(111,214,167,.42),0 2px 4px #000}
+#gate:hover{transform:scale(1.024)}
+@keyframes gateBreath{50%{filter:drop-shadow(0 0 34px rgba(111,214,167,.72)) drop-shadow(0 8px 16px rgba(0,0,0,.65))}}
+.quote{
+  width:100%;padding:18px 24px;display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;
+}
+.quote .qm{font-family:Georgia,serif;font-size:42px;color:var(--gold-hi);line-height:1}
+.quote p{font-family:var(--f-display);font-size:21px;letter-spacing:5px;color:var(--gold-hi);line-height:1.8}
+.today{
+  position:relative;grid-column:1;grid-row:2;width:420px;min-height:104px;padding:20px 20px 18px 82px;
+  align-self:end;justify-self:start;
+}
+.today .mini-ico{position:absolute;left:26px;top:28px;width:36px;height:36px}
+.today h3{font-family:var(--f-display);font-size:22px;letter-spacing:5px;color:var(--gold-hi);font-weight:500;margin-bottom:7px}
+.today p{font-size:13px;letter-spacing:1.3px;line-height:1.72;color:var(--muted)}
+#tapHint{
+  position:fixed;z-index:18;left:50%;bottom:31px;transform:translateX(-50%);
+  color:var(--gold-hi);font-size:14px;letter-spacing:4px;text-shadow:0 0 16px rgba(200,151,79,.45);
+  opacity:.78;animation:pulseHint 2.6s ease-in-out infinite;pointer-events:none;
+}
+@keyframes pulseHint{50%{opacity:.35}}
+
+.layer{position:fixed;inset:0;z-index:18;opacity:0;pointer-events:none;transition:opacity .9s ease}
+body[data-stage="intro"] #introLayer,
+body[data-stage="burst"] #burstLayer,
+body[data-stage="reading"] #readingLayer{opacity:1;pointer-events:auto}
+body:not([data-stage="home"]) #home{opacity:0;pointer-events:none;transform:translateY(-18px);filter:blur(4px)}
+body[data-stage="intro"] #topnav,
+body[data-stage="burst"] #topnav{opacity:0;pointer-events:none;transform:translateY(-18px)}
+body[data-stage="reading"] #topnav{opacity:0;pointer-events:none}
+body[data-stage="intro"] #bg{filter:brightness(.82) saturate(1.12)}
+body[data-stage="burst"] #shade{opacity:.34}
+body[data-stage="reading"] #bg{filter:brightness(.55) saturate(.95);animation:none}
+body:not([data-stage="home"]) #tapHint{display:none}
+
+#introLayer{
+  display:flex;align-items:flex-end;justify-content:center;padding:0 24px 5.4vh;
+}
+#wizard{
+  width:min(1080px,94vw);min-height:310px;padding:24px 28px 24px;
+}
+.ritualLine{
+  position:absolute;left:50%;bottom:calc(5.4vh + 344px);transform:translateX(-50%);
+  width:min(900px,88vw);text-align:center;font-family:var(--f-display);
+  font-size:clamp(20px,2.1vw,30px);letter-spacing:6px;color:var(--gold-hi);
+  text-shadow:0 0 18px rgba(241,213,155,.5),0 2px 6px #000;
+}
+.track{display:flex;gap:10px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.dot{
+  height:25px;padding:0 14px;border:1px solid rgba(213,167,93,.28);border-radius:999px;
+  color:var(--muted);font-size:12px;letter-spacing:2px;display:flex;align-items:center;gap:6px;
+}
+.dot.on{color:#06110d;background:linear-gradient(120deg,var(--gold-hi),var(--gold));border-color:var(--gold-hi);font-weight:600}
+.wizardHead{text-align:center;margin-bottom:18px}
+.wizardHead h2{font-family:var(--f-display);font-size:28px;font-weight:500;color:var(--gold-hi);letter-spacing:7px;margin-bottom:8px}
+.wizardHead p{font-size:13.5px;line-height:1.8;color:var(--muted);letter-spacing:1.8px}
+#choiceGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.choice{
+  min-height:86px;padding:16px 16px 14px;border:1px solid rgba(213,167,93,.28);
+  background:rgba(4,13,11,.58);cursor:pointer;transition:.22s ease;
+}
+.choice:hover,.choice.sel{border-color:rgba(241,213,155,.75);box-shadow:0 0 18px rgba(111,214,167,.16);transform:translateY(-2px)}
+.choice.sel{background:linear-gradient(145deg,rgba(111,214,167,.24),rgba(4,13,11,.72))}
+.choice h3{font-family:var(--f-display);font-size:20px;font-weight:500;letter-spacing:4px;color:var(--gold-hi);margin-bottom:6px}
+.choice p{font-size:12.5px;line-height:1.6;letter-spacing:1.1px;color:var(--muted)}
+.wizardActions{display:flex;justify-content:space-between;gap:14px;align-items:center}
+.hintText{font-size:12.5px;color:var(--muted);letter-spacing:1.7px;line-height:1.7}
+.btn{
+  min-width:128px;height:42px;padding:0 20px;border:1px solid var(--line);color:var(--gold-hi);
+  background:rgba(4,13,11,.7);letter-spacing:4px;transition:.22s ease;
+}
+.btn:hover{border-color:var(--gold-hi);box-shadow:0 0 14px rgba(200,151,79,.26)}
+.btn.primary{color:#06110d;background:linear-gradient(120deg,var(--gold-hi),var(--gold));font-weight:600}
+.btn.ghost{opacity:.72}
+
+#layoutStep{display:none;grid-template-columns:280px 1fr;gap:16px;margin-bottom:18px}
+#layoutStep.show{display:grid}
+.uploadPanel{padding:16px}
+.uploadPanel h3,.markPanel h3{font-family:var(--f-display);font-size:21px;font-weight:500;letter-spacing:5px;color:var(--gold-hi);margin-bottom:10px}
+.uploadPanel p{font-size:12.5px;line-height:1.75;letter-spacing:1.1px;color:var(--muted);margin-bottom:12px}
+.uploadBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.smallBtn{
+  height:38px;border:1px solid rgba(213,167,93,.32);background:rgba(4,13,11,.62);
+  color:var(--gold-hi);font-size:13px;letter-spacing:2px;
+}
+.smallBtn:hover,.smallBtn.on{border-color:var(--gold-hi);background:rgba(111,214,167,.16)}
+.markerGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.marker{
+  min-height:35px;padding:6px 8px;border:1px solid rgba(213,167,93,.24);background:rgba(3,10,9,.62);
+  color:var(--muted);font-size:12px;letter-spacing:1.5px;text-align:left;
+}
+.marker.on{color:#06110d;background:linear-gradient(120deg,var(--jade),var(--gold-hi));border-color:var(--gold-hi);font-weight:600}
+.markPanel{min-height:310px;padding:16px}
+.layoutBoard{
+  position:relative;height:310px;overflow:hidden;border:1px solid rgba(213,167,93,.28);
+  background:
+    radial-gradient(circle at center,rgba(111,214,167,.12),transparent 58%),
+    linear-gradient(145deg,rgba(9,24,20,.82),rgba(2,9,8,.9));
+  cursor:crosshair;
+}
+.layoutBoard img{
+  position:absolute;left:50%;top:50%;max-width:100%;max-height:100%;
+  transform:translate(-50%,-50%);object-fit:contain;opacity:.9;
+}
+.ghostPlan{
+  position:absolute;inset:26px;border:1px dashed rgba(241,213,155,.34);
+  background:
+    linear-gradient(90deg,transparent 49.7%,rgba(241,213,155,.2) 50%,transparent 50.3%),
+    linear-gradient(0deg,transparent 49.7%,rgba(241,213,155,.2) 50%,transparent 50.3%);
+}
+.ghostPlan::before{
+  content:"未上传时，可直接在此模拟平面点位";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:rgba(241,213,155,.58);font-size:13px;letter-spacing:3px;white-space:nowrap;
+}
+.placed{
+  position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;
+  padding:3px 8px;border:1px solid rgba(241,213,155,.78);border-radius:999px;
+  color:#07110d;background:linear-gradient(120deg,var(--gold-hi),var(--jade));
+  font-size:11px;letter-spacing:1.2px;font-weight:600;box-shadow:0 0 14px rgba(111,214,167,.34);
+}
+.placed i{width:7px;height:7px;border-radius:50%;background:#07110d;display:block}
+.boardHint{margin-top:9px;font-size:12px;letter-spacing:1.5px;color:var(--muted);line-height:1.6}
+
+#burstLayer{display:flex;align-items:flex-end;justify-content:center;padding:0 24px 8vh}
+.burstLine{
+  font-family:var(--f-display);font-size:clamp(22px,2.4vw,34px);letter-spacing:7px;color:var(--gold-hi);
+  text-shadow:0 0 22px rgba(241,213,155,.58),0 0 32px rgba(111,214,167,.34),0 3px 8px #000;
+}
+#skipBtn{
+  position:fixed;right:28px;bottom:28px;z-index:50;display:none;
+  height:36px;padding:0 18px;border:1px solid rgba(213,167,93,.35);background:rgba(3,10,9,.55);
+  color:var(--muted);letter-spacing:3px;font-size:12px;
+}
+body[data-stage="burst"] #skipBtn{display:block}
+
+#readingLayer{z-index:19;overflow:auto;background:linear-gradient(180deg,rgba(2,8,7,.42),rgba(2,8,7,.9) 28%,rgba(2,8,7,.98))}
+#readingInner{max-width:1120px;margin:0 auto;padding:58px 28px 90px;display:flex;flex-direction:column;gap:24px}
+.readingHead{text-align:center;padding-top:8px}
+.readingHead h1{font-family:var(--f-display);font-size:clamp(34px,4vw,52px);font-weight:500;letter-spacing:12px;color:var(--gold-hi);text-shadow:0 0 22px rgba(241,213,155,.42),0 4px 10px #000}
+.meta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.meta span{border:1px solid rgba(213,167,93,.34);padding:5px 13px;color:var(--muted);font-size:12px;letter-spacing:1.8px;background:rgba(4,13,11,.54)}
+.meta span.gold{color:#06110d;background:linear-gradient(120deg,var(--gold-hi),var(--gold));border-color:var(--gold-hi);font-weight:600}
+.summaryGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:stretch}
+.summaryCard{padding:26px 28px}
+.summaryCard h2,.reportCard h2{font-family:var(--f-display);font-size:25px;font-weight:500;letter-spacing:6px;color:var(--gold-hi);margin-bottom:14px}
+.summaryCard p,.reportCard p{font-size:14px;line-height:2.05;letter-spacing:1.4px;color:var(--ink);opacity:.95}
+.score{display:flex;align-items:center;gap:22px}
+.scoreNum{
+  width:116px;height:116px;border-radius:50%;display:grid;place-items:center;flex:none;
+  border:1px solid rgba(241,213,155,.62);font-family:var(--f-roman);font-size:38px;color:var(--gold-hi);
+  background:radial-gradient(circle,rgba(111,214,167,.22),rgba(4,13,11,.78) 72%);
+  box-shadow:inset 0 0 28px rgba(111,214,167,.16),0 0 22px rgba(200,151,79,.2);
+}
+.luopan{height:320px;display:grid;place-items:center;position:relative;overflow:hidden}
+.luopan::before,.luopan::after{
+  content:"";position:absolute;border-radius:50%;border:1px solid rgba(213,167,93,.26);
+  box-shadow:inset 0 0 36px rgba(111,214,167,.06);
+}
+.luopan::before{width:260px;height:260px;animation:spin 46s linear infinite}
+.luopan::after{width:188px;height:188px;animation:spin 32s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.luoCenter{
+  width:126px;height:126px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  color:var(--gold-hi);border:1px solid rgba(241,213,155,.58);
+  background:rgba(4,13,11,.78);z-index:1;font-family:var(--f-display);font-size:22px;letter-spacing:4px;line-height:1.5;
+}
+.palaceTag{
+  position:absolute;z-index:2;min-width:48px;text-align:center;padding:6px 8px;
+  border:1px solid rgba(213,167,93,.28);background:rgba(4,13,11,.7);color:var(--muted);
+  font-size:12px;letter-spacing:1.4px;
+}
+.palaceTag.on{color:#06110d;background:linear-gradient(120deg,var(--gold-hi),var(--jade));border-color:var(--gold-hi);font-weight:600}
+.p-n{top:22px;left:50%;transform:translateX(-50%)}.p-ne{top:64px;right:68px}.p-e{top:50%;right:34px;transform:translateY(-50%)}
+.p-se{bottom:64px;right:68px}.p-s{bottom:22px;left:50%;transform:translateX(-50%)}.p-sw{bottom:64px;left:68px}.p-w{top:50%;left:34px;transform:translateY(-50%)}.p-nw{top:64px;left:68px}
+.reportGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.reportCard{padding:24px 26px}
+.reportCard ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.reportCard li{position:relative;padding-left:20px;font-size:13.5px;line-height:1.9;letter-spacing:1.3px;color:var(--ink)}
+.reportCard li::before{content:"";position:absolute;left:0;top:.8em;width:7px;height:7px;border-radius:50%;background:var(--jade);box-shadow:0 0 10px rgba(111,214,167,.55)}
+.marksList{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.marksList span{font-size:12px;letter-spacing:1.4px;color:var(--gold-hi);border:1px solid rgba(213,167,93,.3);padding:4px 10px;background:rgba(4,13,11,.55)}
+.actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+#toast{
+  position:fixed;left:50%;bottom:42px;z-index:100;transform:translateX(-50%) translateY(18px);
+  padding:12px 24px;border:1px solid var(--line);background:rgba(4,13,11,.92);color:var(--gold-hi);
+  font-size:13px;letter-spacing:2.5px;opacity:0;pointer-events:none;transition:.32s ease;box-shadow:0 0 24px rgba(0,0,0,.45);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#disclaimer{
+  position:fixed;right:28px;top:86px;z-index:31;color:rgba(241,213,155,.8);
+  border:1px solid rgba(213,167,93,.24);background:rgba(4,13,11,.36);padding:6px 13px;
+  font-size:11px;letter-spacing:2px;backdrop-filter:blur(5px);
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (max-width:1180px){
+  #topnav{grid-template-columns:190px 1fr auto 1fr 112px;padding:0 22px}
+  .navside{gap:28px}#navTitle{font-size:34px;min-width:260px}
+  #home{grid-template-columns:402px minmax(120px,1fr) 410px;gap:16px 20px;padding-left:24px;padding-right:24px}
+  #rightcol{width:100%}#stepsPanel{width:306px}.today{width:402px}
+}
+@media (max-height:820px) and (min-width:921px){
+  #home{padding-top:118px;gap:12px 22px}
+  #stepsPanel{padding:20px 18px 14px}
+  .steps-title{font-size:24px;letter-spacing:6px;margin-bottom:10px}
+  .steps-title::after{margin-top:10px}
+  .step{grid-template-columns:38px 1fr;gap:11px;min-height:58px;padding:4px 0 7px}
+  .step:not(:last-child)::after{left:19px;top:42px;bottom:-7px}
+  .num{width:36px;height:36px;font-size:19px}
+  .step h3{font-size:17px;margin-bottom:3px}
+  .step p{font-size:11.5px;line-height:1.5;letter-spacing:.9px}
+  .today{min-height:92px;padding:16px 16px 14px 70px}
+  .today .mini-ico{left:22px;top:24px;width:32px;height:32px}
+  .today h3{font-size:19px;margin-bottom:5px}
+  .today p{font-size:12px;line-height:1.55}
+}
+@media (max-width:920px){
+  body{overflow:auto}
+  #topnav{position:absolute;height:auto;min-height:76px;grid-template-columns:1fr auto;gap:10px;padding:16px 18px}
+  .navside,.navIcons{display:none}#navTitle{font-size:26px;min-width:0;letter-spacing:7px;text-indent:7px}#navTitle::before,#navTitle::after{display:none}#projBtn{width:168px}
+  #home{position:relative;min-height:100vh;padding:92px 16px 30px;display:flex;flex-direction:column;gap:16px}
+  #stepsPanel,#rightcol,.today{position:relative;top:auto;left:auto;right:auto;bottom:auto;width:100%}
+  .featureRow{grid-template-columns:1fr}#tapHint{display:none}
+  #introLayer{align-items:flex-end;padding:0 12px 24px}.ritualLine{display:none}
+  #wizard{width:100%;padding:20px 16px}#choiceGrid{grid-template-columns:1fr}
+  #layoutStep.show{grid-template-columns:1fr}.layoutBoard{height:280px}
+  .summaryGrid,.reportGrid{grid-template-columns:1fr}
+  #readingInner{padding:36px 14px 72px}.score{flex-direction:column;text-align:center}
+  #disclaimer{left:50%;right:auto;transform:translateX(-50%);top:76px;width:max-content;max-width:88vw;text-align:center;white-space:normal}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;transition-duration:.12s!important}
+}
+
+/* unified 12-project menu */
+#projMenu,.project-menu{max-height:min(68vh,520px);overflow-y:auto;scrollbar-width:thin}
+#projMenu::-webkit-scrollbar,.project-menu::-webkit-scrollbar{width:6px}
+#projMenu::-webkit-scrollbar-thumb,.project-menu::-webkit-scrollbar-thumb{background:rgba(201,164,106,.42);border-radius:999px}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg"></div>
+<div id="videoLayer">
+  <video id="openingVideo" muted playsinline loop preload="auto" src="assets/fengshui/opening.mp4"></video>
+  <video id="climaxVideo" muted playsinline preload="auto" src="assets/fengshui/climax.mp4"></video>
+</div>
+<div id="shade"></div>
+<div id="grain"></div>
+<div id="flash"></div>
+<div class="frame-line"><i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div>
+
+<header id="topnav" data-ui>
+  <button id="projBtn" aria-label="玄学项目">
+    <svg viewBox="0 0 24 24"><path d="M12 4 L17 9 L12 14 L7 9 Z"/><path d="M7 15 L12 20 L17 15"/></svg>
+    玄学项目
+    <div id="projMenu" class="pnl"></div>
+  </button>
+  <nav class="navside">
+    <span class="navlink cur" data-nav="home">首页</span>
+    <span class="navlink" data-nav="start">堪舆</span>
+    <span class="navlink" data-nav="upload">布局图</span>
+  </nav>
+  <div id="navTitle">风水堪舆</div>
+  <nav class="navside">
+    <span class="navlink" data-nav="daily">每日运势</span>
+    <span class="navlink" data-nav="archive">档案</span>
+    <span class="navlink" data-nav="about">关于我们</span>
+  </nav>
+  <div class="navIcons">
+    <button class="navico" data-nav="user" title="用户档案"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3"/><path d="M5 20 c1.3-4 4-5.8 7-5.8 s5.7 1.8 7 5.8"/></svg></button>
+    <button class="navico" data-nav="compass" title="罗盘"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3"/><path d="M15.5 8.5 l-2.1 4.9 -4.9 2.1 2.1-4.9 z"/></svg></button>
+  </div>
+</header>
+
+<main id="home">
+  <section id="stepsPanel" class="pnl" data-ui>
+    <div class="corners"></div>
+    <h2 class="steps-title">堪舆步骤</h2>
+    <div class="step"><div class="num">一</div><div><h3>观势</h3><p>观山水之势，察明堂、靠山与气口。</p></div></div>
+    <div class="step"><div class="num">二</div><div><h3>定向</h3><p>定坐向方位，辨八宫五行旺衰。</p></div></div>
+    <div class="step"><div class="num">三</div><div><h3>布图</h3><p>上传或拍摄布局图，标注门窗床灶。</p></div></div>
+    <div class="step"><div class="num">四</div><div><h3>调和</h3><p>顺五行、缓冲煞，给出可执行调整。</p></div></div>
+  </section>
+
+  <section id="rightcol" data-ui>
+    <div class="featureRow">
+      <div class="feature pnl" data-nav="start"><div class="corners"></div><div class="round" data-ico="home"></div><h3>宅运布局</h3><p>锁宅化煞，趋吉避凶，安顿全宅气场。</p></div>
+      <div class="feature pnl" data-nav="start"><div class="corners"></div><div class="round" data-ico="compass"></div><h3>方位罗盘</h3><p>精准定向，盘出八宫五行与吉凶方。</p></div>
+      <div class="feature pnl" data-nav="start"><div class="corners"></div><div class="round" data-ico="mountain"></div><h3>山水格局</h3><p>藏山水格局，藏风聚气，明辨形势。</p></div>
+    </div>
+    <button id="gate" data-nav="start"><span>开启堪舆</span></button>
+    <div class="quote pnl"><div class="corners"></div><span class="qm">“</span><p>藏风得水，万象归和。</p></div>
+  </section>
+
+  <section class="today pnl" data-ui data-nav="daily"><div class="corners"></div>
+    <span class="mini-ico" data-ico="compass"></span>
+    <h3>今日风水提示</h3>
+    <p>东方利文昌，宜开窗纳清气；西南忌杂乱，宜静守不宜攻。</p>
+  </section>
+</main>
+<div id="tapHint">轻点空白处，开启风水堪舆</div>
+
+<section id="introLayer" class="layer">
+  <div class="ritualLine" id="ritualLine">罗经将启，请先观宅之势。</div>
+  <div id="wizard" class="pnl" data-ui>
+    <div class="corners"></div>
+    <div class="track" id="track"></div>
+    <div class="wizardHead"><h2 id="stepTitle"></h2><p id="stepDesc"></p></div>
+    <div id="choiceGrid"></div>
+    <div id="layoutStep">
+      <div class="uploadPanel pnl"><div class="corners"></div>
+        <h3>上传或拍摄布局</h3>
+        <p>图片只在本地浏览器中预览，不会上传。上传后选择一个标记，再在图上轻点放置。</p>
+        <div class="uploadBtns">
+          <button class="smallBtn" id="uploadBtn">上传图片</button>
+          <button class="smallBtn" id="cameraBtn">拍摄布局</button>
+        </div>
+        <input id="layoutInput" type="file" accept="image/*" capture="environment" hidden>
+        <div class="markerGrid" id="markerGrid"></div>
+      </div>
+      <div class="markPanel pnl"><div class="corners"></div>
+        <h3>平面点位</h3>
+        <div class="layoutBoard" id="layoutBoard"></div>
+        <div class="boardHint" id="boardHint"></div>
+      </div>
+    </div>
+    <div class="wizardActions">
+      <button class="btn ghost" id="prevBtn">上一步</button>
+      <div class="hintText" id="wizardHint"></div>
+      <button class="btn primary" id="nextBtn">继续</button>
+    </div>
+  </div>
+</section>
+
+<section id="burstLayer" class="layer">
+  <div class="burstLine">罗经开盘，九宫飞布，山水之气正在汇聚。</div>
+</section>
+<button id="skipBtn">跳过动画</button>
+
+<section id="readingLayer" class="layer" data-ui>
+  <div id="readingInner">
+    <div class="readingHead">
+      <h1>风水堪舆结果</h1>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="summaryGrid">
+      <div class="summaryCard pnl"><div class="corners"></div>
+        <h2>宅运总评</h2>
+        <div class="score"><div class="scoreNum" id="scoreNum"></div><p id="overallText"></p></div>
+      </div>
+      <div class="summaryCard pnl luopan"><div class="corners"></div>
+        <div class="luoCenter" id="luoCenter"></div>
+        <span class="palaceTag p-n" data-palace="北">北 坎水</span>
+        <span class="palaceTag p-ne" data-palace="东北">东北 艮土</span>
+        <span class="palaceTag p-e" data-palace="东">东 震木</span>
+        <span class="palaceTag p-se" data-palace="东南">东南 巽木</span>
+        <span class="palaceTag p-s" data-palace="南">南 离火</span>
+        <span class="palaceTag p-sw" data-palace="西南">西南 坤土</span>
+        <span class="palaceTag p-w" data-palace="西">西 兑金</span>
+        <span class="palaceTag p-nw" data-palace="西北">西北 乾金</span>
+      </div>
+    </div>
+    <div class="reportGrid" id="reportGrid"></div>
+    <div class="actions">
+      <button class="btn primary" data-act="copy">复制解读</button>
+      <button class="btn" data-act="again">重新堪舆</button>
+      <button class="btn" data-act="home">回到首页</button>
+    </div>
+  </div>
+</section>
+
+<div id="toast"></div>
+<div id="disclaimer">传统文化体验，仅供空间整理与自我探索参考</div>
+
+<script>
+'use strict';
+
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+
+const ICONS={
+  bagua:'<circle cx="12" cy="12" r="8"/><path d="M12 4 a4 4 0 0 1 0 8 a4 4 0 0 0 0 8"/><circle cx="12" cy="8" r="1.2"/><circle cx="12" cy="16" r="1.2"/>',
+  yin:'<circle cx="12" cy="12" r="8"/><path d="M12 4 a4 4 0 0 1 0 8 a4 4 0 0 0 0 8"/><circle cx="12" cy="8" r="1.3"/><circle cx="12" cy="16" r="1.3"/>',
+  hand:'<path d="M7 12 v-4 a1.4 1.4 0 0 1 2.8 0 v4"/><path d="M9.8 11 v-6 a1.4 1.4 0 0 1 2.8 0 v6"/><path d="M12.6 11 v-5 a1.4 1.4 0 0 1 2.8 0 v6"/><path d="M15.4 12 v-3 a1.4 1.4 0 0 1 2.8 0 v5 c0 4-2.5 6-6.2 6 c-3.3 0-5.5-1.9-6.4-5.2 l-.8-3 a1.3 1.3 0 0 1 2.5-.7 l.7 2.1"/>',
+  face:'<circle cx="12" cy="12" r="8"/><path d="M9 10 h.1 M15 10 h.1 M9 15 q3 2 6 0"/><path d="M12 11 v2"/>',
+  moon:'<path d="M15 3 a8.5 8.5 0 1 0 6 13 a7 7 0 1 1-6-13 z"/>',
+  home:'<path d="M4 11 L12 4 l8 7"/><path d="M6 10 v9 h12 v-9"/><path d="M10 19 v-5 h4 v5"/>',
+  compass:'<circle cx="12" cy="12" r="8"/><path d="M15.6 8.4 l-2.2 5 -5 2.2 2.2-5 z"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3"/>',
+  mountain:'<path d="M3 18 L8 9 l4 6 3-5 6 8 Z"/><path d="M7 18 q5-3 10 0"/><path d="M8 9 l1.4 3 h-3"/>'
+};
+function icon(name){return `<svg viewBox="0 0 24 24">${ICONS[name]}</svg>`}
+
+const PROJECTS=[
+  ['tarot','compass','塔罗互动占卜','index_6.html'],
+  ['astrology','compass','星盘占星','index_astrology.html'],
+  ['bazi','bagua','八字命盘','index_bazi.html'],
+  ['liuyao','yin','六爻问卦','index_liuyao.html'],
+  ['ziwei','compass','紫微斗数','index_ziwei.html'],
+  ['lingqian','home','灵签求问','index_lingqian.html'],
+  ['zhougong','moon','周公解梦','index_zhougong.html'],
+  ['zodiac','compass','生肖运势','index_zodiac.html'],
+  ['fengshui','mountain','风水堪舆',''],
+  ['palm','hand','手相解读','index_palm.html'],
+  ['mianxiang','face','面相解读','index_mianxiang.html'],
+  ['nameDate','home','取名择日','index_name_date.html']
+];
+
+const PURPOSES=[
+  {key:'home',label:'宅运安居',el:'土',desc:'看全宅气场、明堂、靠山与动静平衡。',advice:'安宅以稳为先，先理气口，再调动线。'},
+  {key:'wealth',label:'财位聚气',el:'木',desc:'寻找明财位与生气位，聚财不泄财。',advice:'财气喜曲不喜直，喜洁净明亮不喜压迫。'},
+  {key:'career',label:'事业贵人',el:'水',desc:'看门向、书桌与乾坎震位的助力。',advice:'事业要水木相生，先通路，再立靠。'},
+  {key:'study',label:'文昌学业',el:'木',desc:'看书房、书桌、东南巽宫与光线。',advice:'文昌喜清、喜静、喜生发，忌杂乱压顶。'},
+  {key:'love',label:'姻缘和合',el:'土',desc:'看卧室、坤兑方与阴阳调和。',advice:'和合之气贵在柔顺，不宜尖角逼压。'},
+  {key:'health',label:'健康安宁',el:'土',desc:'看卧室、厨卫、水火与中宫洁净。',advice:'健康先看中宫与睡眠，清浊分明则气顺。'}
+];
+const DIRECTIONS=[
+  {key:'unknown',label:'不确定，由罗盘代定',sit:'未定',face:'代定',el:'土',desc:'适合未带指南针时，系统按今日气机作参考。'},
+  {key:'north_south',label:'坐北朝南',sit:'北',face:'南',el:'火',desc:'纳阳取明，利人气与名望，需防火气过盛。'},
+  {key:'south_north',label:'坐南朝北',sit:'南',face:'北',el:'水',desc:'背火向水，利静修与思考，需补温润之气。'},
+  {key:'east_west',label:'坐东朝西',sit:'东',face:'西',el:'金',desc:'木金相见，利收束与决断，需缓冲直冲。'},
+  {key:'west_east',label:'坐西朝东',sit:'西',face:'东',el:'木',desc:'迎东方生气，利成长与新局。'},
+  {key:'ne_sw',label:'坐东北朝西南',sit:'东北',face:'西南',el:'土',desc:'艮坤相应，重家宅稳定与承载。'},
+  {key:'se_nw',label:'坐东南朝西北',sit:'东南',face:'西北',el:'金',desc:'巽乾相通，利资源与权责，但忌风口过疾。'}
+];
+const FORMS=[
+  {key:'mingtang',label:'明堂开阔',score:8,desc:'前方宽缓，气有停蓄之处。'},
+  {key:'backing',label:'背有靠山',score:7,desc:'后方稳定，有承托与贵人象。'},
+  {key:'water',label:'水路环抱',score:6,desc:'水势有情，利流动与财气。'},
+  {key:'clash',label:'路冲门冲',score:-10,desc:'直来直去，气急而不聚。'},
+  {key:'missing',label:'缺角逼压',score:-8,desc:'宫位不全，需补形与补气。'},
+  {key:'pressure',label:'横梁压顶',score:-7,desc:'上方压迫，影响心神与睡眠。'},
+  {key:'mixed',label:'暂不确定',score:0,desc:'先从室内布局与气口判断。'}
+];
+const FOCUS=[
+  {key:'gate',label:'大门玄关',el:'水',desc:'气口所在，主纳气、财气与人气。'},
+  {key:'living',label:'客厅明堂',el:'土',desc:'家人聚合之处，宜宽明有序。'},
+  {key:'bedroom',label:'卧室床位',el:'土',desc:'主休养与关系，宜静、宜靠、忌冲。'},
+  {key:'study',label:'书房书桌',el:'木',desc:'主文昌与事业，宜背实面明。'},
+  {key:'kitchen',label:'厨房炉灶',el:'火',desc:'主食禄与健康，需水火既济。'},
+  {key:'wealth',label:'明财位',el:'木',desc:'主聚财，宜洁净、稳定、有生气。'}
+];
+const MARKERS=[
+  {key:'entrance',label:'大门'}, {key:'window',label:'窗'},
+  {key:'bed',label:'床'}, {key:'stove',label:'灶'},
+  {key:'desk',label:'书桌'}, {key:'toilet',label:'卫浴'},
+  {key:'balcony',label:'阳台'}, {key:'wealth',label:'财位'},
+  {key:'north',label:'北向'}
+];
+const PALACES=[
+  {dir:'北',name:'坎宫',el:'水',use:'事业、智慧、流动'},
+  {dir:'东北',name:'艮宫',el:'土',use:'健康、少男、稳定'},
+  {dir:'东',name:'震宫',el:'木',use:'成长、长男、行动'},
+  {dir:'东南',name:'巽宫',el:'木',use:'财气、文昌、风入'},
+  {dir:'南',name:'离宫',el:'火',use:'名望、光明、表达'},
+  {dir:'西南',name:'坤宫',el:'土',use:'姻缘、母位、承载'},
+  {dir:'西',name:'兑宫',el:'金',use:'口才、喜悦、收获'},
+  {dir:'西北',name:'乾宫',el:'金',use:'贵人、事业、父位'}
+];
+const ELEMENT_TUNE={
+  木:'以青绿、植物、竖向收纳补生发；忌枯枝败叶与杂物堆叠。',
+  火:'以暖光、洁净、适度红金补明亮；忌过强灯火与躁动噪声。',
+  土:'以方正、陶石、低饱和暖色稳中宫；忌中心堆堵与长期潮湿。',
+  金:'以圆形金属、白金色与清爽边界补收束；忌尖锐外露相逼。',
+  水:'以曲线、黑蓝色、清水意象补流动；忌污水、漏水与门窗直泄。'
+};
+
+const state={
+  stage:'home',
+  step:0,
+  purpose:'home',
+  direction:'unknown',
+  form:'mingtang',
+  focus:'gate',
+  activeMarker:'entrance',
+  image:'',
+  marks:[],
+  reportText:''
+};
+const steps=[
+  {id:'purpose',short:'观势',title:'先定堪舆所问',desc:'风水先分所求。请选择这次最想看的主题，系统会以对应宫位与五行为主线。',items:PURPOSES},
+  {id:'direction',short:'定向',title:'再定宅之坐向',desc:'若暂时不清楚方向，可以选择罗盘代定，后续结果会按今日气机作参考。',items:DIRECTIONS},
+  {id:'form',short:'察形',title:'察外部形势',desc:'山水形势决定气从何来、何处停蓄。请选择最接近你空间外部或入口处的情况。',items:FORMS},
+  {id:'focus',short:'布局',title:'选择重点区域',desc:'同一宅局，不同区域看法不同。请选择这次最需要落地调整的位置。',items:FOCUS},
+  {id:'layout',short:'布图',title:'上传或标注布局图',desc:'拍摄户型、房间或办公桌布局后，手动标注关键点。没有图片也可以在示意盘上点位继续。',items:[]}
+];
+
+let toastTimer=0;
+const V={opening:$('#openingVideo'),climax:$('#climaxVideo')};
+
+function mountIcons(){
+  $$('[data-ico]').forEach(el=>{el.innerHTML=icon(el.dataset.ico);});
+  $('#projMenu').innerHTML=PROJECTS.map(([key,ico,label])=>`<div class="pm-it${key==='fengshui'?' cur':''}" data-proj="${key}"><span class="mini-ico">${icon(ico)}</span>${label}</div>`).join('');
+}
+function toast(msg){
+  const t=$('#toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2300);
+}
+function setStage(stage){
+  state.stage=stage;
+  document.body.dataset.stage=stage;
+}
+function playVideo(key){
+  Object.entries(V).forEach(([name,v])=>{
+    if(name===key){v.classList.add('on'); const p=v.play(); if(p)p.catch(()=>{});}
+    else{v.classList.remove('on'); v.pause();}
+  });
+}
+function getByKey(list,key){return list.find(x=>x.key===key)||list[0];}
+function todayAutoDir(){
+  const idx=new Date().getDate()%PALACES.length;
+  return PALACES[idx];
+}
+function activeDirection(){
+  const d=getByKey(DIRECTIONS,state.direction);
+  if(d.key!=='unknown')return d;
+  const auto=todayAutoDir();
+  return {key:'auto',label:`罗盘代定：朝${auto.dir}`,sit:'参看',face:auto.dir,el:auto.el,desc:`今日取${auto.name}为参考向，主${auto.use}。`};
+}
+function setRitualLine(){
+  const lines=['罗经将启，请先观宅之势。','定向已成，八宫开始归位。','山水有情，气口正在显形。','请在布局图上落下关键点位。','九宫飞布之前，先让空间说话。'];
+  $('#ritualLine').textContent=lines[state.step]||lines[0];
+}
+function renderWizard(){
+  setRitualLine();
+  const step=steps[state.step];
+  $('#track').innerHTML=steps.map((s,i)=>`<span class="dot${i===state.step?' on':''}">${i+1} ${s.short}</span>`).join('');
+  $('#stepTitle').textContent=step.title;
+  $('#stepDesc').textContent=step.desc;
+  $('#prevBtn').style.visibility=state.step===0?'hidden':'visible';
+  $('#nextBtn').textContent=state.step===steps.length-1?'开盘推演':'继续';
+  $('#wizardHint').textContent=state.step===steps.length-1?'建议至少标注大门与北向；也可直接开盘。':'轻点选项后继续。';
+  const layout=step.id==='layout';
+  $('#choiceGrid').style.display=layout?'none':'grid';
+  $('#layoutStep').classList.toggle('show',layout);
+  if(layout){renderLayoutStep();return;}
+  $('#choiceGrid').innerHTML=step.items.map(item=>{
+    const sel=state[step.id]===item.key;
+    return `<button class="choice${sel?' sel':''}" data-choice="${item.key}"><h3>${item.label}</h3><p>${item.desc}</p></button>`;
+  }).join('');
+}
+function renderLayoutStep(){
+  $('#markerGrid').innerHTML=MARKERS.map(m=>`<button class="marker${state.activeMarker===m.key?' on':''}" data-marker="${m.key}">${m.label}</button>`).join('');
+  const board=$('#layoutBoard');
+  const img=state.image?`<img src="${state.image}" alt="布局图预览">`:'<div class="ghostPlan"></div>';
+  const marks=state.marks.map(m=>{
+    const def=MARKERS.find(x=>x.key===m.key);
+    return `<span class="placed" style="left:${m.x}%;top:${m.y}%"><i></i>${def?def.label:m.key}</span>`;
+  }).join('');
+  board.innerHTML=img+marks;
+  const current=MARKERS.find(x=>x.key===state.activeMarker);
+  const marked=state.marks.map(m=>MARKERS.find(x=>x.key===m.key)?.label||m.key).join('、')||'尚未标注';
+  $('#boardHint').textContent=`当前标记：${current.label}。已标注：${marked}。`;
+}
+function toIntro(){
+  if(state.stage!=='home')return;
+  setStage('intro');
+  state.step=0;
+  playVideo('opening');
+  renderWizard();
+}
+function toBurst(){
+  setStage('burst');
+  playVideo('climax');
+  V.climax.onended=finishBurst;
+  setTimeout(()=>{if(state.stage==='burst'&&V.climax.paused)finishBurst();},7600);
+}
+function finishBurst(){
+  if(state.stage!=='burst')return;
+  $('#flash').classList.add('on');
+  setTimeout(()=>{$('#flash').classList.remove('on');toReading();},520);
+}
+function resetHome(){
+  V.climax.onended=()=>{};
+  playVideo('');
+  setStage('home');
+}
+function addMark(evt){
+  const board=$('#layoutBoard');
+  const rect=board.getBoundingClientRect();
+  const x=Math.max(2,Math.min(98,((evt.clientX-rect.left)/rect.width)*100));
+  const y=Math.max(2,Math.min(98,((evt.clientY-rect.top)/rect.height)*100));
+  const i=state.marks.findIndex(m=>m.key===state.activeMarker);
+  const mark={key:state.activeMarker,x:Math.round(x*10)/10,y:Math.round(y*10)/10};
+  if(i>=0)state.marks[i]=mark; else state.marks.push(mark);
+  renderLayoutStep();
+}
+function uploadImage(file){
+  if(!file||!file.type.startsWith('image/')){toast('请选择图片文件');return;}
+  const reader=new FileReader();
+  reader.onload=()=>{state.image=String(reader.result);state.marks=[];renderLayoutStep();toast('布局图已载入，请开始标注');};
+  reader.readAsDataURL(file);
+}
+function dist(a,b){
+  if(!a||!b)return 999;
+  const dx=a.x-b.x,dy=a.y-b.y;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+function mark(key){return state.marks.find(m=>m.key===key);}
+function clamp(n,min,max){return Math.max(min,Math.min(max,n));}
+function scoreKanyu(){
+  const form=getByKey(FORMS,state.form);
+  let score=72+form.score;
+  if(state.image)score+=5; else score-=2;
+  if(mark('entrance'))score+=4;
+  if(mark('north'))score+=3;
+  if(mark('wealth'))score+=3;
+  if(dist(mark('entrance'),mark('window'))<18)score-=7;
+  if(dist(mark('stove'),mark('toilet'))<22)score-=8;
+  if(dist(mark('bed'),mark('entrance'))<18)score-=6;
+  return clamp(score,48,96);
+}
+function layoutInsights(){
+  const items=[];
+  const entrance=mark('entrance'), windowM=mark('window'), bed=mark('bed'), stove=mark('stove'), toilet=mark('toilet'), desk=mark('desk'), wealth=mark('wealth'), north=mark('north');
+  if(!state.image)items.push('本次未上传真实布局图，系统按你在示意盘上的点位作轻量推演；后续补充户型图后，结果会更贴近空间实况。');
+  else items.push(`已读取本地布局图，并标注 ${state.marks.length} 个关键点位；本页不上传图片，所有判断只发生在当前浏览器中。`);
+  if(entrance&&windowM&&dist(entrance,windowM)<18)items.push('大门与窗标注距离偏近，形成“入门见泄”的象，宜用屏风、矮柜、绿植或转折动线缓气。');
+  else if(entrance&&windowM)items.push('大门与窗有呼应但未成近距离直泄，气可入亦可流，重点是保持玄关整洁与过渡。');
+  if(bed&&entrance&&dist(bed,entrance)<18)items.push('床位接近门气，睡眠易受动线扰动，宜调整床头靠实墙，或用帘、柜形成柔性缓冲。');
+  else if(bed)items.push('床位已标注，后续调整以“床头有靠、两侧留气、避镜避门冲”为优先。');
+  if(stove&&toilet&&dist(stove,toilet)<22)items.push('灶与卫浴距离偏近，水火相逼，宜加强门帘、干湿分离、清洁与暖光，避免炉灶正对水口。');
+  else if(stove)items.push('炉灶已标注，厨房以火土为用，宜明亮洁净，忌水口直冲与杂物压灶。');
+  if(desk)items.push('书桌已标注，文昌位讲究背后有靠、前方开明、左高右低，桌面宜留出一片清气。');
+  if(wealth)items.push('财位已标注，明财位宜稳、亮、净，可用常绿植物、暖光或收纳秩序聚气，忌堆放破损旧物。');
+  if(!north)items.push('未标注北向，罗盘方位将按所选坐向与今日代定综合参考；若有指南针，建议补标北向。');
+  return items;
+}
+function buildReport(){
+  const purpose=getByKey(PURPOSES,state.purpose);
+  const dir=activeDirection();
+  const form=getByKey(FORMS,state.form);
+  const focus=getByKey(FOCUS,state.focus);
+  const score=scoreKanyu();
+  const scoreText=score>=88?'上吉':score>=76?'中吉':score>=64?'可调':score>=54?'需整':'重整';
+  const activePalace=dir.face==='代定'?todayAutoDir().dir:dir.face;
+  const palace=PALACES.find(p=>p.dir===activePalace)||todayAutoDir();
+  const marksText=state.marks.map(m=>MARKERS.find(x=>x.key===m.key)?.label||m.key);
+  const scoreCopy=`本局以「${purpose.label}」为问，取${dir.label}，外势为「${form.label}」。综合看来，此宅气场得分 ${score}，属「${scoreText}」之象。${form.score<0?'外部形势有冲压之意，先缓煞再求旺。':'外势有可用之气，可顺势聚纳。'}重点区域为「${focus.label}」，调理宜围绕${focus.desc}`;
+
+  const fourAnimals=[
+    `玄武宜靠：后方要稳，床、沙发、书桌背后不宜空荡。若背后为窗，可用厚帘、柜体或高背椅补靠。`,
+    `朱雀宜明：前方明堂要开，不宜杂物封堵。入口、客厅与桌前留出开阔面，可让气先停后聚。`,
+    `青龙宜动：左侧宜有生发之物，如书架、绿植、灯光或有序收纳；但不可凌乱高压。`,
+    `白虎宜静：右侧宜低宜顺，尖锐物、强噪声与杂物压迫会让气场紧绷。`
+  ];
+  const palaceAdvice=[
+    `${palace.name}为本局参考向，五行属${palace.el}，主${palace.use}。${ELEMENT_TUNE[palace.el]}`,
+    `本次主题属${purpose.el}，重点区域属${focus.el}。若二者相生，宜顺势加强；若相克，宜用土作为中介，先稳后旺。`,
+    `中宫为全宅气口交汇处，不宜长期堆物、潮湿、昏暗。中宫一清，全宅气机才有回旋余地。`
+  ];
+  const actionAdvice=[
+    `七日内先完成一次“清中宫”：客厅中心、走道中心、餐桌中心减少堆放，保持一条清晰动线。`,
+    `围绕「${focus.label}」做一处微调：补光、去杂物、添靠背或改变尖角直冲，选一件能立刻执行的事。`,
+    `${dir.desc} 调理时不必大拆大改，先用屏风、灯光、收纳、植物、帘幕这些轻介入手段观察气感变化。`
+  ];
+  const sections=[
+    {title:'八卦九宫',items:palaceAdvice},
+    {title:'四象山水',items:fourAnimals},
+    {title:'布局图标注',items:layoutInsights(),marks:marksText},
+    {title:'五行调和',items:[ELEMENT_TUNE[purpose.el],ELEMENT_TUNE[focus.el],`本局不求神秘化，重点是让入口能纳、明堂能停、睡卧能静、火水不冲、财位不泄。`]},
+    {title:'七日行动建议',items:actionAdvice},
+    {title:'堪舆提示',items:[`风水调理应与真实建筑安全、采光通风、消防规则和居住习惯并看。若涉及结构、水电或承重，请以专业工程意见为准。`]}
+  ];
+  return {purpose,dir,form,focus,score,scoreText,scoreCopy,activePalace,sections};
+}
+function toReading(){
+  playVideo('');
+  setStage('reading');
+  const r=buildReport();
+  $('#meta').innerHTML=`<span class="gold">${r.purpose.label}</span><span>${r.dir.label}</span><span>${r.form.label}</span><span>${r.focus.label}</span>`;
+  $('#scoreNum').innerHTML=`${r.score}<small style="font-size:14px;margin-left:2px">分</small>`;
+  $('#overallText').textContent=r.scoreCopy;
+  $('#luoCenter').innerHTML=`${r.dir.face}<br><span style="font-size:14px;letter-spacing:2px">${r.scoreText}</span>`;
+  $$('.palaceTag').forEach(t=>t.classList.toggle('on',t.dataset.palace===r.activePalace));
+  $('#reportGrid').innerHTML=r.sections.map(sec=>`
+    <article class="reportCard pnl"><div class="corners"></div>
+      <h2>${sec.title}</h2>
+      <ul>${sec.items.map(item=>`<li>${item}</li>`).join('')}</ul>
+      ${sec.marks&&sec.marks.length?`<div class="marksList">${sec.marks.map(m=>`<span>${m}</span>`).join('')}</div>`:''}
+    </article>`).join('');
+  state.reportText=[
+    '【玄境 · 风水堪舆】',
+    `主题：${r.purpose.label}`,
+    `坐向：${r.dir.label}`,
+    `外势：${r.form.label}`,
+    `重点：${r.focus.label}`,
+    `宅运评分：${r.score}（${r.scoreText}）`,
+    '',
+    r.scoreCopy,
+    '',
+    ...r.sections.flatMap(sec=>[`【${sec.title}】`,...sec.items,''])
+  ].join('\n');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function copyReport(){
+  const text=state.reportText||'';
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>toast('解读已复制')).catch(()=>fallbackCopy(text));
+  }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('解读已复制');}catch(e){toast('复制失败，可手动截屏保存');}
+  ta.remove();
+}
+
+document.addEventListener('click',evt=>{
+  const target=evt.target;
+  if(target.closest('#projBtn')){
+    const item=target.closest('.pm-it');
+    if(item){const p=PROJECTS.find(([key])=>key===item.dataset.proj);if(p?.[0]==='fengshui')toast('你正身处风水殿堂');else if(p?.[3])location.href=p[3];$('#projMenu').classList.remove('show');$('#projBtn').classList.remove('open');return;}
+    $('#projMenu').classList.toggle('show');$('#projBtn').classList.toggle('open');return;
+  }else{$('#projMenu').classList.remove('show');$('#projBtn').classList.remove('open');}
+
+  const nav=target.closest('[data-nav]');
+  if(nav){
+    const k=nav.dataset.nav;
+    if(k==='home'){resetHome();return;}
+    if(k==='start'||k==='upload'){toIntro(); if(k==='upload'){state.step=4;renderWizard();} return;}
+    toast(k==='daily'?'今日提示已在左下角显示':'该功能后续接入');return;
+  }
+  if(state.stage==='home'&&!target.closest('[data-ui]')){toIntro();return;}
+
+  const choice=target.closest('[data-choice]');
+  if(choice){
+    const step=steps[state.step];
+    state[step.id]=choice.dataset.choice;
+    renderWizard();
+    return;
+  }
+  const marker=target.closest('[data-marker]');
+  if(marker){state.activeMarker=marker.dataset.marker;renderLayoutStep();return;}
+  if(target.closest('#uploadBtn')||target.closest('#cameraBtn')){$('#layoutInput').click();return;}
+  if(target.closest('#layoutBoard')&&state.stage==='intro'&&state.step===4){addMark(evt);return;}
+  if(target.closest('#prevBtn')){if(state.step>0){state.step--;renderWizard();}return;}
+  if(target.closest('#nextBtn')){
+    if(state.step<steps.length-1){state.step++;renderWizard();}
+    else toBurst();
+    return;
+  }
+  if(target.closest('#skipBtn')){finishBurst();return;}
+  const act=target.closest('[data-act]');
+  if(act){
+    if(act.dataset.act==='copy')copyReport();
+    if(act.dataset.act==='again'){setStage('home');requestAnimationFrame(toIntro);}
+    if(act.dataset.act==='home')resetHome();
+  }
+});
+
+$('#layoutInput').addEventListener('change',evt=>{
+  const file=evt.target.files&&evt.target.files[0];
+  uploadImage(file);
+  evt.target.value='';
+});
+document.addEventListener('keydown',evt=>{
+  if(evt.key==='Escape'){
+    if(state.stage==='intro'||state.stage==='burst')resetHome();
+    else if(state.stage==='reading')resetHome();
+  }
+});
+
+(function init(){
+  mountIcons();
+  renderWizard();
+})();
+</script>
+</body>
+</html>

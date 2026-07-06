@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>八字命盘 · 沉浸式排盘</title>
+<meta name="description" content="沉浸式八字命盘排盘体验，依据四柱、十神、五行旺衰、喜忌用神与大运流年生成命理解读。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 7 L58 39 L91 50 L58 61 L50 93 L42 61 L9 50 L42 39 Z' fill='%23d8a94b'/%3E%3C/svg%3E">
+<style>
+:root{
+  --void:#030302;
+  --black:#090705;
+  --panel:rgba(10,8,5,.68);
+  --panel-deep:rgba(8,6,4,.88);
+  --gold:#c48932;
+  --gold-hi:#ffe1a0;
+  --gold-soft:rgba(196,137,50,.46);
+  --line:rgba(213,157,67,.44);
+  --ink:#f6e8cc;
+  --muted:#c8a982;
+  --jade:#89c997;
+  --cinnabar:#d8784f;
+  --water:#7fb6d9;
+  --metal:#efe0b0;
+  --wood:#78bc79;
+  --earth:#c59654;
+  --shadow:0 24px 80px rgba(0,0,0,.48);
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --display:"STKaiti","KaiTi","Noto Serif SC",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{
+  overflow:hidden;
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--serif);
+  user-select:none;
+}
+button,input,select{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+::selection{background:rgba(216,169,75,.38)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#070503}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold),rgba(137,201,151,.6));border-radius:999px}
+
+#bg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  background:
+    radial-gradient(900px 520px at 49% 32%,rgba(240,176,76,.12),transparent 64%),
+    linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.22)),
+    url("assets/bazi/bg.png") center center/cover no-repeat;
+  transition:filter 1s ease,transform 1.2s ease,opacity 1s ease;
+}
+#videoLayer{position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+#videoLayer video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  filter:contrast(1.08) saturate(1.06);
+  transition:opacity .8s ease;
+}
+#shade{
+  position:fixed;
+  inset:0;
+  z-index:2;
+  background:
+    radial-gradient(900px 580px at 46% 36%,transparent 0,rgba(0,0,0,.08) 56%,rgba(0,0,0,.56) 100%),
+    linear-gradient(90deg,rgba(0,0,0,.62),transparent 30%,transparent 68%,rgba(0,0,0,.62));
+  opacity:.76;
+  pointer-events:none;
+  transition:opacity .7s ease;
+}
+#grain{
+  position:fixed;
+  inset:0;
+  z-index:3;
+  opacity:.11;
+  pointer-events:none;
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,228,165,.6) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 70% 60%,rgba(255,255,255,.45) 0 1px,transparent 1.4px);
+  background-size:160px 160px,230px 230px;
+  mix-blend-mode:screen;
+  animation:grainMove 28s linear infinite;
+}
+@keyframes grainMove{to{transform:translate3d(80px,-70px,0)}}
+#flash{
+  position:fixed;
+  inset:0;
+  z-index:30;
+  background:radial-gradient(circle at 50% 42%,rgba(255,232,170,.95),rgba(216,169,75,.45) 18%,transparent 54%);
+  opacity:0;
+  pointer-events:none;
+}
+#flash.on{animation:flash .92s ease forwards}
+@keyframes flash{0%{opacity:0}34%{opacity:1}100%{opacity:0}}
+.frame-line{position:fixed;inset:18px;z-index:5;pointer-events:none;border:1px solid rgba(196,137,50,.18)}
+.corner{position:absolute;width:54px;height:54px;border-color:rgba(255,218,140,.68);filter:drop-shadow(0 0 8px rgba(216,169,75,.45))}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}.c4{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  background:
+    linear-gradient(135deg,rgba(255,220,145,.06),transparent 32%,rgba(122,79,26,.08)),
+    var(--panel);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,226,160,.08);
+  backdrop-filter:blur(8px);
+}
+.pnl::before,.pnl::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+  inset:9px;
+  border:1px solid rgba(216,169,75,.16);
+}
+.panel-corners{position:absolute;inset:0;pointer-events:none}
+.panel-corners::before,.panel-corners::after{
+  content:"";
+  position:absolute;
+  width:38px;
+  height:38px;
+  border-color:rgba(255,218,140,.76);
+  filter:drop-shadow(0 0 7px rgba(216,169,75,.38));
+}
+.panel-corners::before{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.panel-corners::after{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.ornate-title{
+  font-family:var(--display);
+  color:var(--gold-hi);
+  font-weight:500;
+  letter-spacing:7px;
+  text-shadow:0 0 18px rgba(216,169,75,.38);
+}
+.ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+#topnav{
+  position:fixed;
+  z-index:12;
+  top:0;
+  left:0;
+  right:0;
+  height:76px;
+  padding:0 28px;
+  display:grid;
+  grid-template-columns:190px 1fr auto 1fr 140px;
+  align-items:center;
+  gap:20px;
+  background:linear-gradient(180deg,rgba(2,2,1,.74),rgba(2,2,1,.28),transparent);
+  border-bottom:1px solid rgba(216,169,75,.22);
+  transition:opacity .7s ease,transform .7s ease,background .7s ease;
+}
+#projBtn{
+  height:48px;
+  padding:0 18px;
+  border:1px solid rgba(216,169,75,.58);
+  color:var(--gold-hi);
+  background:rgba(8,6,3,.48);
+  letter-spacing:3px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:inset 0 0 18px rgba(196,137,50,.13),0 0 20px rgba(0,0,0,.25);
+}
+#projBtn .car{font-size:18px;color:var(--gold)}
+#projMenu{
+  display:none;
+  position:absolute;
+  top:56px;
+  left:0;
+  width:218px;
+  padding:9px;
+  z-index:30;
+}
+#projMenu.show{display:block;animation:fadeUp .24s ease}
+.pm-it{
+  height:40px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 12px;
+  color:var(--muted);
+  letter-spacing:2px;
+  font-size:14px;
+}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(196,137,50,.14)}
+.pm-it .mini{width:22px;color:var(--gold)}
+.navside{display:flex;justify-content:center;gap:34px}
+.navlink{
+  color:#d8b472;
+  font-size:16px;
+  letter-spacing:4px;
+  position:relative;
+}
+.navlink.cur,.navlink:hover{color:var(--gold-hi)}
+#navTitle{
+  white-space:nowrap;
+  font-family:var(--display);
+  font-size:32px;
+  letter-spacing:12px;
+  color:var(--gold-hi);
+  text-shadow:0 0 20px rgba(216,169,75,.42);
+}
+#navTitle::before,#navTitle::after{content:"✦";font-size:20px;margin:0 18px;color:var(--gold)}
+.navIcons{display:flex;justify-content:flex-end;gap:14px}
+.navico{
+  width:42px;
+  height:42px;
+  border:1px solid rgba(216,169,75,.54);
+  border-radius:50%;
+  color:var(--gold-hi);
+  padding:10px;
+  background:rgba(8,6,3,.36);
+  box-shadow:inset 0 0 14px rgba(196,137,50,.12);
+}
+.navico:hover{box-shadow:0 0 20px rgba(216,169,75,.32),inset 0 0 16px rgba(196,137,50,.2)}
+
+#home{
+  position:relative;
+  z-index:8;
+  min-height:100vh;
+  padding:118px 50px 46px;
+  display:grid;
+  grid-template-columns:178px minmax(250px,330px) 1fr 390px;
+  gap:34px;
+  align-items:center;
+  transition:opacity .8s ease,transform .8s ease;
+}
+#leftcol,#stepPanel,#rightcol{transition:opacity .72s ease,transform .72s ease}
+.side-menu{padding:22px 14px;display:flex;flex-direction:column;gap:8px}
+.mi{
+  height:74px;
+  display:grid;
+  grid-template-columns:48px 1fr;
+  align-items:center;
+  gap:14px;
+  padding:0 12px;
+  color:#c99752;
+  border-bottom:1px dashed rgba(216,169,75,.22);
+  letter-spacing:6px;
+  font-size:21px;
+}
+.mi:last-child{border-bottom:0}
+.mi:hover,.mi.cur{color:var(--gold-hi);background:linear-gradient(90deg,rgba(196,137,50,.16),transparent)}
+.mini-ico{
+  width:44px;
+  height:44px;
+  border:1px solid rgba(216,169,75,.52);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--gold-hi);
+  font-size:20px;
+  box-shadow:inset 0 0 16px rgba(216,169,75,.12);
+}
+.today-tip{margin-top:20px;padding:24px 22px 28px;min-height:160px}
+.tip-title{font-family:var(--display);font-size:21px;letter-spacing:4px;color:var(--gold-hi);margin-bottom:16px}
+.tip-copy{font-size:14px;line-height:1.9;color:var(--muted);letter-spacing:1.5px}
+.tip-mark{position:absolute;right:22px;bottom:22px;width:58px;height:58px;border:1px solid rgba(216,169,75,.34);border-radius:50%;display:grid;place-items:center;color:var(--gold-hi)}
+
+#stepPanel{align-self:center;padding:28px 26px 30px;min-height:476px}
+.steps-title{
+  font-family:var(--display);
+  font-size:25px;
+  color:var(--gold-hi);
+  letter-spacing:5px;
+  margin-bottom:24px;
+  text-align:center;
+}
+.step{
+  display:grid;
+  grid-template-columns:38px 1fr;
+  gap:15px;
+  padding:12px 0;
+  position:relative;
+}
+.step+.step{border-top:1px dashed rgba(216,169,75,.2)}
+.num{
+  width:34px;
+  height:34px;
+  border:1px solid rgba(216,169,75,.58);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:var(--gold-hi);
+  background:rgba(196,137,50,.11);
+  font-family:Georgia,serif;
+}
+.step h3{font-size:18px;color:#efc884;letter-spacing:4px;font-weight:600}
+.step p{font-size:13px;line-height:1.7;color:var(--muted);letter-spacing:1px;margin-top:4px}
+
+#centerStage{min-height:520px;position:relative;align-self:stretch}
+#chartGlow{
+  position:absolute;
+  left:50%;
+  top:44%;
+  width:min(46vw,620px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:
+    radial-gradient(circle,rgba(255,224,157,.28) 0 4%,transparent 6%),
+    repeating-radial-gradient(circle,rgba(216,169,75,.12) 0 1px,transparent 2px 32px),
+    conic-gradient(from 0deg,transparent,rgba(216,169,75,.42),transparent 32%,rgba(137,201,151,.22),transparent 60%,rgba(216,120,79,.24),transparent);
+  opacity:.72;
+  filter:drop-shadow(0 0 34px rgba(216,169,75,.26));
+  animation:slowSpin 48s linear infinite;
+}
+#chartGlow::before,#chartGlow::after{
+  content:"";
+  position:absolute;
+  inset:12%;
+  border:1px solid rgba(255,220,145,.34);
+  border-radius:50%;
+  box-shadow:0 0 26px rgba(216,169,75,.16),inset 0 0 18px rgba(216,169,75,.12);
+}
+#chartGlow::after{inset:30%;border-style:dashed;animation:slowSpin 32s linear reverse infinite}
+@keyframes slowSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+#rightcol{display:flex;flex-direction:column;gap:18px;align-self:center}
+.feature{min-height:126px;padding:20px 22px 18px 130px}
+.feature .round{
+  position:absolute;
+  left:26px;
+  top:24px;
+  width:78px;
+  height:78px;
+  border:1px solid rgba(216,169,75,.46);
+  border-radius:50%;
+  color:var(--gold-hi);
+  padding:18px;
+  box-shadow:inset 0 0 18px rgba(216,169,75,.12);
+}
+.feature h3{font-family:var(--display);font-size:25px;font-weight:500;letter-spacing:4px;color:var(--gold-hi);margin-bottom:8px}
+.feature p{font-size:14px;line-height:1.75;color:var(--muted);letter-spacing:1.2px}
+#startBtn{
+  height:78px;
+  color:var(--gold-hi);
+  font-family:var(--display);
+  font-size:32px;
+  letter-spacing:9px;
+  background:
+    linear-gradient(90deg,transparent,rgba(255,218,140,.18),transparent),
+    rgba(24,14,5,.76);
+  border:1px solid rgba(255,218,140,.72);
+  box-shadow:0 0 32px rgba(216,169,75,.28),inset 0 0 26px rgba(216,169,75,.14);
+}
+#startBtn:hover{filter:brightness(1.18);box-shadow:0 0 42px rgba(216,169,75,.42),inset 0 0 30px rgba(216,169,75,.2)}
+.quote{padding:22px 30px 22px 72px;color:#e7bd77;font-family:var(--display);font-size:22px;letter-spacing:4px}
+.quote .mark{position:absolute;left:25px;top:14px;font-size:44px;color:var(--gold)}
+#tapHint{
+  position:fixed;
+  z-index:10;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  color:rgba(255,224,157,.86);
+  letter-spacing:4px;
+  font-size:13px;
+  text-shadow:0 0 16px rgba(216,169,75,.5);
+  transition:opacity .7s ease;
+}
+
+.layer{
+  position:fixed;
+  inset:0;
+  z-index:14;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .65s ease;
+}
+body[data-stage="opening"] #openingLayer,
+body[data-stage="form"] #formLayer,
+body[data-stage="climax"] #climaxLayer,
+body[data-stage="result"] #resultLayer{opacity:1;visibility:visible;pointer-events:auto}
+body:not([data-stage="home"]) #home,
+body:not([data-stage="home"]) #tapHint{opacity:0;pointer-events:none;transform:scale(.985)}
+body:not([data-stage="home"]) #home *{pointer-events:none!important}
+body:not([data-stage="home"]) #leftcol{transform:translateX(-28px)}
+body:not([data-stage="home"]) #rightcol{transform:translateX(28px)}
+body:not([data-stage="home"]) #stepPanel{transform:translateY(20px)}
+body[data-stage="opening"] #topnav,
+body[data-stage="form"] #topnav,
+body[data-stage="climax"] #topnav{opacity:.22;transform:translateY(-8px);pointer-events:none}
+body[data-stage="result"] #topnav{opacity:.96;background:linear-gradient(180deg,rgba(3,3,2,.95),rgba(3,3,2,.72),transparent)}
+body[data-stage="opening"] #openingVideo,
+body[data-stage="climax"] #climaxVideo{opacity:1}
+body[data-stage="opening"] #bg,
+body[data-stage="climax"] #bg{filter:brightness(.62) saturate(1.08) contrast(1.06);transform:scale(1.018)}
+body[data-stage="opening"] #shade,
+body[data-stage="climax"] #shade{opacity:.42}
+body[data-stage="form"] #shade{opacity:.88}
+body[data-stage="result"] #shade{opacity:.94}
+body[data-stage="result"] #bg{filter:brightness(.32) saturate(.86) contrast(1.02);transform:scale(1.025)}
+
+.ritual-card{
+  position:absolute;
+  left:50%;
+  bottom:44px;
+  width:min(920px,calc(100vw - 40px));
+  transform:translateX(-50%) translateY(18px);
+  padding:30px 34px;
+  text-align:center;
+}
+.ritual-card h1{
+  font-family:var(--display);
+  font-size:clamp(30px,4vw,54px);
+  font-weight:500;
+  color:var(--gold-hi);
+  letter-spacing:10px;
+  text-shadow:0 0 20px rgba(216,169,75,.48);
+}
+.ritual-card p{max-width:720px;margin:14px auto 0;color:var(--muted);line-height:1.8;letter-spacing:1.6px;font-size:15px}
+.focus-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:22px auto 20px}
+.chip{
+  min-height:38px;
+  padding:0 18px;
+  border:1px solid rgba(216,169,75,.36);
+  background:rgba(7,5,3,.5);
+  color:#d5b479;
+  letter-spacing:2px;
+  font-size:14px;
+}
+.chip:hover,.chip.sel{border-color:rgba(255,218,140,.82);color:var(--gold-hi);box-shadow:0 0 18px rgba(216,169,75,.22);background:rgba(196,137,50,.14)}
+.primary,.ghost,.act{
+  min-height:44px;
+  padding:0 22px;
+  border:1px solid rgba(216,169,75,.54);
+  color:var(--gold-hi);
+  background:rgba(9,7,4,.58);
+  letter-spacing:3px;
+  box-shadow:inset 0 0 18px rgba(216,169,75,.09);
+}
+.primary{
+  background:linear-gradient(90deg,rgba(127,82,25,.52),rgba(39,23,8,.78));
+  border-color:rgba(255,218,140,.72);
+}
+.ghost:hover,.primary:hover,.act:hover{filter:brightness(1.16)}
+#exitRitual,#skipBtn{
+  position:absolute;
+  right:34px;
+  top:96px;
+  z-index:18;
+  opacity:.74;
+}
+#skipBtn{top:auto;bottom:40px}
+
+#formLayer{
+  display:grid;
+  grid-template-columns:minmax(0,760px) 330px;
+  align-items:center;
+  justify-content:center;
+  gap:28px;
+  padding:108px 28px 38px;
+}
+#formCard{padding:34px}
+.form-head{text-align:center;margin-bottom:24px}
+.form-head h1{font-family:var(--display);font-size:42px;font-weight:500;letter-spacing:8px;color:var(--gold-hi)}
+.form-head p{margin-top:10px;color:var(--muted);letter-spacing:1.4px;line-height:1.75}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label,.switch span{font-size:13px;color:#d2b071;letter-spacing:2px}
+.field input,.field select{
+  width:100%;
+  height:44px;
+  border:1px solid rgba(216,169,75,.38);
+  background:rgba(6,5,3,.7);
+  padding:0 12px;
+  color:var(--ink);
+  outline:none;
+}
+.field input:focus,.field select:focus{border-color:rgba(255,218,140,.78);box-shadow:0 0 18px rgba(216,169,75,.18)}
+.switch{
+  margin:18px 0 0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--muted);
+}
+.switch input{accent-color:#c48932;width:16px;height:16px}
+.form-actions{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.side-note{padding:28px 24px}
+.side-note h2{font-family:var(--display);font-size:27px;font-weight:500;letter-spacing:5px;color:var(--gold-hi);margin-bottom:18px}
+.method{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:13px 0;border-top:1px dashed rgba(216,169,75,.2)}
+.method:first-of-type{border-top:0}
+.method b{width:28px;height:28px;border:1px solid rgba(216,169,75,.5);border-radius:50%;display:grid;place-items:center;color:var(--gold-hi)}
+.method h4{font-size:15px;color:#efc884;letter-spacing:2px}
+.method p{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:4px}
+
+#climaxLayer{display:grid;place-items:center}
+#climaxLayer .ritual-card{bottom:auto;top:50%;transform:translate(-50%,-50%);max-width:760px}
+#climaxLine{font-family:var(--display);font-size:clamp(28px,4vw,48px);letter-spacing:9px;color:var(--gold-hi);text-shadow:0 0 20px rgba(216,169,75,.55)}
+#climaxSub{margin-top:16px;color:var(--muted);letter-spacing:2px}
+
+#resultLayer{
+  z-index:18;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background:linear-gradient(180deg,rgba(4,3,2,.72),rgba(4,3,2,.96) 44%,#030302);
+}
+#resultInner{
+  width:min(1260px,calc(100vw - 36px));
+  margin:0 auto;
+  padding:108px 0 76px;
+}
+.result-head{text-align:center;margin-bottom:28px}
+.result-head h1{font-family:var(--display);font-size:clamp(34px,4vw,56px);font-weight:500;letter-spacing:10px;color:var(--gold-hi);text-shadow:0 0 22px rgba(216,169,75,.42)}
+#resultMeta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 18px}
+#resultMeta span{
+  font-size:12px;
+  color:#e2c188;
+  letter-spacing:2px;
+  border:1px solid rgba(216,169,75,.28);
+  background:rgba(196,137,50,.08);
+  padding:6px 12px;
+}
+.result-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.result-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;margin-bottom:22px}
+.block{padding:24px}
+.block h2{
+  font-family:var(--display);
+  font-size:25px;
+  font-weight:500;
+  color:var(--gold-hi);
+  letter-spacing:5px;
+  margin-bottom:16px;
+}
+.pillar-table{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pillar{
+  min-height:228px;
+  padding:18px 12px;
+  text-align:center;
+  border:1px solid rgba(216,169,75,.32);
+  background:rgba(255,224,157,.04);
+  position:relative;
+}
+.pillar .name{font-size:14px;color:var(--muted);letter-spacing:4px}
+.pillar .gz{font-family:var(--display);font-size:42px;letter-spacing:4px;color:var(--gold-hi);margin:12px 0;text-shadow:0 0 16px rgba(216,169,75,.34)}
+.pillar .stem-branch{display:flex;justify-content:center;gap:12px;margin-bottom:12px}
+.pillar .stem-branch b{font-size:34px;font-weight:500}
+.small-line{font-size:12.5px;line-height:1.7;color:var(--muted);letter-spacing:1px}
+.ten{color:#f1d28f}
+.chart-bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:12px}
+.bar-name{letter-spacing:3px;color:var(--gold-hi)}
+.bar-track{height:12px;background:rgba(255,255,255,.07);border:1px solid rgba(216,169,75,.2);overflow:hidden}
+.bar-fill{height:100%;width:10%;box-shadow:0 0 18px currentColor}
+.bar-val{text-align:right;color:var(--muted);font-size:12px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.summary-card{padding:19px 18px;min-height:132px}
+.summary-card .k{font-size:12px;color:var(--muted);letter-spacing:3px;margin-bottom:8px}
+.summary-card .v{font-family:var(--display);font-size:26px;color:var(--gold-hi);letter-spacing:3px;margin-bottom:8px}
+.summary-card .d{font-size:13px;color:var(--muted);line-height:1.65;letter-spacing:1px}
+.reading-blocks{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.analysis{padding:24px;min-height:210px}
+.analysis h3{font-family:var(--display);font-weight:500;font-size:25px;color:var(--gold-hi);letter-spacing:5px;margin-bottom:12px}
+.analysis p{font-size:14px;line-height:1.9;color:#dcc8a4;letter-spacing:1.1px;margin-top:10px}
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.tag{font-size:12px;color:#efc884;border:1px solid rgba(216,169,75,.3);padding:5px 10px;background:rgba(196,137,50,.08);letter-spacing:1px}
+.luck-table{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.luck{padding:13px;border:1px solid rgba(216,169,75,.24);background:rgba(255,224,157,.04)}
+.luck b{display:block;color:var(--gold-hi);font-size:19px;letter-spacing:2px;margin-bottom:4px}
+.luck span{font-size:12px;color:var(--muted);letter-spacing:1px}
+#toast{
+  position:fixed;
+  z-index:60;
+  left:50%;
+  bottom:26px;
+  transform:translate(-50%,16px);
+  opacity:0;
+  pointer-events:none;
+  padding:11px 18px;
+  color:var(--gold-hi);
+  background:rgba(8,6,3,.88);
+  border:1px solid rgba(216,169,75,.42);
+  letter-spacing:2px;
+  transition:.25s ease;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#soundBtn{
+  position:fixed;
+  right:24px;
+  bottom:22px;
+  z-index:40;
+  width:42px;
+  height:42px;
+  border:1px solid rgba(216,169,75,.5);
+  border-radius:50%;
+  color:var(--gold-hi);
+  background:rgba(8,6,3,.62);
+}
+#soundBtn.off{opacity:.42}
+
+@media (max-width:1280px){
+  #home{grid-template-columns:156px minmax(230px,300px) 1fr 330px;gap:22px;padding-left:32px;padding-right:32px}
+  .feature{padding-left:104px}.feature .round{width:64px;height:64px;padding:14px}
+  #navTitle{font-size:28px;letter-spacing:9px}
+  .navside{gap:22px}
+}
+@media (min-width:981px){
+  #home{
+    height:100vh;
+    min-height:0;
+    padding-top:clamp(84px,9vh,112px);
+    padding-bottom:clamp(16px,2.3vh,36px);
+    gap:clamp(18px,1.8vw,34px);
+  }
+  .side-menu{
+    padding:clamp(12px,1.7vh,22px) 14px;
+    gap:clamp(4px,.8vh,8px);
+  }
+  .mi{
+    height:clamp(54px,7.2vh,74px);
+    font-size:clamp(17px,2.15vh,21px);
+  }
+  .mini-ico{
+    width:clamp(34px,4.8vh,44px);
+    height:clamp(34px,4.8vh,44px);
+    font-size:clamp(16px,2.2vh,20px);
+  }
+  .today-tip{
+    margin-top:clamp(10px,1.4vh,20px);
+    padding:clamp(14px,1.9vh,24px) 20px clamp(16px,2.1vh,28px);
+    min-height:clamp(112px,14.8vh,160px);
+  }
+  .tip-title{
+    font-size:clamp(18px,2.2vh,21px);
+    margin-bottom:clamp(8px,1.2vh,16px);
+  }
+  .tip-copy{
+    font-size:clamp(12px,1.55vh,14px);
+    line-height:1.62;
+  }
+  .tip-mark{
+    width:clamp(44px,6.3vh,58px);
+    height:clamp(44px,6.3vh,58px);
+    right:18px;
+    bottom:16px;
+  }
+  #stepPanel{
+    min-height:auto;
+    padding:clamp(18px,2.45vh,28px) clamp(18px,1.8vw,26px);
+  }
+  .steps-title{
+    font-size:clamp(21px,2.85vh,25px);
+    margin-bottom:clamp(12px,1.8vh,24px);
+  }
+  .step{
+    padding:clamp(7px,1.05vh,12px) 0;
+    gap:clamp(10px,1.4vh,15px);
+  }
+  .num{
+    width:clamp(28px,4.4vh,34px);
+    height:clamp(28px,4.4vh,34px);
+  }
+  .step h3{
+    font-size:clamp(15px,2vh,18px);
+  }
+  .step p{
+    font-size:clamp(11.5px,1.55vh,13px);
+    line-height:1.5;
+    margin-top:2px;
+  }
+  #rightcol{
+    gap:clamp(10px,1.4vh,18px);
+  }
+  .feature{
+    min-height:clamp(96px,13vh,126px);
+    padding-top:clamp(13px,1.8vh,20px);
+    padding-right:clamp(16px,1.4vw,22px);
+    padding-bottom:clamp(12px,1.7vh,18px);
+    padding-left:clamp(94px,6.8vw,130px);
+  }
+  .feature .round{
+    width:clamp(56px,7.2vh,78px);
+    height:clamp(56px,7.2vh,78px);
+    left:clamp(18px,1.35vw,26px);
+    top:50%;
+    transform:translateY(-50%);
+    padding:clamp(12px,1.7vh,18px);
+  }
+  .feature h3{
+    font-size:clamp(20px,2.7vh,25px);
+    margin-bottom:clamp(4px,.8vh,8px);
+  }
+  .feature p{
+    font-size:clamp(12px,1.55vh,14px);
+    line-height:1.52;
+  }
+  #startBtn{
+    height:clamp(56px,7.8vh,78px);
+    font-size:clamp(24px,3.4vh,32px);
+  }
+  .quote{
+    padding:clamp(12px,1.8vh,22px) clamp(20px,1.8vw,30px) clamp(12px,1.8vh,22px) clamp(54px,4.3vw,72px);
+    font-size:clamp(17px,2.35vh,22px);
+  }
+  .quote .mark{
+    left:20px;
+    top:8px;
+    font-size:clamp(34px,4.8vh,44px);
+  }
+  #tapHint{
+    bottom:clamp(8px,1.4vh,24px);
+  }
+}
+@media (max-width:980px){
+  body{overflow-y:auto;overflow-x:hidden}
+  #topnav{height:66px;grid-template-columns:154px 1fr;gap:12px;padding:0 14px}
+  .navside,.navIcons{display:none}
+  #navTitle{justify-self:end;font-size:24px;letter-spacing:5px}
+  #navTitle::before,#navTitle::after{display:none}
+  #home{min-height:auto;display:flex;flex-direction:column;padding:92px 16px 80px;gap:18px}
+  #leftcol,#stepPanel,#rightcol{width:100%;max-width:680px}
+  .side-menu{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:12px}
+  .mi{height:64px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px;font-size:15px;letter-spacing:2px;border:1px solid rgba(216,169,75,.18)}
+  .mini-ico{width:30px;height:30px;font-size:14px}
+  .today-tip{display:none}
+  #centerStage{display:none}
+  #formLayer{display:flex;flex-direction:column;padding:86px 14px 60px}
+  #formCard,.side-note{width:100%;max-width:680px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .result-grid,.reading-blocks{grid-template-columns:1fr}
+  .summary-grid{grid-template-columns:1fr}
+  .pillar-table{grid-template-columns:repeat(2,1fr)}
+  .luck-table{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .frame-line{inset:10px}
+  #projBtn{height:42px;padding:0 12px;font-size:13px}
+  #navTitle{font-size:20px}
+  .ritual-card{bottom:22px;padding:24px 18px}
+  .ritual-card h1{font-size:30px;letter-spacing:5px}
+  .focus-row{gap:7px}.chip{font-size:12px;padding:0 12px}
+  .form-grid,.pillar-table,.luck-table{grid-template-columns:1fr}
+  .form-head h1,.result-head h1{font-size:32px;letter-spacing:5px}
+  #resultInner{width:calc(100vw - 22px);padding-top:88px}
+  .block,.analysis{padding:20px 16px}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg" aria-hidden="true"></div>
+<div id="videoLayer" aria-hidden="true">
+  <video id="openingVideo" src="assets/bazi/opening.mp4" playsinline muted preload="auto"></video>
+  <video id="climaxVideo" src="assets/bazi/climax.mp4" playsinline muted preload="auto"></video>
+</div>
+<div id="shade" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div class="frame-line" aria-hidden="true"><i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div>
+
+<nav id="topnav" data-ui>
+  <button id="projBtn" aria-expanded="false" data-ui>
+    <span>玄学项目</span><span class="car">⌄</span>
+    <div id="projMenu" class="pnl"></div>
+  </button>
+  <div class="navside">
+    <button class="navlink cur" data-nav="home">首页</button>
+    <button class="navlink" data-nav="ming">命理</button>
+    <button class="navlink" data-nav="service">服务</button>
+  </div>
+  <div id="navTitle">八字命盘</div>
+  <div class="navside">
+    <button class="navlink" data-nav="daily">每日运势</button>
+    <button class="navlink" data-nav="archive">档案</button>
+    <button class="navlink" data-nav="about">关于我们</button>
+  </div>
+  <div class="navIcons">
+    <button class="navico ico" data-nav="profile" aria-label="档案"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.8-4.4 14.2-4.4 16 0"/></svg></button>
+    <button class="navico ico" data-nav="daily" aria-label="日运"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 6.5L21 12l-6.6 2.5L12 21l-2.4-6.5L3 12l6.6-2.5L12 3z"/></svg></button>
+  </div>
+</nav>
+
+<main id="home">
+  <aside id="leftcol" data-ui>
+    <section class="side-menu pnl">
+      <div class="panel-corners"></div>
+      <button class="mi cur" data-side="bazi"><span class="mini-ico">☯</span><span>八字</span></button>
+      <button class="mi" data-side="pillars"><span class="mini-ico">柱</span><span>排盘</span></button>
+      <button class="mi" data-side="pattern"><span class="mini-ico">格</span><span>格局</span></button>
+      <button class="mi" data-side="year"><span class="mini-ico">运</span><span>流年</span></button>
+      <button class="mi" data-side="luck"><span class="mini-ico">限</span><span>大运</span></button>
+    </section>
+    <section class="today-tip pnl">
+      <div class="panel-corners"></div>
+      <div class="tip-title">今日命盘提示</div>
+      <p class="tip-copy">静观其变，顺势而为。今日宜先定一事，不宜多线并问；守中有进，自有贵人相助。</p>
+      <div class="tip-mark">中</div>
+    </section>
+  </aside>
+
+  <section id="stepPanel" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="steps-title">起盘步骤</div>
+    <div class="step"><b class="num">1</b><div><h3>定时</h3><p>校准出生日期、时辰与地点，先分清公历、农历与节气界限。</p></div></div>
+    <div class="step"><b class="num">2</b><div><h3>排柱</h3><p>排出年、月、日、时四柱，以日主为命局核心。</p></div></div>
+    <div class="step"><b class="num">3</b><div><h3>观局</h3><p>看月令旺衰、透干通根，辨别日主强弱与十神结构。</p></div></div>
+    <div class="step"><b class="num">4</b><div><h3>取用</h3><p>依寒暖燥湿、扶抑通关，判断喜忌用神。</p></div></div>
+    <div class="step"><b class="num">5</b><div><h3>推运</h3><p>合参大运与流年，把格局落到当下选择。</p></div></div>
+  </section>
+
+  <section id="centerStage" aria-hidden="true"><div id="chartGlow"></div></section>
+
+  <aside id="rightcol" data-ui>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><path d="M6 4h12M6 20h12M8 4v16M16 4v16"/><path d="M10 8h4M10 12h4M10 16h4"/></svg></span>
+      <h3>四柱命盘</h3>
+      <p>排出年柱、月柱、日柱、时柱，解析天干地支与藏干根气。</p>
+    </section>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M4 8h16M6 16h12"/><path d="M7 8c0 4 10 4 10 8"/></svg></span>
+      <h3>五行旺衰</h3>
+      <p>合看季令、透干、通根与生克，判断日主身强身弱。</p>
+    </section>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><path d="M4 18c4-7 7 1 11-7 1.2-2.4 3-4 5-5"/><path d="M4 21h16M4 4v17"/></svg></span>
+      <h3>命格解读</h3>
+      <p>从十神、格局、喜忌与大运，给出事业、情感、行动建议。</p>
+    </section>
+    <button id="startBtn" class="pnl" data-act="start-opening"><span>启命开盘</span></button>
+    <section class="quote pnl"><div class="panel-corners"></div><span class="mark">“</span>命有其纹，运有其势。</section>
+  </aside>
+</main>
+<div id="tapHint">轻点空白处，启八字命盘</div>
+
+<section id="openingLayer" class="layer">
+  <button id="exitRitual" class="ghost" data-act="homeback" data-ui>退出仪式</button>
+  <div class="ritual-card pnl" data-ui>
+    <div class="panel-corners"></div>
+    <h1>四柱归位</h1>
+    <p>八字以出生时空为经纬，年为根、月为令、日为主、时为归。先选本次解读重点，再继续定盘。</p>
+    <div id="focusRow" class="focus-row"></div>
+    <button class="primary" data-act="opening-next">继续定盘</button>
+  </div>
+</section>
+
+<section id="formLayer" class="layer">
+  <div id="formCard" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="form-head">
+      <h1>定时排盘</h1>
+      <p>时间越准确，时柱与大运越稳。若出生时辰不确定，可勾选不确定，系统会在解读中降低时柱权重。</p>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label for="birthDate">出生日期</label><input id="birthDate" type="date" value="1992-08-18"></div>
+      <div class="field"><label for="birthTime">出生时间</label><input id="birthTime" type="time" value="08:30"></div>
+      <div class="field"><label for="gender">性别</label><select id="gender"><option value="neutral">不限定</option><option value="female">女命</option><option value="male">男命</option></select></div>
+      <div class="field"><label for="calendarType">日期类型</label><select id="calendarType"><option value="solar">公历生日</option><option value="lunar">农历生日</option></select></div>
+      <div class="field"><label for="birthPlace">出生地</label><input id="birthPlace" type="text" value="杭州" autocomplete="off"></div>
+      <div class="field"><label for="hourMode">时辰校准</label><select id="hourMode"><option value="standard">北京时间</option><option value="solar">真太阳时参考</option></select></div>
+    </div>
+    <label class="switch"><input id="uncertainHour" type="checkbox"><span>出生时辰不确定，结果中标注时柱参考</span></label>
+    <div class="form-actions">
+      <button class="primary" data-act="start-climax">继续推演</button>
+      <button class="ghost" data-act="demo">使用演示命盘</button>
+      <button class="ghost" data-act="homeback">返回首页</button>
+    </div>
+  </div>
+  <aside class="side-note pnl" data-ui>
+    <div class="panel-corners"></div>
+    <h2>专业玩法</h2>
+    <div class="method"><b>1</b><div><h4>节气定月</h4><p>八字月柱按节气切换，不以农历初一作为月令边界。</p></div></div>
+    <div class="method"><b>2</b><div><h4>日主为体</h4><p>以日干代表命主自身，十神关系均围绕日主展开。</p></div></div>
+    <div class="method"><b>3</b><div><h4>旺衰取用</h4><p>看月令、透干、藏干、通根，再判断扶抑与通关。</p></div></div>
+    <div class="method"><b>4</b><div><h4>大运落地</h4><p>顺逆由阴阳年与性别合参，起运以节气距离估算。</p></div></div>
+  </aside>
+</section>
+
+<section id="climaxLayer" class="layer">
+  <div class="ritual-card pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div id="climaxLine">天干起势，地支成局</div>
+    <div id="climaxSub">立春定岁 · 节气定月 · 日主归位 · 大运入盘</div>
+  </div>
+  <button id="skipBtn" class="ghost" data-act="finish-climax" data-ui>跳过动画</button>
+</section>
+
+<section id="resultLayer" class="layer">
+  <div id="resultInner" data-ui>
+    <header class="result-head">
+      <h1>八字命盘详解</h1>
+      <div id="resultMeta"></div>
+      <div class="result-actions">
+        <button class="ghost" data-act="copy">复制解读</button>
+        <button class="ghost" data-act="again">重新排盘</button>
+        <button class="ghost" data-act="homeback">返回首页</button>
+      </div>
+    </header>
+    <section class="result-grid">
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>四柱命盘</h2>
+        <div id="pillarTable" class="pillar-table"></div>
+      </article>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>五行气势</h2>
+        <div id="elementBars" class="chart-bars"></div>
+      </article>
+    </section>
+    <section id="summaryGrid" class="summary-grid"></section>
+    <section class="reading-blocks">
+      <article id="analysisMain" class="analysis pnl"><div class="panel-corners"></div></article>
+      <article id="analysisPattern" class="analysis pnl"><div class="panel-corners"></div></article>
+      <article id="analysisCareer" class="analysis pnl"><div class="panel-corners"></div></article>
+      <article id="analysisRelation" class="analysis pnl"><div class="panel-corners"></div></article>
+      <article id="analysisYear" class="analysis pnl"><div class="panel-corners"></div></article>
+      <article id="analysisAdvice" class="analysis pnl"><div class="panel-corners"></div></article>
+    </section>
+    <section class="block pnl" style="margin-top:18px">
+      <div class="panel-corners"></div>
+      <h2>大运简表</h2>
+      <div id="luckTable" class="luck-table"></div>
+    </section>
+  </div>
+</section>
+
+<button id="soundBtn" data-ui title="音效开关">♪</button>
+<div id="toast"></div>
+
+<script>
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const STAGES = ["home","opening","form","climax","result"];
+const state = {
+  stage:"home",
+  focus:"overall",
+  chart:null,
+  reading:null,
+  sound:true,
+  climaxDone:false
+};
+const V = {opening:$("#openingVideo"), climax:$("#climaxVideo")};
+const FOCUS_OPTIONS = [
+  {key:"overall",label:"综合命盘",desc:"格局全览"},
+  {key:"career",label:"事业财运",desc:"财官印同看"},
+  {key:"relation",label:"情感关系",desc:"配偶宫与财官"},
+  {key:"talent",label:"性格天赋",desc:"日主十神"},
+  {key:"year",label:"流年近势",desc:"当下策略"}
+];
+const PROJECTS = [
+  {key:"tarot",label:"塔罗占卜",href:"index_6.html"},
+  {key:"astro",label:"星盘占星",href:"index_astrology.html"},
+  {key:"bazi",label:"八字命理",href:"index_bazi.html",current:true},
+  {key:"ziwei",label:"紫微斗数",href:"index_ziwei.html"},
+  {key:"zodiac",label:"生肖运势",href:"index_zodiac.html"},
+  {key:"lingqian",label:"灵签占问",href:"index_lingqian.html"},
+  {key:"mianxiang",label:"面相识人",href:"index_mianxiang.html"},
+  {key:"name",label:"姓名日期",href:"index_name_date.html"},
+  {key:"zhougong",label:"周公解梦",href:"index_zhougong.html"}
+];
+const STEMS = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const ELEMENTS = ["木","火","土","金","水"];
+const ELEMENT_COLOR = {木:"#78bc79",火:"#d8784f",土:"#c59654",金:"#efe0b0",水:"#7fb6d9"};
+const GENERATES = {木:"火",火:"土",土:"金",金:"水",水:"木"};
+const CONTROLS = {木:"土",土:"水",水:"火",火:"金",金:"木"};
+const STEM_INFO = {
+  甲:{el:"木",pol:"阳"},乙:{el:"木",pol:"阴"},丙:{el:"火",pol:"阳"},丁:{el:"火",pol:"阴"},戊:{el:"土",pol:"阳"},
+  己:{el:"土",pol:"阴"},庚:{el:"金",pol:"阳"},辛:{el:"金",pol:"阴"},壬:{el:"水",pol:"阳"},癸:{el:"水",pol:"阴"}
+};
+const BRANCH_INFO = {
+  子:{el:"水",animal:"鼠",hidden:["癸"]},
+  丑:{el:"土",animal:"牛",hidden:["己","癸","辛"]},
+  寅:{el:"木",animal:"虎",hidden:["甲","丙","戊"]},
+  卯:{el:"木",animal:"兔",hidden:["乙"]},
+  辰:{el:"土",animal:"龙",hidden:["戊","乙","癸"]},
+  巳:{el:"火",animal:"蛇",hidden:["丙","戊","庚"]},
+  午:{el:"火",animal:"马",hidden:["丁","己"]},
+  未:{el:"土",animal:"羊",hidden:["己","丁","乙"]},
+  申:{el:"金",animal:"猴",hidden:["庚","壬","戊"]},
+  酉:{el:"金",animal:"鸡",hidden:["辛"]},
+  戌:{el:"土",animal:"狗",hidden:["戊","辛","丁"]},
+  亥:{el:"水",animal:"猪",hidden:["壬","甲"]}
+};
+const MONTH_BRANCHES = ["寅","卯","辰","巳","午","未","申","酉","戌","亥","子","丑"];
+const MONTH_START_STEM = {甲:2,己:2,乙:4,庚:4,丙:6,辛:6,丁:8,壬:8,戊:0,癸:0};
+const HOUR_BRANCHES = [
+  ["子",23,1],["丑",1,3],["寅",3,5],["卯",5,7],["辰",7,9],["巳",9,11],
+  ["午",11,13],["未",13,15],["申",15,17],["酉",17,19],["戌",19,21],["亥",21,23]
+];
+const HOUR_START_STEM = {甲:0,己:0,乙:2,庚:2,丙:4,辛:4,丁:6,壬:6,戊:8,癸:8};
+const NAYIN = ["海中金","海中金","炉中火","炉中火","大林木","大林木","路旁土","路旁土","剑锋金","剑锋金","山头火","山头火","涧下水","涧下水","城头土","城头土","白蜡金","白蜡金","杨柳木","杨柳木","泉中水","泉中水","屋上土","屋上土","霹雳火","霹雳火","松柏木","松柏木","长流水","长流水","沙中金","沙中金","山下火","山下火","平地木","平地木","壁上土","壁上土","金箔金","金箔金","覆灯火","覆灯火","天河水","天河水","大驿土","大驿土","钗钏金","钗钏金","桑柘木","桑柘木","大溪水","大溪水","沙中土","沙中土","天上火","天上火","石榴木","石榴木","大海水","大海水"];
+const SOLAR_TERMS = [
+  ["小寒",1,6],["立春",2,4],["惊蛰",3,6],["清明",4,5],["立夏",5,6],["芒种",6,6],
+  ["小暑",7,7],["立秋",8,8],["白露",9,8],["寒露",10,8],["立冬",11,7],["大雪",12,7]
+];
+let toastTimer = 0;
+let audioCtx = null;
+
+function toast(message){
+  const t = $("#toast");
+  t.textContent = message;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2300);
+}
+function audio(){
+  if (!state.sound) return null;
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq, dur=.24, delay=0, vol=.045){
+  const ctx = audio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const t = ctx.currentTime + delay;
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t+.02);
+  gain.gain.exponentialRampToValueAtTime(.0001, t+dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t+dur+.04);
+}
+function sfx(kind){
+  if (kind === "open") { tone(196,.28,0,.04); tone(392,.36,.08,.035); }
+  if (kind === "choose") { tone(330,.18,0,.035); }
+  if (kind === "result") { tone(261,.3,0,.04); tone(392,.3,.08,.04); tone(523,.42,.18,.035); }
+}
+function setStage(stage){
+  if (!STAGES.includes(stage)) return;
+  state.stage = stage;
+  document.body.dataset.stage = stage;
+  if (stage !== "opening") stopVideo("opening");
+  if (stage !== "climax") stopVideo("climax");
+}
+function stopVideo(key){
+  const video = V[key];
+  if (!video) return;
+  try { video.pause(); video.currentTime = 0; } catch(e) {}
+}
+function playVideo(key){
+  const video = V[key];
+  if (!video) return;
+  try {
+    video.currentTime = 0;
+    const p = video.play();
+    if (p) p.catch(() => toast("视频自动播放受限，可继续操作"));
+  } catch(e) {}
+}
+function flash(){
+  const f = $("#flash");
+  f.classList.remove("on");
+  void f.offsetWidth;
+  f.classList.add("on");
+}
+function buildProjectMenu(){
+  $("#projMenu").innerHTML = PROJECTS.map(p => `
+    <button class="pm-it${p.current ? " cur" : ""}" data-proj="${p.key}">
+      <span class="mini">${p.current ? "◎" : "✦"}</span>${p.label}
+    </button>`).join("");
+}
+function buildFocusRow(){
+  $("#focusRow").innerHTML = FOCUS_OPTIONS.map(item => `
+    <button class="chip${item.key === state.focus ? " sel" : ""}" data-focus="${item.key}">
+      ${item.label}
+    </button>`).join("");
+}
+function setFocus(key){
+  const item = FOCUS_OPTIONS.find(x => x.key === key);
+  if (!item) return;
+  state.focus = key;
+  buildFocusRow();
+  sfx("choose");
+  toast(`${item.label}已选`);
+}
+function toOpening(){
+  if (state.stage !== "home") return;
+  setStage("opening");
+  playVideo("opening");
+  sfx("open");
+}
+function toForm(){
+  if (state.stage !== "opening") return;
+  setStage("form");
+}
+function startClimax(){
+  state.chart = buildChart();
+  state.reading = buildReading(state.chart);
+  state.climaxDone = false;
+  setStage("climax");
+  playVideo("climax");
+  sfx("open");
+  setTimeout(() => {
+    if (state.stage === "climax" && !state.climaxDone && (!V.climax.duration || V.climax.currentTime < .5)) finishClimax();
+  }, 2600);
+}
+function finishClimax(){
+  if (state.climaxDone) return;
+  state.climaxDone = true;
+  if (!state.chart) state.chart = buildChart();
+  if (!state.reading) state.reading = buildReading(state.chart);
+  flash();
+  sfx("result");
+  renderResult();
+  setTimeout(() => {
+    setStage("result");
+    $("#resultLayer").scrollTop = 0;
+  }, 420);
+}
+function backHome(){
+  state.chart = null;
+  state.reading = null;
+  setStage("home");
+}
+function again(){
+  state.chart = null;
+  state.reading = null;
+  setStage("form");
+}
+function useDemo(){
+  $("#birthDate").value = "1992-08-18";
+  $("#birthTime").value = "08:30";
+  $("#gender").value = "neutral";
+  $("#calendarType").value = "solar";
+  $("#birthPlace").value = "杭州";
+  $("#hourMode").value = "standard";
+  $("#uncertainHour").checked = false;
+  toast("已填入演示命盘");
+}
+function mod(n,m){ return ((n % m) + m) % m; }
+function cycleName(index){ return STEMS[mod(index,10)] + BRANCHES[mod(index,12)]; }
+function cycleIndex(stem, branch){
+  for (let i=0;i<60;i++) if (STEMS[i%10] === stem && BRANCHES[i%12] === branch) return i;
+  return 0;
+}
+function pillarFromIndex(index, label){
+  const idx = mod(index,60);
+  const stem = STEMS[idx % 10];
+  const branch = BRANCHES[idx % 12];
+  return {label, index:idx, stem, branch, name:stem+branch, nayin:NAYIN[idx], hidden:BRANCH_INFO[branch].hidden};
+}
+function dateParts(){
+  const raw = $("#birthDate").value || "1992-08-18";
+  const [year,month,day] = raw.split("-").map(Number);
+  const time = $("#birthTime").value || "08:30";
+  const [hour,minute] = time.split(":").map(Number);
+  return {year,month,day,hour,minute,date:new Date(year, month-1, day, hour, minute || 0)};
+}
+function termDate(year, name){
+  const t = SOLAR_TERMS.find(x => x[0] === name);
+  return new Date(year, t[1]-1, t[2], 0, 0, 0);
+}
+function allTermDates(year){
+  const rows = [];
+  [year-1,year,year+1].forEach(y => {
+    SOLAR_TERMS.forEach(t => rows.push({name:t[0], date:new Date(y, t[1]-1, t[2])}));
+  });
+  return rows.sort((a,b) => a.date - b.date);
+}
+function findNearestTerms(date){
+  const rows = allTermDates(date.getFullYear());
+  let prev = rows[0], next = rows[rows.length-1];
+  for (let i=0;i<rows.length;i++) {
+    if (rows[i].date <= date) prev = rows[i];
+    if (rows[i].date > date) { next = rows[i]; break; }
+  }
+  return {prev,next};
+}
+function yearPillar(parts){
+  let y = parts.year;
+  if (parts.date < termDate(parts.year,"立春")) y -= 1;
+  return pillarFromIndex(y - 1984, "年柱");
+}
+function monthPillar(parts, yPillar){
+  const d = parts.date;
+  const y = parts.year;
+  const termBounds = [
+    ["立春",new Date(y,1,4)],["惊蛰",new Date(y,2,6)],["清明",new Date(y,3,5)],["立夏",new Date(y,4,6)],
+    ["芒种",new Date(y,5,6)],["小暑",new Date(y,6,7)],["立秋",new Date(y,7,8)],["白露",new Date(y,8,8)],
+    ["寒露",new Date(y,9,8)],["立冬",new Date(y,10,7)],["大雪",new Date(y,11,7)],["小寒",new Date(y+1,0,6)]
+  ];
+  let mIndex = 11;
+  for (let i=0;i<termBounds.length;i++) {
+    if (d >= termBounds[i][1]) mIndex = i;
+  }
+  const branch = MONTH_BRANCHES[mIndex];
+  const startStem = MONTH_START_STEM[yPillar.stem];
+  const stem = STEMS[mod(startStem + mIndex,10)];
+  return pillarFromIndex(cycleIndex(stem, branch), "月柱");
+}
+function dayPillar(parts){
+  let Y = parts.year, M = parts.month, d = parts.day;
+  if (M <= 2) { Y -= 1; M += 12; }
+  const C = Math.floor(Y / 100);
+  const y = Y % 100;
+  const gz = 44*C + Math.floor(C/4) + 5*y + Math.floor(y/4) + 30*(M+1) + Math.floor(3*(M+1)/5) + d + 7;
+  const rem = gz % 60 || 60;
+  return pillarFromIndex(rem - 1, "日柱");
+}
+function hourBranch(hour){
+  if (hour >= 23 || hour < 1) return "子";
+  const row = HOUR_BRANCHES.find(x => hour >= x[1] && hour < x[2]);
+  return row ? row[0] : "子";
+}
+function hourPillar(parts, dPillar){
+  const branch = hourBranch(parts.hour);
+  const bIndex = BRANCHES.indexOf(branch);
+  const start = HOUR_START_STEM[dPillar.stem];
+  const stem = STEMS[mod(start + bIndex,10)];
+  return pillarFromIndex(cycleIndex(stem, branch), "时柱");
+}
+function tenGod(dayStem, otherStem){
+  const day = STEM_INFO[dayStem], other = STEM_INFO[otherStem];
+  const samePol = day.pol === other.pol;
+  if (day.el === other.el) return samePol ? "比肩" : "劫财";
+  if (GENERATES[day.el] === other.el) return samePol ? "食神" : "伤官";
+  if (CONTROLS[day.el] === other.el) return samePol ? "偏财" : "正财";
+  if (CONTROLS[other.el] === day.el) return samePol ? "七杀" : "正官";
+  if (GENERATES[other.el] === day.el) return samePol ? "偏印" : "正印";
+  return "杂气";
+}
+function addScore(score, el, amount){ score[el] = (score[el] || 0) + amount; }
+function elementScore(pillars){
+  const score = {木:0,火:0,土:0,金:0,水:0};
+  pillars.forEach((p, i) => {
+    addScore(score, STEM_INFO[p.stem].el, i === 1 ? 1.15 : 1);
+    const b = BRANCH_INFO[p.branch];
+    addScore(score, b.el, i === 1 ? 2.05 : 1.1);
+    b.hidden.forEach((s, hi) => addScore(score, STEM_INFO[s].el, hi === 0 ? .42 : .24));
+  });
+  return score;
+}
+function strengthOf(chart){
+  const dayEl = STEM_INFO[chart.day.stem].el;
+  const resource = Object.keys(GENERATES).find(k => GENERATES[k] === dayEl);
+  const score = chart.elements;
+  const total = ELEMENTS.reduce((sum,e) => sum + score[e], 0);
+  const support = score[dayEl] + score[resource] * .86;
+  const ratio = support / total;
+  const label = ratio >= .46 ? "身强" : ratio <= .32 ? "身弱" : "中和";
+  const useful = label === "身强"
+    ? [GENERATES[dayEl], CONTROLS[dayEl], Object.keys(CONTROLS).find(k => CONTROLS[k] === dayEl)]
+    : [dayEl, resource, GENERATES[resource]];
+  return {label, ratio, support, total, useful:[...new Set(useful)]};
+}
+function buildTenGods(chart){
+  const result = {};
+  chart.pillars.forEach((p, pi) => {
+    if (pi !== 2) result[tenGod(chart.day.stem,p.stem)] = (result[tenGod(chart.day.stem,p.stem)] || 0) + 1;
+    p.hidden.forEach((s, hi) => {
+      const g = tenGod(chart.day.stem, s);
+      result[g] = (result[g] || 0) + (hi === 0 ? .7 : .35);
+    });
+  });
+  return result;
+}
+function dominantGod(gods){
+  return Object.entries(gods).sort((a,b) => b[1]-a[1])[0]?.[0] || "比肩";
+}
+function patternOf(chart){
+  const mainHidden = chart.month.hidden[0];
+  const god = tenGod(chart.day.stem, mainHidden);
+  const through = chart.pillars.some(p => p.stem === mainHidden);
+  const suffix = through ? "，月令主气透干，格局信号清晰" : "，主气藏于地支，需看透干与通根承接";
+  return {god, mainHidden, name:`${god}格意`, desc:`月令${chart.month.branch}以${mainHidden}为主气，对日主${chart.day.stem}而言属${god}${suffix}。`};
+}
+function buildLuck(chart, parts){
+  const gender = $("#gender").value;
+  const yearYang = STEM_INFO[chart.year.stem].pol === "阳";
+  let forward = true;
+  if (gender === "male") forward = yearYang;
+  if (gender === "female") forward = !yearYang;
+  const near = findNearestTerms(parts.date);
+  const target = forward ? near.next : near.prev;
+  const days = Math.max(3, Math.abs(target.date - parts.date) / 86400000);
+  const startAge = Math.max(1, Math.round(days / 3));
+  const luck = [];
+  for (let i=0;i<8;i++) {
+    const idx = mod(chart.month.index + (forward ? i+1 : -i-1), 60);
+    luck.push({age:`${startAge + i*10}-${startAge + i*10 + 9}岁`, pillar:pillarFromIndex(idx,"大运"), note:i===0 ? `起运约${startAge}岁` : ""});
+  }
+  return {forward, startAge, term:target.name, luck};
+}
+function currentYearPillar(){
+  const now = new Date();
+  const parts = {year:now.getFullYear(), date:now};
+  let y = parts.year;
+  if (parts.date < termDate(parts.year,"立春")) y -= 1;
+  return pillarFromIndex(y - 1984, "流年");
+}
+function buildChart(){
+  const parts = dateParts();
+  const y = yearPillar(parts);
+  const m = monthPillar(parts, y);
+  const d = dayPillar(parts);
+  const h = hourPillar(parts, d);
+  const pillars = [y,m,d,h];
+  const chart = {
+    parts,
+    year:y,
+    month:m,
+    day:d,
+    hour:h,
+    pillars,
+    focus:FOCUS_OPTIONS.find(x => x.key === state.focus),
+    place:$("#birthPlace").value.trim() || "未填写",
+    calendarType:$("#calendarType").value,
+    hourMode:$("#hourMode").value,
+    uncertainHour:$("#uncertainHour").checked,
+    elements:elementScore(pillars),
+    currentYear:currentYearPillar()
+  };
+  chart.strength = strengthOf(chart);
+  chart.gods = buildTenGods(chart);
+  chart.dominantGod = dominantGod(chart.gods);
+  chart.pattern = patternOf(chart);
+  chart.luck = buildLuck(chart, parts);
+  return chart;
+}
+function groupGod(god){
+  if (["正官","七杀"].includes(god)) return "官杀";
+  if (["正财","偏财"].includes(god)) return "财星";
+  if (["正印","偏印"].includes(god)) return "印星";
+  if (["食神","伤官"].includes(god)) return "食伤";
+  return "比劫";
+}
+function relationLine(chart){
+  const dayEl = STEM_INFO[chart.day.stem].el;
+  const spouse = chart.pillars[2].branch;
+  const spouseEl = BRANCH_INFO[spouse].el;
+  const usefulHit = chart.strength.useful.includes(spouseEl);
+  return usefulHit
+    ? `日支${spouse}属${spouseEl}，落在喜用范围，关系中容易因共同目标、资源互补而稳定。`
+    : `日支${spouse}属${spouseEl}，与日主${dayEl}需要调和，关系中宜减少情绪化判断，先建立边界与节奏。`;
+}
+function focusLine(chart){
+  const f = chart.focus.key;
+  if (f === "career") return "本次重点在事业财运，解读会优先看财官印是否成链，以及大运是否承接现实机会。";
+  if (f === "relation") return "本次重点在情感关系，解读会优先看日支、财官星与冲合刑害的互动。";
+  if (f === "talent") return "本次重点在性格天赋，解读会优先看日主气质、食伤表达与印星学习力。";
+  if (f === "year") return "本次重点在流年近势，解读会优先看今年干支对原局的触发与行动窗口。";
+  return "本次为综合命盘，先看四柱格局，再落到事业、关系与近年节奏。";
+}
+function buildReading(chart){
+  const dayInfo = STEM_INFO[chart.day.stem];
+  const useful = chart.strength.useful.join("、");
+  const avoid = ELEMENTS.filter(e => !chart.strength.useful.includes(e)).slice(0,2).join("、");
+  const godGroup = groupGod(chart.dominantGod);
+  const yearGod = tenGod(chart.day.stem, chart.currentYear.stem);
+  const monthGod = tenGod(chart.day.stem, chart.month.hidden[0]);
+  const career = `事业财运看${godGroup}最醒目，命局中${chart.dominantGod}力量突出。若能把${chart.pattern.god}的规则感与日主${chart.day.stem}${dayInfo.el}的本性结合，适合在有标准、有资源流动、有长期积累的场景中发力。财星不宜只看快钱，宜看可复用的技能、客户信任与稳定现金流。`;
+  const relation = relationLine(chart) + (chart.uncertainHour ? " 因时辰不确定，子女、晚景与部分关系细节仅作参考。" : " 时柱已纳入合参，可进一步观察晚年规划与长期关系承诺。");
+  const year = `当前流年为${chart.currentYear.name}，流年天干对日主为${yearGod}。若今年感到机会与压力并行，重点不在盲目扩张，而在顺着${useful}之气补足命局短板；遇到${avoid}过旺的环境，则宜放慢节奏，先做结构调整。`;
+  const advice = chart.strength.label === "身强"
+    ? "日主有承担力，宜泄秀生财或以规则约束能量。行动上少逞强，多用制度、流程、复盘来换长期收益。"
+    : chart.strength.label === "身弱"
+      ? "日主需要扶助，宜先补资源、找同盟、建立稳定作息和学习系统。行动上先站稳，再争取外部机会。"
+      : "命局趋于中和，关键在取舍。行动上不必极端补偏，保持节奏、专注一条主线，反而更容易见效。";
+  return {
+    summary:[
+      ["日主",`${chart.day.stem}${dayInfo.el}${dayInfo.pol}`,`以${chart.day.stem}为命主核心，观察十神生克。`],
+      ["旺衰",chart.strength.label,`扶助比约${Math.round(chart.strength.ratio*100)}%，以月令和根气为主。`],
+      ["格局",chart.pattern.name,`${chart.pattern.desc}`],
+      ["喜用",useful,`优先补${useful}之气，忌${avoid}过旺失衡。`],
+      ["十神",chart.dominantGod,`${chart.dominantGod}较醒目，体现为${godGroup}主题。`],
+      ["大运",chart.luck.forward ? "顺行" : "逆行",`约${chart.luck.startAge}岁起运，取${chart.luck.term}节气估算。`]
+    ],
+    main:`${focusLine(chart)} 你的日主为${chart.day.stem}，五行属${dayInfo.el}，生于${chart.month.name}月。月令主气为${chart.pattern.mainHidden}，对日主形成${monthGod}，这是命盘最先发声的位置。整体看，命局判为${chart.strength.label}，喜用倾向${useful}，需要避免${avoid}之气过偏。`,
+    pattern:`${chart.pattern.desc} 四柱中年柱看根基与家族环境，月柱看社会规则与成长压力，日柱看自我与亲密关系，时柱看长期愿景。此盘${chart.dominantGod}突出，说明人生课题常围绕${godGroup}展开，越能把该主题用在具体职业与长期计划上，越容易出成果。`,
+    career,
+    relation,
+    year,
+    advice,
+    tags:[`${chart.strength.label}`,`${chart.pattern.god}`,`喜${useful}`,chart.luck.forward ? "大运顺行" : "大运逆行",chart.focus.label]
+  };
+}
+function renderPillars(chart){
+  $("#pillarTable").innerHTML = chart.pillars.map((p, i) => {
+    const god = i === 2 ? "日主" : tenGod(chart.day.stem, p.stem);
+    const hiddenGods = p.hidden.map(s => `${s}${tenGod(chart.day.stem,s)}`).join(" · ");
+    return `<article class="pillar">
+      <div class="name">${p.label}</div>
+      <div class="gz">${p.name}</div>
+      <div class="stem-branch"><b style="color:${ELEMENT_COLOR[STEM_INFO[p.stem].el]}">${p.stem}</b><b style="color:${ELEMENT_COLOR[BRANCH_INFO[p.branch].el]}">${p.branch}</b></div>
+      <div class="small-line ten">${god}</div>
+      <div class="small-line">藏干：${hiddenGods}</div>
+      <div class="small-line">纳音：${p.nayin}</div>
+      <div class="small-line">生肖：${BRANCH_INFO[p.branch].animal}</div>
+    </article>`;
+  }).join("");
+}
+function renderElements(chart){
+  const max = Math.max(...ELEMENTS.map(e => chart.elements[e]));
+  $("#elementBars").innerHTML = ELEMENTS.map(e => {
+    const v = chart.elements[e];
+    return `<div class="bar-row">
+      <div class="bar-name">${e}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(8,v/max*100)}%;color:${ELEMENT_COLOR[e]};background:${ELEMENT_COLOR[e]}"></div></div>
+      <div class="bar-val">${v.toFixed(1)}</div>
+    </div>`;
+  }).join("");
+}
+function renderResult(){
+  const chart = state.chart;
+  const r = state.reading;
+  const p = chart.parts;
+  $("#resultMeta").innerHTML = [
+    `${p.year}年${p.month}月${p.day}日 ${String(p.hour).padStart(2,"0")}:${String(p.minute).padStart(2,"0")}`,
+    chart.place,
+    chart.calendarType === "solar" ? "公历排盘" : "农历输入待精确换算",
+    chart.hourMode === "solar" ? "真太阳时参考" : "北京时间",
+    chart.focus.label
+  ].map(x => `<span>${x}</span>`).join("");
+  renderPillars(chart);
+  renderElements(chart);
+  $("#summaryGrid").innerHTML = r.summary.map(item => `<article class="summary-card pnl"><div class="panel-corners"></div><div class="k">${item[0]}</div><div class="v">${item[1]}</div><div class="d">${item[2]}</div></article>`).join("");
+  $("#analysisMain").innerHTML = `<div class="panel-corners"></div><h3>命局总览</h3><p>${r.main}</p>`;
+  $("#analysisPattern").innerHTML = `<div class="panel-corners"></div><h3>格局与用神</h3><p>${r.pattern}</p><div class="tag-row">${r.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>`;
+  $("#analysisCareer").innerHTML = `<div class="panel-corners"></div><h3>事业财运</h3><p>${r.career}</p>`;
+  $("#analysisRelation").innerHTML = `<div class="panel-corners"></div><h3>情感关系</h3><p>${r.relation}</p>`;
+  $("#analysisYear").innerHTML = `<div class="panel-corners"></div><h3>流年近势</h3><p>${r.year}</p>`;
+  $("#analysisAdvice").innerHTML = `<div class="panel-corners"></div><h3>行动建议</h3><p>${r.advice}</p><p>本解读用于传统文化体验与自我观察，不替代医疗、法律、投资等专业意见。</p>`;
+  $("#luckTable").innerHTML = chart.luck.luck.map(x => `<article class="luck"><b>${x.pillar.name}</b><span>${x.age} · ${x.pillar.nayin}${x.note ? " · " + x.note : ""}</span></article>`).join("");
+}
+function readingText(){
+  const chart = state.chart;
+  const r = state.reading;
+  const lines = [];
+  lines.push("【八字命盘】");
+  lines.push(`出生：${chart.parts.year}-${String(chart.parts.month).padStart(2,"0")}-${String(chart.parts.day).padStart(2,"0")} ${String(chart.parts.hour).padStart(2,"0")}:${String(chart.parts.minute).padStart(2,"0")} ｜ ${chart.place}`);
+  lines.push(`四柱：${chart.pillars.map(p => p.name).join("　")}`);
+  lines.push(`日主：${chart.day.stem}${STEM_INFO[chart.day.stem].el}${STEM_INFO[chart.day.stem].pol} ｜ 旺衰：${chart.strength.label} ｜ 喜用：${chart.strength.useful.join("、")}`);
+  lines.push("");
+  lines.push(r.main);
+  lines.push(r.pattern);
+  lines.push(r.career);
+  lines.push(r.relation);
+  lines.push(r.year);
+  lines.push(r.advice);
+  return lines.join("\n");
+}
+function copyReading(){
+  const text = readingText();
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); toast("解读已复制"); } catch(e) { toast("复制失败，请手动选择文本"); }
+    ta.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast("解读已复制"), fallback);
+  } else fallback();
+}
+function handleProject(key){
+  const p = PROJECTS.find(item => item.key === key);
+  if (!p) return;
+  if (p.current) { toast("当前已在八字命盘"); return; }
+  if (p.href) window.location.href = p.href;
+  else toast(`${p.label}将在后续开发中开放`);
+}
+function handleAction(action){
+  if (action === "start-opening") toOpening();
+  if (action === "opening-next") toForm();
+  if (action === "start-climax") startClimax();
+  if (action === "finish-climax") finishClimax();
+  if (action === "homeback") backHome();
+  if (action === "again") again();
+  if (action === "demo") useDemo();
+  if (action === "copy") copyReading();
+}
+document.addEventListener("click", event => {
+  const target = event.target;
+  if (target.closest("#projBtn")) {
+    const item = target.closest(".pm-it");
+    if (item) {
+      handleProject(item.dataset.proj);
+      $("#projMenu").classList.remove("show");
+      $("#projBtn").setAttribute("aria-expanded","false");
+      return;
+    }
+    const open = !$("#projMenu").classList.contains("show");
+    $("#projMenu").classList.toggle("show", open);
+    $("#projBtn").setAttribute("aria-expanded", open ? "true" : "false");
+    return;
+  }
+  if (!target.closest("#projMenu")) {
+    $("#projMenu").classList.remove("show");
+    $("#projBtn").setAttribute("aria-expanded","false");
+  }
+  const nav = target.closest("[data-nav]");
+  if (nav) {
+    const key = nav.dataset.nav;
+    if (key === "home") backHome();
+    else toast("该栏目将在后续玄学项目中补充");
+    return;
+  }
+  const side = target.closest(".mi");
+  if (side) {
+    $$(".mi").forEach(x => x.classList.remove("cur"));
+    side.classList.add("cur");
+    toast("已切换查看：" + side.innerText.trim());
+    return;
+  }
+  const focus = target.closest("[data-focus]");
+  if (focus) {
+    setFocus(focus.dataset.focus);
+    return;
+  }
+  const act = target.closest("[data-act]");
+  if (act) {
+    handleAction(act.dataset.act);
+    return;
+  }
+  if (state.stage === "home" && !target.closest("[data-ui]")) toOpening();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && state.stage !== "home") backHome();
+  if (event.key === "Enter") {
+    if (state.stage === "home") toOpening();
+    else if (state.stage === "opening") toForm();
+    else if (state.stage === "form") startClimax();
+  }
+});
+$("#soundBtn").addEventListener("click", () => {
+  state.sound = !state.sound;
+  $("#soundBtn").classList.toggle("off", !state.sound);
+  toast(state.sound ? "音效已开启" : "音效已静默");
+});
+V.climax.addEventListener("ended", finishClimax);
+V.opening.addEventListener("error", () => toast("开场视频未能加载，可继续定盘"));
+V.climax.addEventListener("error", finishClimax);
+(function init(){
+  buildProjectMenu();
+  buildFocusRow();
+})();
+</script>
+</body>
+</html>

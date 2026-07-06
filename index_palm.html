@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄境 · 手相解读</title>
+<meta name="description" content="沉浸式手相解读体验：采集或上传掌纹照片，以生命线、智慧线、感情线、事业线、掌丘、手型与专项关注生成传统文化参考报告。">
+<link rel="preload" as="image" href="assets/palm/bg.png">
+<link rel="preload" as="image" href="assets/palm/ui-reference.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Cpath d='M23 49V22a7 7 0 0 1 14 0v22M37 44V14a7 7 0 0 1 14 0v31M51 45V19a7 7 0 0 1 14 0v32M65 51V31a7 7 0 0 1 14 0v23c0 19-11 31-30 31h-4c-14 0-24-8-29-23l-5-15a7 7 0 0 1 12-6l8 14' fill='none' stroke='%23c9a45c' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --void:#06030b;
+  --deep:#100816;
+  --panel:rgba(12,7,15,.76);
+  --panel-2:rgba(7,4,10,.9);
+  --gold:#c9954a;
+  --gold-hi:#f0d495;
+  --gold-soft:rgba(201,149,74,.48);
+  --line:rgba(201,149,74,.45);
+  --line-soft:rgba(201,149,74,.22);
+  --ink:#f5ecd8;
+  --muted:#c7b794;
+  --jade:#83c9a2;
+  --cinnabar:#b45d45;
+  --vio:#9570c8;
+  --shadow:0 22px 90px rgba(0,0,0,.62);
+  --f-serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --f-display:"STKaiti","KaiTi","Noto Serif SC",serif;
+  --f-roman:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--f-serif);
+  overflow:hidden;
+  user-select:none;
+}
+body[data-stage="result"]{overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+input,select{border:0;outline:0}
+::selection{background:rgba(201,149,74,.35)}
+
+#bg,#videoLayer,#veil,#dust,#flash{position:fixed;inset:0}
+#bg{
+  z-index:0;
+  background:url("assets/palm/bg.png") center center/cover no-repeat;
+  transform:scale(1.015);
+  animation:bgBreath 18s ease-in-out infinite alternate;
+  transition:filter 1s ease,opacity 1s ease,transform 1s ease;
+}
+#bg::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(760px 460px at 55% 56%,rgba(255,208,117,.12),transparent 62%),
+    radial-gradient(640px 420px at 76% 18%,rgba(149,112,200,.13),transparent 66%),
+    radial-gradient(620px 420px at 16% 28%,rgba(131,201,162,.09),transparent 70%),
+    linear-gradient(90deg,rgba(0,0,0,.62),transparent 25%,transparent 66%,rgba(0,0,0,.66)),
+    linear-gradient(180deg,rgba(0,0,0,.56),rgba(0,0,0,.04) 42%,rgba(0,0,0,.72));
+}
+@keyframes bgBreath{to{transform:scale(1.045)}}
+#videoLayer{z-index:1;overflow:hidden;pointer-events:none}
+#videoLayer video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1s ease,filter 1s ease;
+  filter:contrast(1.08) saturate(1.05) brightness(.94);
+}
+#videoLayer video.on{opacity:1}
+#veil{
+  z-index:2;pointer-events:none;
+  opacity:.68;
+  background:
+    radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(0,0,0,.62) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,.05) 34%,rgba(0,0,0,.75));
+  transition:opacity .9s ease;
+}
+#dust{
+  z-index:3;pointer-events:none;opacity:.2;mix-blend-mode:screen;
+  background-image:
+    radial-gradient(circle at 20% 28%,rgba(240,212,149,.75) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 76% 18%,rgba(255,255,255,.72) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 53% 66%,rgba(131,201,162,.58) 0 1px,transparent 1.7px),
+    linear-gradient(110deg,transparent 0 47%,rgba(240,212,149,.12) 49%,transparent 51%);
+  background-size:240px 240px,360px 360px,290px 290px,210px 210px;
+  animation:dustDrift 46s linear infinite;
+}
+@keyframes dustDrift{to{transform:translate3d(92px,46px,0)}}
+#flash{
+  z-index:90;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at center,rgba(255,244,207,.96),rgba(240,212,149,.24) 42%,transparent 72%);
+  transition:opacity .38s ease;
+}
+#flash.on{opacity:1}
+
+.frame-line{position:fixed;inset:13px;z-index:8;pointer-events:none;border:1px solid rgba(201,149,74,.36)}
+.frame-line::before,.frame-line::after{
+  content:"";position:absolute;left:20px;right:20px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line),transparent);
+}
+.frame-line::before{top:62px}.frame-line::after{bottom:20px}
+.corner{position:absolute;width:34px;height:34px;border-color:var(--gold);opacity:.76}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}
+.c4{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  background:linear-gradient(150deg,rgba(31,20,25,.72),rgba(7,4,10,.86));
+  border:1px solid var(--line);
+  box-shadow:var(--shadow),inset 0 0 28px rgba(201,149,74,.07);
+  backdrop-filter:blur(6px);
+}
+.pnl::before{
+  content:"";position:absolute;inset:6px;border:1px solid rgba(201,149,74,.2);pointer-events:none;
+}
+.pnl::after{
+  content:"";position:absolute;left:50%;top:-7px;width:9px;height:9px;
+  transform:translateX(-50%) rotate(45deg);
+  background:rgba(8,5,11,.96);border:1px solid rgba(201,149,74,.68);
+  box-shadow:0 0 12px rgba(201,149,74,.45);
+}
+.panel-corners{position:absolute;inset:0;pointer-events:none}
+.panel-corners::before,.panel-corners::after{
+  content:"";position:absolute;width:20px;height:20px;border-color:rgba(201,149,74,.58);
+}
+.panel-corners::before{left:8px;top:8px;border-left:1px solid;border-top:1px solid}
+.panel-corners::after{right:8px;bottom:8px;border-right:1px solid;border-bottom:1px solid}
+
+#topnav{
+  position:fixed;z-index:26;top:0;left:0;right:0;height:78px;
+  display:grid;grid-template-columns:250px 1fr auto 1fr 146px;align-items:center;
+  gap:18px;padding:0 40px;
+  background:linear-gradient(180deg,rgba(6,4,9,.92),rgba(6,4,9,.34) 74%,transparent);
+  transition:opacity .9s ease,transform .9s ease;
+}
+#projBtn{
+  position:relative;width:190px;height:42px;display:flex;align-items:center;justify-content:center;gap:12px;
+  border:1px solid var(--line);background:rgba(7,5,15,.66);color:var(--gold-hi);
+  letter-spacing:4px;font-size:15px;box-shadow:inset 0 0 18px rgba(201,149,74,.1);
+}
+#projBtn svg{width:14px;height:14px;transition:transform .25s ease}
+#projBtn.open svg{transform:rotate(180deg)}
+#projMenu{display:none;position:absolute;left:0;top:52px;width:226px;padding:8px;z-index:35}
+#projMenu.show{display:block;animation:fadeUp .26s ease}
+.pm-it{
+  height:40px;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:pointer;
+  color:var(--muted);font-size:14px;letter-spacing:2px;transition:.22s ease;
+}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(201,149,74,.1)}
+.pm-it.cur::after{content:"当前";margin-left:auto;font-size:11px;color:var(--gold-hi);opacity:.86}
+.navside{display:flex;align-items:center;justify-content:center;gap:56px;color:var(--gold-hi)}
+.navlink{
+  font-size:16px;letter-spacing:5px;cursor:pointer;text-shadow:0 0 10px rgba(201,149,74,.36);
+  transition:.22s ease;white-space:nowrap;
+}
+.navlink:hover,.navlink.cur{color:#ffe8aa}
+#navTitle{
+  min-width:300px;text-align:center;font-family:var(--f-display);font-size:44px;line-height:1;
+  color:var(--gold-hi);letter-spacing:13px;text-indent:13px;
+  text-shadow:0 4px 18px rgba(0,0,0,.72),0 0 16px rgba(201,149,74,.28);
+}
+.navIcons{display:flex;align-items:center;justify-content:flex-end;gap:14px}
+.navico{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  color:var(--gold-hi);border:1px solid var(--line);background:rgba(7,5,15,.52);
+  transition:.24s ease;
+}
+.navico:hover{transform:translateY(-1px);border-color:var(--gold);box-shadow:0 0 16px rgba(201,149,74,.28)}
+.navico svg,.mini-ico svg{display:block;width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+#home{
+  position:fixed;z-index:12;inset:0;display:grid;grid-template-columns:180px 286px 1fr 318px;
+  align-items:center;gap:26px;padding:104px 34px 36px;
+  transition:opacity .9s ease,transform .9s ease;
+}
+#leftcol{display:flex;flex-direction:column;gap:13px}
+.side-menu{padding:8px 0}
+.mi{
+  height:61px;display:grid;grid-template-columns:39px 1fr;align-items:center;padding:0 14px;
+  border-bottom:1px solid rgba(201,149,74,.22);color:var(--muted);letter-spacing:7px;font-size:20px;
+  cursor:pointer;transition:.25s ease;
+}
+.mi:last-child{border-bottom:0}
+.mi.cur,.mi:hover{color:var(--gold-hi);background:linear-gradient(90deg,rgba(201,149,74,.18),transparent)}
+.mini-ico{width:25px;height:25px;display:grid;place-items:center;color:var(--gold-hi)}
+.today-tip{min-height:118px;padding:18px 14px 16px 66px}
+.tip-eye{position:absolute;left:20px;top:28px;width:34px;height:34px;color:var(--gold-hi)}
+.tip-title{font-family:var(--f-display);font-size:22px;letter-spacing:5px;color:var(--gold-hi);margin-bottom:7px}
+.tip-copy{font-size:13px;letter-spacing:1.4px;line-height:1.72;color:var(--muted)}
+
+#stepPanel{padding:22px 18px 18px}
+.steps-title{text-align:center;font-family:var(--f-display);font-size:25px;letter-spacing:6px;color:var(--gold-hi);margin-bottom:16px}
+.steps-title::after{
+  content:"";display:block;height:1px;margin:14px 3px 0;
+  background:linear-gradient(90deg,transparent,var(--line),transparent);
+}
+.step{
+  position:relative;display:grid;grid-template-columns:54px 1fr;gap:10px;min-height:84px;padding:3px 0 13px;
+  border-bottom:1px solid rgba(201,149,74,.2);
+}
+.step:last-child{border-bottom:0;padding-bottom:2px}
+.num{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(201,149,74,.75);color:var(--gold-hi);
+  font-family:Georgia,serif;font-size:28px;background:rgba(74,48,20,.3);
+  box-shadow:inset 0 0 18px rgba(201,149,74,.12);
+}
+.step h3{font-family:var(--f-display);font-size:20px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:6px}
+.step p{font-size:13px;line-height:1.62;letter-spacing:1.2px;color:var(--muted)}
+
+#centerVoid{height:100%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+#tapHint{
+  position:fixed;z-index:18;left:50%;bottom:31px;transform:translateX(-50%);
+  color:var(--gold-hi);font-size:14px;letter-spacing:4px;text-shadow:0 0 16px rgba(201,149,74,.45);
+  opacity:.82;animation:pulseHint 2.6s ease-in-out infinite;
+}
+@keyframes pulseHint{50%{opacity:.42;transform:translateX(-50%) translateY(3px)}}
+#rightcol{display:flex;flex-direction:column;gap:14px}
+.feature{
+  min-height:108px;display:grid;grid-template-columns:64px 1fr;align-items:center;gap:12px;padding:15px 18px;
+}
+.round{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(201,149,74,.62);background:rgba(63,39,16,.28);color:var(--gold-hi);
+  box-shadow:inset 0 0 18px rgba(201,149,74,.12);
+}
+.round svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.feature h3{font-family:var(--f-display);font-size:23px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:6px}
+.feature p{font-size:13px;line-height:1.55;color:var(--muted);letter-spacing:1.2px}
+#startBtn{
+  height:76px;display:flex;align-items:center;justify-content:center;gap:14px;
+  color:var(--ink);font-family:var(--f-display);font-size:31px;letter-spacing:10px;text-indent:10px;
+  text-shadow:0 0 18px rgba(240,212,149,.58);
+  background:linear-gradient(90deg,rgba(83,43,16,.4),rgba(7,4,10,.86),rgba(83,43,16,.4));
+}
+#startBtn b{font-family:Georgia,serif;font-size:21px;color:var(--gold-hi)}
+.quote{padding:22px 22px 22px 58px;font-family:var(--f-display);font-size:21px;letter-spacing:4px;color:var(--gold-hi)}
+.mark{position:absolute;left:20px;top:12px;font-size:44px;color:var(--gold)}
+
+.layer{
+  position:fixed;z-index:20;inset:0;opacity:0;pointer-events:none;
+  transition:opacity .86s ease;
+}
+body[data-stage="home"] #home{opacity:1;pointer-events:auto}
+body[data-stage="intro"] #introLayer,
+body[data-stage="capture"] #captureLayer,
+body[data-stage="select"] #selectLayer,
+body[data-stage="climax"] #climaxLayer,
+body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
+body:not([data-stage="home"]) #home,
+body:not([data-stage="home"]) #topnav,
+body:not([data-stage="home"]) #tapHint{
+  opacity:0;pointer-events:none;transform:translateY(-12px);
+}
+body:not([data-stage="home"]) #tapHint{animation:none;opacity:0!important}
+body:not([data-stage="home"]) #bg{filter:saturate(.92) contrast(1.04) brightness(.56);transform:scale(1.035)}
+body[data-stage="intro"] #openingVid,
+body[data-stage="climax"] #climaxVid{opacity:1}
+body[data-stage="intro"] #veil,
+body[data-stage="climax"] #veil{opacity:.48}
+body[data-stage="result"] #bg{filter:saturate(.82) contrast(1.06) brightness(.37)}
+body[data-stage="result"] #veil{opacity:.78}
+
+#introLayer,#climaxLayer{display:grid;place-items:end center;padding:0 24px 82px}
+.ritualLine{
+  width:min(760px,92vw);min-height:116px;padding:24px 32px;text-align:center;
+  font-family:var(--f-display);font-size:28px;line-height:1.6;letter-spacing:5px;color:var(--gold-hi);
+  text-shadow:0 0 16px rgba(201,149,74,.34);
+}
+.ritualLine .small{margin-top:6px;font-family:var(--f-serif);font-size:13px;letter-spacing:2px;color:var(--muted)}
+#climaxLayer .ritualLine{transform:translateY(12px)}
+
+#captureLayer,#selectLayer{display:grid;place-items:center;padding:94px 34px 34px}
+.capture-shell{
+  width:min(1180px,94vw);display:grid;grid-template-columns:minmax(520px,1fr) 330px;gap:22px;align-items:stretch;
+}
+.camera-panel{padding:20px}
+.camera-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:14px}
+.camera-head h2,.select-head h2,.result-head h1{
+  font-family:var(--f-display);font-weight:500;color:var(--gold-hi);letter-spacing:7px;
+}
+.camera-head h2{font-size:27px}
+.camera-status{font-size:12px;color:var(--muted);letter-spacing:1.5px;text-align:right}
+.viewfinder{
+  position:relative;height:min(54vh,510px);min-height:310px;overflow:hidden;
+  border:1px solid rgba(201,149,74,.36);background:rgba(4,3,7,.86);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.7);
+}
+#cameraVideo,#snapshotCanvas,#snapshotImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#snapshotCanvas{display:none}
+#snapshotImg{display:none}
+.has-shot #snapshotImg{display:block}
+.has-shot #cameraVideo{opacity:0}
+.hand-guide{
+  position:absolute;inset:8%;opacity:.74;pointer-events:none;color:rgba(240,212,149,.72);
+  filter:drop-shadow(0 0 10px rgba(201,149,74,.32));
+}
+.hand-guide svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.line-label{
+  position:absolute;padding:4px 8px;border:1px solid rgba(201,149,74,.36);background:rgba(6,4,9,.52);
+  color:var(--gold-hi);font-size:12px;letter-spacing:2px;text-shadow:0 0 10px rgba(201,149,74,.48);
+}
+.line-label.life{left:13%;bottom:24%}
+.line-label.head{left:43%;top:47%}
+.line-label.heart{right:15%;top:31%}
+.line-label.fate{right:29%;bottom:20%}
+.scan-line{
+  position:absolute;left:0;right:0;top:-20%;height:24%;
+  background:linear-gradient(180deg,transparent,rgba(240,212,149,.22),transparent);
+  animation:scan 3.2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes scan{50%{top:94%}}
+.capture-actions{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.act{
+  position:relative;min-height:42px;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid rgba(201,149,74,.48);background:rgba(7,4,10,.66);color:var(--gold-hi);
+  letter-spacing:2px;font-size:14px;transition:.24s ease;
+}
+.act:hover{border-color:var(--gold-hi);box-shadow:0 0 18px rgba(201,149,74,.22);transform:translateY(-1px)}
+.act.primary{background:linear-gradient(90deg,rgba(133,76,26,.65),rgba(201,149,74,.22));color:#fff4cf}
+#uploadInput{display:none}
+.camera-note{margin-top:13px;color:var(--muted);font-size:12.5px;line-height:1.7;letter-spacing:1.2px}
+.analysis-panel{padding:22px 18px}
+.analysis-panel h3{font-family:var(--f-display);font-size:24px;letter-spacing:5px;color:var(--gold-hi);font-weight:500;margin-bottom:14px;text-align:center}
+.scan-steps{display:grid;gap:12px}
+.scan-step{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;min-height:48px;
+  border-bottom:1px solid rgba(201,149,74,.18);padding-bottom:10px;color:var(--muted);font-size:12.5px;line-height:1.45;letter-spacing:1px;
+}
+.scan-step b{color:var(--gold-hi);font-size:14px;font-weight:500}
+.dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(201,149,74,.6);box-shadow:inset 0 0 12px rgba(201,149,74,.16)}
+.scan-step.done .dot{background:var(--gold-hi);box-shadow:0 0 18px rgba(240,212,149,.55)}
+.meter{width:54px;height:5px;background:rgba(201,149,74,.14);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-hi));transition:width .6s ease}
+.scan-step.done .meter i{width:100%}
+.mode-note{margin-top:16px;font-size:12px;line-height:1.7;letter-spacing:1.2px;color:var(--muted)}
+
+.select-shell{width:min(1060px,94vw);display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:stretch}
+.select-card,.reading-preview{padding:22px}
+.select-head h2{font-size:28px;margin-bottom:10px}
+.select-head p{font-size:13.5px;line-height:1.8;letter-spacing:1.3px;color:var(--muted)}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.choice{
+  min-height:86px;text-align:left;padding:15px;border:1px solid rgba(201,149,74,.32);
+  background:rgba(7,4,10,.55);transition:.22s ease;
+}
+.choice:hover,.choice.sel{border-color:var(--gold-hi);background:rgba(201,149,74,.14)}
+.choice h3{font-family:var(--f-display);font-size:20px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:5px}
+.choice p{font-size:12.5px;line-height:1.55;letter-spacing:1px;color:var(--muted)}
+.profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.field{display:grid;gap:7px}
+.field.wide{grid-column:1 / -1}
+.field label{font-size:12px;color:var(--gold-hi);letter-spacing:2px}
+.field input,.field select{
+  height:38px;padding:0 12px;background:rgba(8,5,12,.72);border:1px solid rgba(201,149,74,.32);
+  color:var(--ink);font-size:13px;letter-spacing:1.2px;
+}
+.field input::placeholder{color:rgba(199,183,148,.58)}
+.select-actions{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
+.snapshot-preview{
+  position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border:1px solid rgba(201,149,74,.34);margin-bottom:16px;
+  background:rgba(6,4,9,.8);
+}
+.snapshot-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.preview-title{font-family:var(--f-display);font-size:23px;letter-spacing:5px;color:var(--gold-hi);margin-bottom:10px}
+.preview-list{display:grid;gap:10px;color:var(--muted);font-size:13px;line-height:1.65;letter-spacing:1.2px}
+
+#resultLayer{padding:92px 34px 34px;overflow:auto}
+.result-wrap{width:min(1180px,94vw);margin:0 auto 28px}
+.result-head{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px;padding:18px 22px;
+}
+.result-head h1{font-size:34px}
+.result-meta{font-size:13px;letter-spacing:1.6px;color:var(--muted);margin-top:6px}
+.seal{
+  width:72px;height:72px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(201,149,74,.72);
+  color:var(--gold-hi);font-family:var(--f-display);font-size:30px;letter-spacing:3px;
+  background:radial-gradient(circle,rgba(201,149,74,.2),rgba(7,4,10,.7));
+}
+.result-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;align-items:start}
+.result-section{padding:22px}
+.section-title{
+  font-family:var(--f-display);font-size:25px;letter-spacing:6px;color:var(--gold-hi);
+  margin-bottom:12px;border-bottom:1px solid rgba(201,149,74,.22);padding-bottom:10px;
+}
+.result-section p{font-size:14px;line-height:1.9;letter-spacing:1.2px;color:var(--ink);margin-bottom:10px}
+.result-section .muted{color:var(--muted)}
+.line-grid,.mount-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mini-card{border:1px solid rgba(201,149,74,.25);background:rgba(7,4,10,.42);padding:14px}
+.mini-card h3{font-family:var(--f-display);font-weight:500;font-size:20px;letter-spacing:4px;color:var(--gold-hi);margin-bottom:7px}
+.mini-card p{font-size:13px;line-height:1.75;color:var(--muted);margin:0}
+.advice-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.tag{
+  display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid rgba(201,149,74,.32);
+  color:var(--gold-hi);background:rgba(201,149,74,.08);font-size:12.5px;letter-spacing:1.2px;
+}
+.result-actions{display:flex;justify-content:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+
+#soundBtn{
+  position:fixed;right:18px;bottom:18px;z-index:70;width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;border:1px solid var(--line);background:rgba(7,4,10,.7);color:var(--gold-hi);
+}
+#soundBtn.off{opacity:.45}
+#toast{
+  position:fixed;left:50%;bottom:24px;z-index:80;transform:translateX(-50%) translateY(18px);
+  min-width:180px;max-width:min(520px,86vw);padding:12px 18px;text-align:center;color:var(--gold-hi);
+  background:rgba(7,4,10,.88);border:1px solid rgba(201,149,74,.42);
+  opacity:0;pointer-events:none;transition:.28s ease;font-size:13px;letter-spacing:1.5px;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media (max-width:1180px){
+  #topnav{grid-template-columns:210px 1fr auto 1fr 110px;padding:0 22px}
+  .navside{gap:28px}.navlink{font-size:14px;letter-spacing:3px}
+  #navTitle{font-size:36px;min-width:240px}
+  #home{grid-template-columns:160px 270px 1fr 300px;gap:18px;padding-left:22px;padding-right:22px}
+}
+@media (max-width:860px){
+  body{overflow:auto}
+  #topnav{position:absolute;grid-template-columns:1fr auto;min-height:82px;height:auto;padding:12px 14px}
+  .navside,.navIcons{display:none}
+  #navTitle{font-size:30px;min-width:0}
+  #projBtn{width:164px}
+  #home{position:relative;min-height:100vh;grid-template-columns:1fr;padding:96px 16px 76px;gap:16px}
+  #leftcol,#rightcol{gap:12px}
+  .side-menu{display:grid;grid-template-columns:repeat(3,1fr);padding:0}
+  .mi{height:52px;font-size:16px;letter-spacing:4px;border-right:1px solid rgba(201,149,74,.2)}
+  .mi:nth-child(3n){border-right:0}
+  #centerVoid{display:none}
+  .capture-shell,.select-shell,.result-grid{grid-template-columns:1fr}
+  #captureLayer,#selectLayer,#resultLayer{position:fixed;min-height:0;padding:96px 16px 34px;overflow:auto}
+  .layer{overflow:auto}
+  body:not([data-stage="home"]) #topnav{opacity:0}
+  .choice-grid,.profile-grid,.line-grid,.mount-grid{grid-template-columns:1fr}
+  .viewfinder{height:min(52vh,420px);min-height:280px}
+  #introLayer,#climaxLayer{padding:0 16px 58px}
+  .ritualLine{font-size:23px;letter-spacing:4px;padding:20px}
+  .result-head{align-items:flex-start}
+}
+@media (max-width:520px){
+  .side-menu{grid-template-columns:repeat(2,1fr)}
+  .mi:nth-child(3n){border-right:1px solid rgba(201,149,74,.2)}
+  .mi:nth-child(2n){border-right:0}
+  .feature{grid-template-columns:56px 1fr;padding:14px}
+  #startBtn{font-size:27px;letter-spacing:7px;text-indent:7px}
+  .camera-panel,.select-card,.reading-preview,.result-section{padding:16px}
+  .camera-head{align-items:flex-start;flex-direction:column;margin-bottom:10px}
+  .camera-head h2,.select-head h2{font-size:24px;letter-spacing:6px}
+  .camera-status{text-align:left}
+  .capture-actions,.select-actions,.result-actions{gap:8px}
+  .act{min-height:38px;padding:0 13px;font-size:12.5px;letter-spacing:1.3px}
+  .camera-note{margin-top:9px;font-size:11.5px;line-height:1.55}
+  .seal{width:58px;height:58px;font-size:24px}
+  .result-head h1{font-size:28px}
+}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg" aria-hidden="true"></div>
+<div id="videoLayer" aria-hidden="true">
+  <video id="openingVid" muted playsinline preload="auto" src="assets/palm/opening.mp4"></video>
+  <video id="climaxVid" muted playsinline preload="none" src="assets/palm/climax.mp4"></video>
+</div>
+<div id="veil" aria-hidden="true"></div>
+<div id="dust" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div class="frame-line" aria-hidden="true"><i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div>
+
+<header id="topnav" data-ui>
+  <button id="projBtn" aria-expanded="false">
+    玄学项目
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></svg>
+    <div id="projMenu" class="pnl"></div>
+  </button>
+  <nav class="navside">
+    <span class="navlink cur" data-nav="home">首页</span>
+    <span class="navlink" data-nav="fate">命理</span>
+    <span class="navlink" data-nav="service">服务</span>
+  </nav>
+  <div id="navTitle">手相解读</div>
+  <nav class="navside">
+    <span class="navlink" data-nav="daily">每日运势</span>
+    <span class="navlink" data-nav="archive">档案</span>
+    <span class="navlink" data-nav="about">关于我们</span>
+  </nav>
+  <div class="navIcons">
+    <button class="navico" data-nav="profile" title="个人档案"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.2-4.1 4-6.1 7.5-6.1s6.3 2 7.5 6.1"/></svg></button>
+    <button class="navico" data-nav="settings" title="设置"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5 6.8 15M17.2 9l2.6-1.5"/><circle cx="12" cy="12" r="3.4"/></svg></button>
+  </div>
+</header>
+
+<main id="home">
+  <aside id="leftcol" data-ui>
+    <section class="pnl side-menu">
+      <div class="panel-corners"></div>
+      <div class="mi" data-side="bazi"><span class="mini-ico" data-icon="bagua"></span><span>八字</span></div>
+      <div class="mi cur" data-side="palm"><span class="mini-ico" data-icon="hand"></span><span>手相</span></div>
+      <div class="mi" data-side="fengshui"><span class="mini-ico" data-icon="mountain"></span><span>风水</span></div>
+      <div class="mi" data-side="mianxiang"><span class="mini-ico" data-icon="face"></span><span>面相</span></div>
+      <div class="mi" data-side="name"><span class="mini-ico" data-icon="brush"></span><span>取名</span></div>
+      <div class="mi" data-side="dream"><span class="mini-ico" data-icon="cloud"></span><span>解梦</span></div>
+    </section>
+    <section class="pnl today-tip">
+      <div class="panel-corners"></div>
+      <svg class="tip-eye" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 26V13a3 3 0 0 1 6 0v11M20 24V9a3 3 0 0 1 6 0v16M26 25V12a3 3 0 0 1 6 0v17M32 29v-8a3 3 0 0 1 6 0v9c0 8-5 14-13 14h-2c-6 0-10-4-12-10l-3-8a3 3 0 0 1 5-3l4 6"/></svg>
+      <div class="tip-title">今日手相提示</div>
+      <div class="tip-copy">纹路看势，掌丘看气；先辨主线，再合掌形与当下节律。</div>
+    </section>
+  </aside>
+
+  <section id="stepPanel" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="steps-title">观掌步骤</div>
+    <div class="step"><div class="num">1</div><div><h3>净手</h3><p>自然伸掌，五指微张，掌心对光不反光</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>采纹</h3><p>摄像头或上传照片，读取三大主线与掌丘明暗</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>定手</h3><p>区分主手副手，主手看现势，副手看底色</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>解掌</h3><p>合参生命、智慧、感情、事业线与专项问事</p></div></div>
+  </section>
+
+  <div id="centerVoid" aria-hidden="true"></div>
+
+  <section id="rightcol" data-ui>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div class="round"><svg viewBox="0 0 48 48"><path d="M14 36c0-12 5-22 17-27"/><path d="M13 27c9-2 16-1 23 4"/><path d="M15 20c7 0 13-2 18-8"/></svg></div>
+      <div><h3>生命线</h3><p>洞悉生命轨迹、体能节律、韧性与恢复力。</p></div>
+    </article>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div class="round"><svg viewBox="0 0 48 48"><path d="M12 26c9-5 18-5 27 1"/><path d="M12 18c8 2 17 1 25-4"/><path d="M24 10v28"/></svg></div>
+      <div><h3>事业线</h3><p>解析事业方向、成就路径、压力节点与机遇承接。</p></div>
+    </article>
+    <article class="pnl feature">
+      <div class="panel-corners"></div>
+      <div class="round"><svg viewBox="0 0 48 48"><path d="M10 23c8-6 19-5 28 2"/><path d="M14 31c7 4 14 4 21 0"/><path d="M17 15c4 3 10 3 14 0"/></svg></div>
+      <div><h3>情感线</h3><p>解读情感世界、缘分节奏、亲密关系与表达方式。</p></div>
+    </article>
+    <button id="startBtn" class="pnl" data-nav="start"><span>观掌启示</span><b>✦</b></button>
+    <article class="pnl quote">
+      <div class="panel-corners"></div>
+      <span class="mark">“</span>掌纹秘要，贵在合参。
+    </article>
+  </section>
+</main>
+
+<div id="tapHint">✦ 轻点空白处，开启手相观测仪式 ✦</div>
+
+<section id="introLayer" class="layer">
+  <div class="ritualLine pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div id="introLine"></div>
+    <div class="small">请伸出要解读的手掌，掌心朝上，五指自然展开，保持掌纹清晰。</div>
+  </div>
+</section>
+
+<section id="captureLayer" class="layer">
+  <div class="capture-shell">
+    <section class="camera-panel pnl" data-ui>
+      <div class="panel-corners"></div>
+      <div class="camera-head">
+        <h2>掌纹采样</h2>
+        <div id="cameraStatus" class="camera-status">等待开启摄像头</div>
+      </div>
+      <div id="viewfinder" class="viewfinder">
+        <video id="cameraVideo" autoplay muted playsinline></video>
+        <canvas id="snapshotCanvas"></canvas>
+        <img id="snapshotImg" alt="本地手相采样结果">
+        <div class="hand-guide" aria-hidden="true">
+          <svg viewBox="0 0 420 360">
+            <path d="M113 194V93c0-18 27-18 27 0v84"/>
+            <path d="M140 178V58c0-18 27-18 27 0v122"/>
+            <path d="M167 180V70c0-18 27-18 27 0v123"/>
+            <path d="M194 193V86c0-18 27-18 27 0v125"/>
+            <path d="M221 212v-76c0-18 27-18 27 0v93c0 62-38 102-103 102h-18c-48 0-79-30-96-82l-14-44c-6-20 21-29 31-12l30 52"/>
+            <path d="M86 282c24-50 43-82 83-105"/>
+            <path d="M73 215c68-12 132-6 196 27"/>
+            <path d="M82 163c62 2 118-15 166-50"/>
+            <path d="M164 320c13-58 14-104 2-141"/>
+          </svg>
+        </div>
+        <div class="scan-line"></div>
+        <span class="line-label life">生命线</span>
+        <span class="line-label head">智慧线</span>
+        <span class="line-label heart">感情线</span>
+        <span class="line-label fate">事业线</span>
+      </div>
+      <div class="capture-actions">
+        <button class="act primary" data-act="capture">定格掌纹</button>
+        <button class="act" data-act="upload">上传手相照片</button>
+        <input id="uploadInput" type="file" accept="image/*">
+        <button class="act" data-act="retake">重新采样</button>
+        <button class="act" data-act="skip-camera">无摄像头继续</button>
+      </div>
+      <div class="camera-note">照片仅在本地浏览器用于本次传统文化体验，不上传、不保存、不做人手身份识别。建议掌心充满画面 70%，手腕入镜，避免强背光、手掌弯曲或掌纹被遮挡。</div>
+    </section>
+    <aside class="analysis-panel pnl" data-ui>
+      <div class="panel-corners"></div>
+      <h3>掌纹扫描</h3>
+      <div id="scanSteps" class="scan-steps"></div>
+      <div class="mode-note">本页以传统手相的主线、辅线、掌丘、手型与主副手规则生成体验式报告。当前版本用本地画面采样模拟分析，后续可替换为 AI 视觉模型接口。</div>
+    </aside>
+  </div>
+</section>
+
+<section id="selectLayer" class="layer">
+  <div class="select-shell">
+    <section class="select-card pnl" data-ui>
+      <div class="panel-corners"></div>
+      <div class="select-head">
+        <h2>选择问掌方向</h2>
+        <p>专业手相不只看一条线，而要先定主副手，再把生命线、智慧线、感情线、事业线与掌丘合参。请选择本次最想看的重点。</p>
+      </div>
+      <div id="focusChoices" class="choice-grid">
+        <button class="choice sel" data-focus="overall"><h3>综合格局</h3><p>总看掌型、三大主线、事业线与掌丘气势。</p></button>
+        <button class="choice" data-focus="career"><h3>事业方向</h3><p>重点看事业线、智慧线、木星丘与土星丘。</p></button>
+        <button class="choice" data-focus="wealth"><h3>财运经营</h3><p>重点看太阳线、水星线、金星丘与掌心聚气。</p></button>
+        <button class="choice" data-focus="relation"><h3>情感关系</h3><p>重点看感情线、金星丘、月丘与表达节奏。</p></button>
+        <button class="choice" data-focus="talent"><h3>性格天赋</h3><p>重点看手型、智慧线走向、拇指与指节比例。</p></button>
+        <button class="choice" data-focus="recent"><h3>近期运势</h3><p>重点看掌色、线纹清晰度、断续与当下节律。</p></button>
+      </div>
+      <div class="profile-grid">
+        <div class="field">
+          <label for="handInput">解读手掌</label>
+          <select id="handInput">
+            <option value="right" selected>右手</option>
+            <option value="left">左手</option>
+            <option value="both">双手合参</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="dominantInput">惯用手</label>
+          <select id="dominantInput">
+            <option value="right" selected>右手为主手</option>
+            <option value="left">左手为主手</option>
+            <option value="unknown">不确定</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ageInput">年龄段</label>
+          <select id="ageInput">
+            <option value="young">18-29</option>
+            <option value="prime" selected>30-45</option>
+            <option value="mature">46-60</option>
+            <option value="senior">60+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="toneInput">当前状态</label>
+          <select id="toneInput">
+            <option value="steady" selected>平稳推进</option>
+            <option value="turning">转折调整</option>
+            <option value="seeking">寻找方向</option>
+            <option value="intense">事务繁重</option>
+          </select>
+        </div>
+        <div class="field wide">
+          <label for="questionInput">本次关注</label>
+          <input id="questionInput" maxlength="32" placeholder="例如：事业转机、财运、人缘、感情稳定">
+        </div>
+      </div>
+      <div class="select-actions">
+        <button class="act primary" data-act="reveal">生成手相启示</button>
+        <button class="act" data-act="retake">重新采样</button>
+      </div>
+    </section>
+    <aside class="reading-preview pnl" data-ui>
+      <div class="panel-corners"></div>
+      <div class="snapshot-preview"><img id="selectSnapshot" alt="手相采样预览"></div>
+      <div class="preview-title">采样摘要</div>
+      <div id="sampleSummary" class="preview-list"></div>
+    </aside>
+  </div>
+</section>
+
+<section id="climaxLayer" class="layer">
+  <div class="ritualLine pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div id="climaxLine">掌丘归位，主线成象，生命、智慧、情感与事业正在合参。</div>
+    <div class="small">动画结束后自动进入手相报告。</div>
+  </div>
+</section>
+
+<section id="resultLayer" class="layer">
+  <div class="result-wrap">
+    <header class="result-head pnl" data-ui>
+      <div class="panel-corners"></div>
+      <div>
+        <h1>手相解读结果</h1>
+        <div id="resultMeta" class="result-meta"></div>
+      </div>
+      <div class="seal">掌</div>
+    </header>
+    <div class="result-grid">
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">观掌总论</div>
+        <div id="overviewText"></div>
+      </section>
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">三大主线</div>
+        <div id="lineGrid" class="line-grid"></div>
+      </section>
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">事业财运</div>
+        <div id="careerText"></div>
+      </section>
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">情感性格</div>
+        <div id="relationText"></div>
+      </section>
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">掌丘手型</div>
+        <div id="mountGrid" class="mount-grid"></div>
+      </section>
+      <section class="result-section pnl">
+        <div class="panel-corners"></div>
+        <div class="section-title">专项建议</div>
+        <div id="adviceText"></div>
+      </section>
+    </div>
+    <div class="result-actions">
+      <button class="act primary" data-act="copy">复制解读文本</button>
+      <button class="act" data-act="again">再看一次</button>
+      <button class="act" data-act="homeback">回到首页</button>
+    </div>
+  </div>
+</section>
+
+<button id="soundBtn" data-ui title="音效开关">音</button>
+<div id="toast"></div>
+
+<script>
+/* stage flow: home -> intro -> capture -> select -> climax -> result */
+const STAGES = ['home', 'intro', 'capture', 'select', 'climax', 'result'];
+const PROJECTS = [
+  {key:'palm', label:'手相解读', icon:'hand', current:true},
+  {key:'tarot', label:'塔罗互动占卜', icon:'star', href:'index_6.html'},
+  {key:'mianxiang', label:'面相解读', icon:'face', href:'index_mianxiang.html'},
+  {key:'astrology', label:'星盘占星', icon:'wheel', href:'index_astrology.html'},
+  {key:'lingqian', label:'灵签问卜', icon:'lotus', href:'index_lingqian.html'},
+  {key:'nameDate', label:'取名择日', icon:'brush', href:'index_name_date.html'},
+  {key:'zhougong', label:'周公解梦', icon:'cloud', href:'index_zhougong.html'}
+];
+const FOCUS_OPTIONS = [
+  {key:'overall', title:'综合格局'},
+  {key:'career', title:'事业方向'},
+  {key:'wealth', title:'财运经营'},
+  {key:'relation', title:'情感关系'},
+  {key:'talent', title:'性格天赋'},
+  {key:'recent', title:'近期运势'}
+];
+const SCAN_STEPS = [
+  ['life','观生命线','生命线主精力节律、韧性、恢复力与生活稳定度'],
+  ['head','辨智慧线','智慧线主思考方式、判断风格、学习力与决策路径'],
+  ['heart','察感情线','感情线主情绪表达、亲密关系、人缘与感受力'],
+  ['fate','定事业线','事业线主职业方向、责任承接、阶段转折与成就路径'],
+  ['mount','合掌丘','掌丘主欲望、行动、审美、财气、表达与想象力']
+];
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const state = {
+  stage:'home',
+  focus:'overall',
+  hand:'right',
+  dominant:'right',
+  age:'prime',
+  tone:'steady',
+  question:'',
+  photoData:'',
+  cameraStream:null,
+  metrics:null,
+  reading:null,
+  climaxDone:false
+};
+const V = { opening:$('#openingVid'), climax:$('#climaxVid') };
+let soundOn = true;
+let audioContext = null;
+let toastTimer = null;
+let scanTimer = null;
+let typeTimer = null;
+
+function iconSVG(key){
+  const paths = {
+    hand:'<path d="M15 25V13a3 3 0 0 1 6 0v10M21 23V9a3 3 0 0 1 6 0v15M27 24V12a3 3 0 0 1 6 0v16M33 28v-8a3 3 0 0 1 6 0v9c0 8-5 14-13 14h-2c-6 0-10-4-12-10l-3-8a3 3 0 0 1 5-3l4 6"/>',
+    face:'<path d="M15 10c5-5 13-5 18 0 4 5 4 20 0 25-5 6-13 6-18 0-4-5-4-20 0-25Z"/><path d="M18 22h5M25 22h5M21 30c2 2 4 2 6 0M24 23v5"/>',
+    star:'<path d="M24 5 28 20l15 4-15 4-4 15-4-15-15-4 15-4 4-15Z"/>',
+    wheel:'<circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="5"/><path d="M24 7v10M24 31v10M7 24h10M31 24h10M12 12l7 7M29 29l7 7M36 12l-7 7M19 29l-7 7"/>',
+    lotus:'<path d="M24 8c5 7 5 14 0 21-5-7-5-14 0-21Z"/><path d="M12 17c8 3 12 8 12 16-8-1-13-6-12-16ZM36 17c-8 3-12 8-12 16 8-1 13-6 12-16Z"/><path d="M10 36h28"/>',
+    brush:'<path d="M30 6 14 25l9 9L42 18 30 6Z"/><path d="M14 25c-5 3-7 8-8 14 6-1 11-3 14-8"/><path d="M23 34 14 25"/>',
+    cloud:'<path d="M17 32h20a7 7 0 0 0 0-14 12 12 0 0 0-23-2A8 8 0 0 0 17 32Z"/><path d="M16 39h17"/>',
+    bagua:'<path d="M24 5 40 14v20L24 43 8 34V14L24 5Z"/><circle cx="24" cy="24" r="9"/><path d="M24 15c6 3 6 15 0 18M24 15c-6 3-6 15 0 18"/>',
+    mountain:'<path d="M5 39 18 15l8 14 5-8 12 18H5Z"/><path d="M18 15l3 9h-6M31 21l2 6h-4"/>'
+  };
+  return `<svg viewBox="0 0 48 48">${paths[key] || paths.star}</svg>`;
+}
+
+function installIcons(){
+  $$('[data-icon]').forEach(el => { el.innerHTML = iconSVG(el.dataset.icon); });
+}
+
+function buildProjectMenu(){
+  $('#projMenu').innerHTML = PROJECTS.map(p => `
+    <div class="pm-it${p.current ? ' cur' : ''}" data-proj="${p.key}">
+      <span class="mini-ico">${iconSVG(p.icon)}</span>${p.label}
+    </div>
+  `).join('');
+}
+
+function buildScanSteps(){
+  $('#scanSteps').innerHTML = SCAN_STEPS.map(([key, title, desc]) => `
+    <div class="scan-step" data-scan="${key}">
+      <span class="dot"></span>
+      <span><b>${title}</b><br>${desc}</span>
+      <span class="meter"><i></i></span>
+    </div>
+  `).join('');
+}
+
+function setStage(stage){
+  if (!STAGES.includes(stage)) return;
+  state.stage = stage;
+  document.body.dataset.stage = stage;
+}
+
+function playVideo(which){
+  Object.entries(V).forEach(([key, video]) => {
+    video.onended = null;
+    if (key === which) {
+      video.classList.add('on');
+      try { video.currentTime = 0; } catch(e) {}
+      const p = video.play();
+      if (p) p.catch(() => fallbackVideo(which));
+    } else {
+      video.classList.remove('on');
+      video.pause();
+    }
+  });
+}
+
+function stopVideos(){
+  Object.values(V).forEach(video => {
+    video.pause();
+    video.classList.remove('on');
+    video.onended = null;
+  });
+}
+
+function fallbackVideo(which){
+  if (which === 'opening' && state.stage === 'intro') setTimeout(toCapture, 1500);
+  if (which === 'climax' && state.stage === 'climax') setTimeout(finishClimax, 1500);
+}
+
+function typewriter(el, text, speed=58, done){
+  clearTimeout(typeTimer);
+  el.textContent = '';
+  let i = 0;
+  const step = () => {
+    el.textContent = text.slice(0, i);
+    i += 1;
+    if (i <= text.length) typeTimer = setTimeout(step, speed);
+    else if (done) done();
+  };
+  step();
+}
+
+function audio(){
+  if (!soundOn) return null;
+  if (!audioContext) {
+    try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  }
+  if (audioContext.state === 'suspended') audioContext.resume();
+  return audioContext;
+}
+
+function tone(freq, dur=.28, delay=0, vol=.08, type='sine'){
+  const ctx = audio();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  const t = ctx.currentTime + delay;
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(vol, t + .025);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.start(t);
+  osc.stop(t + dur + .04);
+}
+
+function sfx(kind){
+  if (kind === 'gate') { tone(196,.55,0,.1,'triangle'); tone(392,.62,.08,.07); tone(784,.55,.17,.04); }
+  if (kind === 'soft') { tone(660,.22,0,.045); }
+  if (kind === 'photo') { tone(740,.12,0,.08,'square'); tone(980,.18,.08,.05); }
+  if (kind === 'finish') { tone(523,.42,0,.07); tone(880,.48,.08,.06); tone(1175,.52,.16,.04); }
+}
+
+function toast(message){
+  const t = $('#toast');
+  t.textContent = message;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function toIntro(){
+  if (state.stage !== 'home') return;
+  sfx('gate');
+  setStage('intro');
+  playVideo('opening');
+  typewriter($('#introLine'), '掌中有纹，如河有势；请随掌光入局，先定主线，再观掌丘。', 62);
+  V.opening.onended = toCapture;
+  setTimeout(() => {
+    if (state.stage === 'intro' && V.opening.paused) toCapture();
+  }, 1700);
+}
+
+function toCapture(){
+  if (state.stage !== 'intro' && state.stage !== 'select') return;
+  stopVideos();
+  setStage('capture');
+  $('#viewfinder').classList.remove('has-shot');
+  resetScanSteps();
+  startCamera();
+}
+
+async function startCamera(){
+  const status = $('#cameraStatus');
+  status.textContent = '正在请求摄像头权限';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = '当前浏览器不支持摄像头';
+    toast('当前环境无法开启摄像头，可上传照片或选择无摄像头继续');
+    return;
+  }
+  try {
+    stopCamera();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:960}},
+      audio:false
+    });
+    state.cameraStream = stream;
+    $('#cameraVideo').srcObject = stream;
+    status.textContent = '摄像头已开启，请让掌心对齐辅助线';
+  } catch(error) {
+    status.textContent = '摄像头权限未开启';
+    toast('摄像头未开启，可调整权限、上传照片或选择无摄像头继续');
+  }
+}
+
+function stopCamera(){
+  if (state.cameraStream) {
+    state.cameraStream.getTracks().forEach(track => track.stop());
+    state.cameraStream = null;
+  }
+  $('#cameraVideo').srcObject = null;
+}
+
+function capturePalm(){
+  const video = $('#cameraVideo');
+  const canvas = $('#snapshotCanvas');
+  const img = $('#snapshotImg');
+  const width = video.videoWidth || 1280;
+  const height = video.videoHeight || 960;
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  if (video.readyState >= 2) {
+    ctx.drawImage(video, 0, 0, width, height);
+  } else {
+    drawFallbackPalm(ctx, width, height);
+  }
+  completePalmCapture(canvas, img);
+}
+
+function uploadPalm(file){
+  if (!file || !file.type.startsWith('image/')) {
+    toast('请选择一张手相照片');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = $('#snapshotCanvas');
+      const img = $('#snapshotImg');
+      canvas.width = 1280;
+      canvas.height = 960;
+      const ctx = canvas.getContext('2d', { willReadFrequently:true });
+      ctx.fillStyle = '#07040f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const scale = Math.max(canvas.width / image.width, canvas.height / image.height);
+      const dw = image.width * scale;
+      const dh = image.height * scale;
+      ctx.drawImage(image, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+      completePalmCapture(canvas, img);
+    };
+    image.onerror = () => toast('照片读取失败，请换一张清晰图片');
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function completePalmCapture(canvas, img){
+  state.photoData = canvas.toDataURL('image/jpeg', .88);
+  img.src = state.photoData;
+  $('#selectSnapshot').src = state.photoData;
+  $('#viewfinder').classList.add('has-shot');
+  state.metrics = analyzePalmImage(canvas);
+  runScanAnimation(() => {
+    renderSampleSummary();
+    stopCamera();
+    setStage('select');
+  });
+  sfx('photo');
+}
+
+function drawFallbackPalm(ctx, width, height){
+  const grad = ctx.createRadialGradient(width*.48,height*.44,20,width*.5,height*.5,width*.58);
+  grad.addColorStop(0,'#a47d58');
+  grad.addColorStop(.45,'#493024');
+  grad.addColorStop(1,'#090511');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,width,height);
+  ctx.save();
+  ctx.translate(width*.5, height*.54);
+  ctx.strokeStyle = 'rgba(240,212,149,.62)';
+  ctx.lineWidth = Math.max(3,width/360);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.ellipse(0, 35, width*.18, height*.25, 0, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-width*.2, height*.04);
+  ctx.bezierCurveTo(-width*.32,-height*.08,-width*.2,-height*.22,-width*.07,-height*.22);
+  ctx.moveTo(-width*.06, -height*.13);
+  ctx.bezierCurveTo(width*.02,-height*.26,width*.17,-height*.29,width*.24,-height*.11);
+  ctx.moveTo(-width*.22, height*.08);
+  ctx.bezierCurveTo(-width*.02, -height*.02, width*.13, -height*.01, width*.29, height*.1);
+  ctx.moveTo(-width*.02, height*.26);
+  ctx.bezierCurveTo(width*.01, height*.04, width*.02, -height*.06, width*.01, -height*.17);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function zoneAverage(data, width, height, x0, y0, x1, y1, step){
+  const zone = {sum:0,count:0,contrast:0,prev:0,warm:0};
+  for (let y = Math.floor(y0 * height); y < Math.floor(y1 * height); y += step) {
+    for (let x = Math.floor(x0 * width); x < Math.floor(x1 * width); x += step) {
+      const i = (y * width + x) * 4;
+      const lum = data[i] * .299 + data[i+1] * .587 + data[i+2] * .114;
+      zone.sum += lum;
+      zone.contrast += Math.abs(lum - zone.prev);
+      zone.warm += data[i] - data[i+2];
+      zone.prev = lum;
+      zone.count += 1;
+    }
+  }
+  const count = Math.max(1, zone.count);
+  return {
+    lum:zone.sum / count,
+    contrast:zone.contrast / count,
+    warm:zone.warm / count
+  };
+}
+
+function analyzePalmImage(canvas){
+  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  const {width, height} = canvas;
+  const data = ctx.getImageData(0, 0, width, height).data;
+  const step = Math.max(4, Math.floor(width / 180));
+  const zones = {
+    life:zoneAverage(data,width,height,.08,.42,.42,.86,step),
+    head:zoneAverage(data,width,height,.18,.42,.78,.62,step),
+    heart:zoneAverage(data,width,height,.18,.22,.82,.43,step),
+    fate:zoneAverage(data,width,height,.40,.44,.62,.88,step),
+    venus:zoneAverage(data,width,height,.08,.55,.38,.9,step),
+    moon:zoneAverage(data,width,height,.64,.55,.94,.9,step),
+    jupiter:zoneAverage(data,width,height,.18,.12,.38,.35,step),
+    sun:zoneAverage(data,width,height,.56,.1,.78,.34,step),
+    center:zoneAverage(data,width,height,.32,.32,.68,.7,step),
+    left:zoneAverage(data,width,height,.04,.1,.46,.9,step),
+    right:zoneAverage(data,width,height,.54,.1,.96,.9,step),
+    all:zoneAverage(data,width,height,0,0,1,1,step)
+  };
+  const score = (zone, bias=0) => Math.round(Math.min(96, Math.max(18, zone.contrast * 2.6 + zone.lum / 255 * 44 + bias)));
+  const warmth = Math.round(Math.min(96, Math.max(18, 48 + zones.all.warm / 4)));
+  const clarity = Math.round(Math.min(96, Math.max(18, zones.all.contrast * 3.1)));
+  const balance = Math.round(Math.max(0, 100 - Math.abs(zones.left.lum - zones.right.lum) * 1.2));
+  const palmTone = warmth >= 54 ? 'warm' : warmth <= 43 ? 'cool' : 'balanced';
+  const lineBias = zones.life.contrast >= zones.fate.contrast ? 'foundation' : 'ambition';
+  const handType = zones.center.lum > zones.all.lum * 1.04 ? 'earth' : zones.center.contrast > zones.all.contrast * 1.1 ? 'fire' : zones.moon.lum > zones.venus.lum ? 'water' : 'air';
+  return {
+    life:score(zones.life, 4),
+    head:score(zones.head, 1),
+    heart:score(zones.heart, 2),
+    fate:score(zones.fate, 0),
+    sun:score(zones.sun, -1),
+    mercury:score(zones.moon, -2),
+    venus:score(zones.venus, 3),
+    moon:score(zones.moon, 0),
+    jupiter:score(zones.jupiter, 0),
+    clarity,
+    warmth,
+    balance,
+    palmTone,
+    lineBias,
+    handType
+  };
+}
+
+function resetScanSteps(){
+  clearTimeout(scanTimer);
+  $$('.scan-step').forEach(step => step.classList.remove('done'));
+}
+
+function runScanAnimation(done){
+  resetScanSteps();
+  let index = 0;
+  const next = () => {
+    const item = $$('.scan-step')[index];
+    if (item) {
+      item.classList.add('done');
+      sfx('soft');
+      index += 1;
+      scanTimer = setTimeout(next, 360);
+    } else {
+      scanTimer = setTimeout(done, 360);
+    }
+  };
+  next();
+}
+
+function skipCamera(){
+  const canvas = $('#snapshotCanvas');
+  canvas.width = 1280;
+  canvas.height = 960;
+  drawFallbackPalm(canvas.getContext('2d'), canvas.width, canvas.height);
+  completePalmCapture(canvas, $('#snapshotImg'));
+}
+
+function renderSampleSummary(){
+  const m = state.metrics || {};
+  const handTypeMap = {earth:'土形手', air:'风形手', fire:'火形手', water:'水形手'};
+  $('#sampleSummary').innerHTML = `
+    <div><b>主线清晰：</b>生命线 ${m.life} · 智慧线 ${m.head} · 感情线 ${m.heart} · 事业线 ${m.fate}</div>
+    <div><b>掌丘气势：</b>金星丘 ${m.venus} · 木星丘 ${m.jupiter} · 月丘 ${m.moon} · 太阳丘 ${m.sun}</div>
+    <div><b>取象参考：</b>${handTypeMap[m.handType] || '综合手型'}，线纹清晰度 ${m.clarity}，左右均衡 ${m.balance}</div>
+    <div><b>合参提示：</b>${m.lineBias === 'foundation' ? '基础线势较强，宜先看体能节律与稳定承载。' : '事业纵线较显，宜先看目标路径与现实推进。'}</div>
+  `;
+}
+
+function selectFocus(key){
+  state.focus = key;
+  $$('.choice').forEach(btn => btn.classList.toggle('sel', btn.dataset.focus === key));
+  sfx('soft');
+}
+
+function toClimax(){
+  if (state.stage !== 'select') return;
+  state.hand = $('#handInput').value;
+  state.dominant = $('#dominantInput').value;
+  state.age = $('#ageInput').value;
+  state.tone = $('#toneInput').value;
+  state.question = $('#questionInput').value.trim();
+  state.climaxDone = false;
+  setStage('climax');
+  playVideo('climax');
+  V.climax.preload = 'auto';
+  V.climax.onended = finishClimax;
+  setTimeout(() => {
+    if (!state.climaxDone && state.stage === 'climax' && V.climax.paused) finishClimax();
+  }, 1700);
+}
+
+function finishClimax(){
+  if (state.climaxDone) return;
+  state.climaxDone = true;
+  state.reading = buildReading();
+  const flash = $('#flash');
+  flash.classList.add('on');
+  sfx('finish');
+  setTimeout(() => {
+    renderResult();
+    stopVideos();
+    setStage('result');
+    $('#resultLayer').scrollTop = 0;
+  }, 430);
+  setTimeout(() => flash.classList.remove('on'), 980);
+}
+
+function pickFocus(){
+  return FOCUS_OPTIONS.find(item => item.key === state.focus) || FOCUS_OPTIONS[0];
+}
+
+function buildReading(){
+  const m = state.metrics || {life:64,head:58,heart:61,fate:52,sun:48,mercury:47,venus:66,moon:54,jupiter:55,clarity:58,warmth:52,balance:82,palmTone:'balanced',lineBias:'foundation',handType:'earth'};
+  const focus = pickFocus();
+  const ageMap = {young:'青年阶段，宜看智慧线与迁移学习', prime:'壮年阶段，宜看事业线、财运线与责任承接', mature:'成熟阶段，宜看生命线后段、掌丘守成与资源沉淀', senior:'长年阶段，宜看福德节律、稳定关系与生活质量'};
+  const handMap = {right:'右手', left:'左手', both:'双手合参'};
+  const domMap = {right:'右手为主手，主手多看当下选择与现实轨迹', left:'左手为主手，主手多看当下选择与现实轨迹', unknown:'主副手不明，本次以掌纹显势和当下状态合参'};
+  const handRole = state.hand === 'both' ? '本次采用双手合参思路：主手看现势，副手看底色。' : `本次取${handMap[state.hand]}入局。${domMap[state.dominant] || domMap.unknown}。`;
+  const toneMap = {steady:'当前状态偏平稳，适合稳扎稳打累积结果', turning:'当前处在转折调整期，宜先定方向再增速', seeking:'当前重在寻找方向，宜用智慧线与事业线校准路径', intense:'当前事务繁重，宜先看生命线与掌色节律'};
+  const handTypeMap = {earth:'土形手取象，重稳定、承载与实际执行', air:'风形手取象，重信息、表达与多线处理', fire:'火形手取象，重行动、冲劲与开创意识', water:'水形手取象，重感受、想象与关系敏锐度'};
+  const toneLead = m.palmTone === 'warm' ? '掌色偏暖，行动意愿较足，但要防急躁耗神。' : m.palmTone === 'cool' ? '掌色偏冷，宜先回养节律，再推进关键事务。' : '掌色较平，适合以规律行动稳步推进。';
+  return {
+    meta:`${focus.title} · ${handMap[state.hand] || '右手'} · ${ageMap[state.age] || ageMap.prime}${state.question ? ` · 关注「${state.question}」` : ''}`,
+    overview:[
+      `${handRole}${toneMap[state.tone] || toneMap.steady}。${handTypeMap[m.handType] || handTypeMap.earth}，${toneLead}`,
+      `手相讲究线、丘、形、色合参：线看走势，丘看能量，形看性情，色看当下。不能只凭一条线断吉凶，本次以「${focus.title}」为问掌方向，综合生命线、智慧线、感情线、事业线与掌丘取象。`
+    ],
+    lines:[
+      ['生命线', `清晰度 ${m.life}。${m.life >= 60 ? '生命线取象较稳，表示韧性、恢复力与生活承载可用，适合把长期目标拆成固定节律。' : '生命线取象偏柔，宜先养作息、稳体能与生活秩序，再做高强度承诺。'}`],
+      ['智慧线', `清晰度 ${m.head}。${m.head >= 60 ? '智慧线较明，判断与学习吸收力可用，适合做规划、复盘、方案比较。' : '智慧线偏柔，近期决策宜多查证，避免凭一时感受快速定局。'}`],
+      ['感情线', `清晰度 ${m.heart}。${m.heart >= 60 ? '感情线较顺，表达与感受力较能配合，适合坦诚沟通、修复关系。' : '感情线取象偏收，情绪表达宜放慢，不必急着给关系下结论。'}`],
+      ['事业线', `清晰度 ${m.fate}。${m.fate >= 58 ? '事业线有承接，说明责任路径和目标感正在形成，适合争取可见成果。' : '事业线偏隐，近期宜先建立稳定作品、流程与人脉支点。'}`]
+    ],
+    career:[
+      `${m.fate >= 58 ? '事业线有势，适合把机会变成明确项目，尤其要让成果被看见、被记录、被复用。' : '事业线尚在蓄势，短期不要急着证明自己，先把能力包装成稳定交付。'}${m.jupiter >= 56 ? '木星丘得力，领导欲与上进心可用，可主动承担更清楚的责任。' : '木星丘偏平，宜先找导师、标杆或标准动作来校正方向。'}`,
+      `${m.sun >= 56 ? '太阳丘与太阳线取象较明，利声望、作品展示与口碑积累。' : '太阳线偏隐，名气与收益不宜求快，适合先做长期可见的作品轨迹。'}${m.mercury >= 54 ? '水星气较活，沟通、交易与副业经营可作为辅助财路。' : '水星线需养，谈钱谈合作时要留书面记录，避免口头模糊。'}`
+    ],
+    relation:[
+      `${m.heart >= 60 ? '感情线较清，关系里有表达温度，也能照顾对方感受。' : '感情线偏浅，容易把真实感受藏起来，关系中宜少试探、多说明。'}${m.venus >= 60 ? '金星丘丰，亲和力与情感投入较足，适合经营长期关系。' : '金星丘偏收，宜保持边界和精力，不要用过度付出来换稳定。'}`,
+      `${m.head >= 60 ? '智慧线能压住情绪波动，适合用理性沟通处理分歧。' : '智慧线偏柔时容易受情绪带动，重要关系议题建议先冷静后表达。'}掌纹均衡度 ${m.balance}，${m.balance >= 78 ? '说明左右取象较稳，关系与决策容易达成一致。' : '说明近期内外状态略有拉扯，宜减少临时承诺。'}`
+    ],
+    mounts:[
+      ['金星丘', m.venus >= 60 ? '金星丘较有气，重情义、生活热度与恢复力，宜把热情用在值得的人事。' : '金星丘偏收，宜先补精力，不必勉强维持所有关系。'],
+      ['木星丘', m.jupiter >= 56 ? '木星丘可用，上进心与组织欲较强，适合主动争取主导权。' : '木星丘需养，宜先定目标和标准，再谈扩张。'],
+      ['太阳丘', m.sun >= 56 ? '太阳丘较明，利审美、作品、名望和被看见的机会。' : '太阳丘偏隐，适合沉淀作品，不急于曝光。'],
+      ['月丘', m.moon >= 56 ? '月丘有势，想象力、人缘感知与远方机缘较活。' : '月丘偏静，宜减少过度幻想，把灵感落到具体行动。'],
+      ['水星丘', m.mercury >= 54 ? '水星丘可用，沟通、交易、表达与灵活变通是加分项。' : '水星丘需稳，合同、沟通和利益边界要说清楚。'],
+      ['手型', `${handTypeMap[m.handType] || handTypeMap.earth}。${m.lineBias === 'foundation' ? '本局宜先稳根基，再求突破。' : '本局目标线较显，宜以任务和结果带动运势。'}`]
+    ],
+    focusText:buildFocusText(focus, m),
+    advice:buildAdvice(focus, m)
+  };
+}
+
+function buildFocusText(focus, m){
+  const map = {
+    overall:`综合来看，本局以${m.lineBias === 'foundation' ? '生命线与金星丘为底' : '事业线与掌心纵势为先'}，宜把精力、目标和关系三件事分开处理。先稳定日常节律，再推进关键计划，运势会更容易落在可执行的事情上。`,
+    career:`事业方向重点看事业线、智慧线和木星丘。${m.fate >= 58 ? '事业线有承接，适合争取项目、汇报成果、建立个人标签。' : '事业线偏隐，先做作品沉淀和流程复用，比急着换方向更有利。'}决策上忌凭热度追逐机会，应看是否能持续交付。`,
+    wealth:`财运经营重点看太阳线、水星线与掌心聚气。${m.sun >= 56 || m.mercury >= 54 ? '偏财与副业机会可看，但必须依托专业、表达和稳定交易。' : '财运以守成为先，近期宜控预算、补现金流、减少短线冲动。'}财帛之道贵在留痕、复利和边界。`,
+    relation:`情感关系重点看感情线与金星丘。${m.heart >= 60 ? '感情线较顺，适合把真实期待说清楚，关系会因坦诚而稳定。' : '感情线偏收，容易想很多却说很少，建议少用试探，多用清晰表达。'}金星丘提醒你：亲密也需要边界。`,
+    talent:`性格天赋重点看手型、智慧线和拇指意志。${m.handType === 'fire' ? '行动快、开局强，但要补复盘。' : m.handType === 'air' ? '信息敏锐、表达灵活，但要防分散。' : m.handType === 'water' ? '感受细腻、想象力强，但要落地。' : '稳定踏实、耐力好，但要主动争取机会。'}智慧线决定天赋能否变成方法。`,
+    recent:`近期运势重点看掌色、线纹清晰度和均衡度。${m.clarity >= 58 ? '线纹尚清，适合推进计划和主动沟通。' : '线纹偏柔，宜先减负、整理环境、恢复规律。'}本周宜把一件关键事情做深，不宜同时开启太多战线。`
+  };
+  return map[focus.key] || map.overall;
+}
+
+function buildAdvice(focus, m){
+  const yi = [
+    m.life >= 60 ? '宜固定作息与长期计划' : '宜先回养精力',
+    m.fate >= 58 ? '宜争取可见成果' : '宜沉淀作品流程',
+    m.heart >= 60 ? '宜坦诚沟通' : '宜放慢情绪表达'
+  ];
+  const avoid = [
+    '忌凭单线断全局',
+    m.warmth >= 56 ? '忌急躁求快' : '忌拖延耗神',
+    focus.key === 'wealth' ? '忌短线投机' : '忌模糊承诺'
+  ];
+  return {yi, avoid, note:'仅作传统文化体验与自我观察参考，不构成医疗、法律、投资或现实命运判断。重要事务仍应以专业意见和实际证据为准。'};
+}
+
+function renderResult(){
+  const r = state.reading || buildReading();
+  $('#resultMeta').textContent = r.meta;
+  $('#overviewText').innerHTML = r.overview.map(p => `<p>${p}</p>`).join('');
+  $('#lineGrid').innerHTML = r.lines.map(([title, text]) => `<article class="mini-card"><h3>${title}</h3><p>${text}</p></article>`).join('');
+  $('#careerText').innerHTML = r.career.map(p => `<p>${p}</p>`).join('');
+  $('#relationText').innerHTML = r.relation.map(p => `<p>${p}</p>`).join('');
+  $('#mountGrid').innerHTML = r.mounts.map(([title, text]) => `<article class="mini-card"><h3>${title}</h3><p>${text}</p></article>`).join('');
+  $('#adviceText').innerHTML = `
+    <p>${r.focusText}</p>
+    <p><b>宜：</b>${r.advice.yi.join('；')}。</p>
+    <p><b>忌：</b>${r.advice.avoid.join('；')}。</p>
+    <div class="advice-row">${[...r.advice.yi, ...r.advice.avoid].map(item => `<span class="tag">${item}</span>`).join('')}</div>
+    <p class="muted" style="margin-top:12px">${r.advice.note}</p>
+  `;
+}
+
+function readingText(){
+  const r = state.reading;
+  if (!r) return '';
+  return `手相解读结果
+${r.meta}
+
+观掌总论
+${r.overview.join('\n')}
+
+三大主线
+${r.lines.map(([k,v]) => `${k}：${v}`).join('\n')}
+
+事业财运
+${r.career.join('\n')}
+
+情感性格
+${r.relation.join('\n')}
+
+掌丘手型
+${r.mounts.map(([k,v]) => `${k}：${v}`).join('\n')}
+
+专项建议
+${r.focusText}
+宜：${r.advice.yi.join('；')}
+忌：${r.advice.avoid.join('；')}
+${r.advice.note}`;
+}
+
+function copyReading(){
+  const text = readingText();
+  if (!text) return toast('暂无可复制的解读');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('解读已复制'); } catch(e) { toast('复制失败，请手动选择文本'); }
+    ta.remove();
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('解读已复制')).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+function backHome(){
+  stopVideos();
+  stopCamera();
+  state.climaxDone = false;
+  setStage('home');
+}
+
+function again(){
+  stopVideos();
+  stopCamera();
+  state.photoData = '';
+  state.metrics = null;
+  state.reading = null;
+  setStage('home');
+  requestAnimationFrame(() => toIntro());
+}
+
+function handleProject(key){
+  const p = PROJECTS.find(item => item.key === key);
+  if (!p) return;
+  if (p.href) {
+    location.href = p.href;
+    return;
+  }
+  if (p.current) toast('你正在手相解读殿堂');
+  else toast(`${p.label}模块将在后续补充`);
+}
+
+document.addEventListener('click', event => {
+  const target = event.target;
+  if (target.closest('#soundBtn')) {
+    soundOn = !soundOn;
+    $('#soundBtn').classList.toggle('off', !soundOn);
+    toast(soundOn ? '音效已开启' : '音效已静默');
+    return;
+  }
+  if (target.closest('#projBtn')) {
+    const item = target.closest('.pm-it');
+    if (item) {
+      handleProject(item.dataset.proj);
+      $('#projMenu').classList.remove('show');
+      $('#projBtn').classList.remove('open');
+      $('#projBtn').setAttribute('aria-expanded','false');
+      return;
+    }
+    const open = !$('#projMenu').classList.contains('show');
+    $('#projMenu').classList.toggle('show', open);
+    $('#projBtn').classList.toggle('open', open);
+    $('#projBtn').setAttribute('aria-expanded', String(open));
+    return;
+  } else {
+    $('#projMenu').classList.remove('show');
+    $('#projBtn').classList.remove('open');
+    $('#projBtn').setAttribute('aria-expanded','false');
+  }
+  const nav = target.closest('[data-nav]');
+  if (nav) {
+    const key = nav.dataset.nav;
+    if (key === 'start') toIntro();
+    else if (key === 'home') backHome();
+    else toast(`${nav.textContent.trim() || '功能'}将在后续补充`);
+    return;
+  }
+  const side = target.closest('[data-side]');
+  if (side) {
+    if (side.dataset.side === 'palm') toast('你正在手相解读殿堂');
+    else if (side.dataset.side === 'mianxiang') location.href = 'index_mianxiang.html';
+    else toast(`${side.textContent.trim()}模块将在后续补充`);
+    return;
+  }
+  const choice = target.closest('[data-focus]');
+  if (choice) {
+    selectFocus(choice.dataset.focus);
+    return;
+  }
+  const act = target.closest('[data-act]');
+  if (act) {
+    const a = act.dataset.act;
+    if (a === 'capture') capturePalm();
+    if (a === 'upload') $('#uploadInput').click();
+    if (a === 'retake') {
+      state.photoData = '';
+      state.metrics = null;
+      $('#viewfinder').classList.remove('has-shot');
+      resetScanSteps();
+      if (state.stage === 'select') toCapture();
+      else startCamera();
+    }
+    if (a === 'skip-camera') skipCamera();
+    if (a === 'reveal') toClimax();
+    if (a === 'copy') copyReading();
+    if (a === 'again') again();
+    if (a === 'homeback') backHome();
+    return;
+  }
+  if (state.stage === 'home' && !target.closest('[data-ui]')) toIntro();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    if (state.stage === 'home') return;
+    if (state.stage === 'climax') finishClimax();
+    else backHome();
+  }
+  if (event.key === 'Enter' || event.key === ' ') {
+    if (state.stage === 'home') toIntro();
+    else if (state.stage === 'select') toClimax();
+  }
+});
+
+$('#uploadInput').addEventListener('change', event => {
+  const file = event.target.files && event.target.files[0];
+  uploadPalm(file);
+  event.target.value = '';
+});
+
+Object.values(V).forEach(video => {
+  video.addEventListener('error', () => {
+    if (state.stage === 'intro') fallbackVideo('opening');
+    if (state.stage === 'climax') fallbackVideo('climax');
+  });
+});
+
+installIcons();
+buildProjectMenu();
+buildScanSteps();
+drawFallbackPalm($('#snapshotCanvas').getContext('2d'), 960, 720);
+</script>
+</body>
+</html>

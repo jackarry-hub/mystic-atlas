@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玄境 · 紫微斗数</title>
+<meta name="description" content="沉浸式紫微斗数推演：以命宫、身宫、十二宫、十四主星、四化飞星、三方四正与流年走势生成传统文化参考解读。">
+<link rel="preload" as="image" href="assets/ziwei/bg.png">
+<link rel="preload" as="image" href="assets/ziwei/ui-reference.png">
+<link rel="preload" as="video" href="assets/ziwei/opening.mp4">
+<link rel="preload" as="video" href="assets/ziwei/climax.mp4">
+<style>
+:root{
+  --void:#040403;
+  --ink:#f5ead0;
+  --muted:#c6b68f;
+  --gold:#c89443;
+  --gold-hi:#ffe7b4;
+  --gold-soft:rgba(200,148,67,.48);
+  --jade:#6aa67d;
+  --jade-hi:#b8e6bf;
+  --cinnabar:#9f4635;
+  --purple:#8b62d6;
+  --panel:rgba(9,10,8,.7);
+  --panel-strong:rgba(8,8,7,.9);
+  --line:rgba(214,162,80,.44);
+  --line-soft:rgba(214,162,80,.2);
+  --shadow:0 22px 78px rgba(0,0,0,.62);
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --display:"STKaiti","KaiTi","Noto Serif SC",serif;
+  --roman:"Cinzel","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  color:var(--ink);
+  background:var(--void);
+  font-family:var(--serif);
+  overflow:hidden;
+  user-select:none;
+}
+button,input,select{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+input,select{border:0;outline:0;background:transparent}
+::selection{background:rgba(200,148,67,.32)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:rgba(7,7,6,.88)}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--gold),rgba(106,166,125,.72));border-radius:8px}
+
+/* Flow: home -> opening -> form -> climax -> result */
+#bg,#videoLayer,#veil,#stardust,#flash{position:fixed;inset:0}
+#bg{
+  z-index:0;
+  background:
+    radial-gradient(820px 520px at 50% 58%,rgba(200,148,67,.13),transparent 66%),
+    radial-gradient(620px 380px at 78% 30%,rgba(106,166,125,.16),transparent 67%),
+    url("assets/ziwei/bg.png") center center/cover no-repeat;
+  transform:scale(1.01);
+  transition:filter 1.1s ease,opacity 1s ease,transform 1.2s ease;
+  animation:bgBreath 18s ease-in-out infinite alternate;
+}
+@keyframes bgBreath{to{transform:scale(1.042)}}
+#videoLayer{z-index:1;overflow:hidden;pointer-events:none}
+#videoLayer video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1s ease,filter 1s ease;
+  filter:contrast(1.08) saturate(1.05) brightness(.92);
+}
+#videoLayer video.on{opacity:1}
+#veil{
+  z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.03) 26%,rgba(0,0,0,.55) 76%,rgba(0,0,0,.82)),
+    linear-gradient(90deg,rgba(0,0,0,.72),transparent 28%,transparent 68%,rgba(0,0,0,.7)),
+    linear-gradient(180deg,rgba(0,0,0,.64),transparent 28%,rgba(0,0,0,.78));
+  opacity:.82;
+  transition:opacity .9s ease;
+}
+#stardust{
+  z-index:3;pointer-events:none;opacity:.22;mix-blend-mode:screen;
+  background-image:
+    radial-gradient(1px 1px at 14% 18%,rgba(255,231,180,.8),transparent),
+    radial-gradient(1.2px 1.2px at 78% 24%,rgba(184,230,191,.64),transparent),
+    radial-gradient(1px 1px at 55% 68%,rgba(255,255,255,.72),transparent),
+    linear-gradient(105deg,transparent 0 48%,rgba(255,231,180,.12) 50%,transparent 52%);
+  background-size:230px 230px,340px 340px,290px 290px,250px 250px;
+  animation:dust 58s linear infinite;
+}
+@keyframes dust{to{transform:translate3d(130px,70px,0)}}
+#flash{
+  z-index:90;opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 52%,rgba(255,248,219,.96),rgba(255,231,180,.45) 28%,rgba(139,98,214,.18) 54%,transparent 76%);
+}
+#flash.on{animation:flash .9s ease both}
+@keyframes flash{0%{opacity:0;transform:scale(.75)}32%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.16)}}
+body[data-stage="opening"] #bg,
+body[data-stage="climax"] #bg{opacity:.05;filter:blur(2px)}
+body[data-stage="form"] #veil{opacity:.9}
+body[data-stage="result"] #veil{opacity:.96}
+
+.frame-line{position:fixed;inset:14px;z-index:8;pointer-events:none;border:1px solid rgba(214,162,80,.28)}
+.frame-line::before,.frame-line::after{
+  content:"";position:absolute;left:22px;right:22px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);
+}
+.frame-line::before{top:58px}.frame-line::after{bottom:20px}
+.corner{position:absolute;width:38px;height:38px;border-color:rgba(255,231,180,.74);filter:drop-shadow(0 0 8px rgba(200,148,67,.42))}
+.c1{left:-1px;top:-1px;border-left:1px solid;border-top:1px solid}
+.c2{right:-1px;top:-1px;border-right:1px solid;border-top:1px solid}
+.c3{right:-1px;bottom:-1px;border-right:1px solid;border-bottom:1px solid}
+.c4{left:-1px;bottom:-1px;border-left:1px solid;border-bottom:1px solid}
+
+.pnl{
+  position:relative;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg,rgba(255,231,180,.055),transparent 38%),
+    linear-gradient(150deg,var(--panel),rgba(3,5,4,.82));
+  box-shadow:var(--shadow),inset 0 0 28px rgba(200,148,67,.08);
+  backdrop-filter:blur(7px);
+}
+.pnl::before{
+  content:"";position:absolute;inset:6px;border:1px solid var(--line-soft);pointer-events:none;
+}
+.pnl::after{
+  content:"";position:absolute;left:50%;top:-7px;width:10px;height:10px;
+  transform:translateX(-50%) rotate(45deg);
+  background:rgba(7,7,6,.95);border:1px solid rgba(255,231,180,.68);
+  box-shadow:0 0 12px rgba(200,148,67,.45);
+}
+.panel-corners{position:absolute;inset:0;pointer-events:none}
+.panel-corners::before,.panel-corners::after{
+  content:"";position:absolute;width:22px;height:22px;border-color:rgba(255,231,180,.5);
+}
+.panel-corners::before{left:10px;top:10px;border-left:1px solid;border-top:1px solid}
+.panel-corners::after{right:10px;bottom:10px;border-right:1px solid;border-bottom:1px solid}
+
+#topnav{
+  position:fixed;z-index:30;top:0;left:0;right:0;height:76px;
+  display:grid;grid-template-columns:220px 1fr auto 1fr 122px;
+  align-items:center;gap:18px;padding:0 30px;
+  background:linear-gradient(180deg,rgba(3,4,3,.92),rgba(3,4,3,.42) 76%,transparent);
+  border-bottom:1px solid rgba(200,148,67,.2);
+  transition:opacity .8s ease,transform .8s ease;
+}
+body:not([data-stage="home"]) #topnav{opacity:.16;transform:translateY(-8px)}
+body[data-stage="result"] #topnav{opacity:.95;transform:none;background:linear-gradient(180deg,rgba(3,4,3,.96),rgba(3,4,3,.78))}
+#projBtn{
+  position:relative;height:43px;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--gold-hi);letter-spacing:3px;border:1px solid var(--line);
+  background:rgba(5,7,5,.74);box-shadow:inset 0 0 20px rgba(200,148,67,.11);
+}
+#projBtn .car{font-size:12px;transition:transform .24s ease}
+#projBtn.open .car{transform:rotate(180deg)}
+#projMenu{display:none;position:absolute;left:0;top:53px;min-width:220px;padding:8px;z-index:42}
+#projMenu.show{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pm-it{
+  height:40px;display:flex;align-items:center;gap:10px;padding:0 12px;
+  color:var(--muted);font-size:14px;letter-spacing:2px;border-bottom:1px solid rgba(214,162,80,.13);
+  cursor:pointer;transition:.22s ease;
+}
+.pm-it:last-child{border-bottom:0}
+.pm-it:hover,.pm-it.cur{color:var(--gold-hi);background:rgba(106,166,125,.12)}
+.pm-it.cur::after{content:"当前";margin-left:auto;font-size:11px;color:var(--jade-hi);border:1px solid rgba(184,230,191,.28);padding:1px 6px}
+.pm-it .mini{width:22px;height:22px;display:grid;place-items:center;color:var(--gold)}
+.navside{display:flex;align-items:center;justify-content:center;gap:52px;min-width:0}
+.navlink{white-space:nowrap;color:var(--muted);letter-spacing:4px;font-size:16px;cursor:pointer;transition:.25s ease}
+.navlink:hover,.navlink.cur{color:var(--gold-hi);text-shadow:0 0 12px rgba(200,148,67,.44)}
+#navTitle{
+  min-width:300px;text-align:center;font-family:var(--display);font-size:43px;line-height:1;
+  color:var(--gold-hi);letter-spacing:13px;text-indent:13px;
+  text-shadow:0 4px 18px rgba(0,0,0,.78),0 0 16px rgba(200,148,67,.34);
+}
+.navIcons{display:flex;justify-content:flex-end;gap:13px}
+.navico{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  color:var(--gold-hi);border:1px solid var(--line);background:rgba(5,7,5,.52);transition:.24s ease;
+}
+.navico:hover{border-color:var(--gold);box-shadow:0 0 16px rgba(200,148,67,.32);transform:translateY(-1px)}
+svg{display:block}
+.ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+#home{
+  position:fixed;z-index:12;inset:0;display:grid;
+  grid-template-columns:190px 284px minmax(220px,1fr) 330px;
+  align-items:center;gap:25px;padding:104px 36px 36px;
+  transition:opacity .9s ease,transform .9s ease;
+}
+body:not([data-stage="home"]) #home{opacity:0;pointer-events:none;transform:scale(.985)}
+#leftcol{display:flex;flex-direction:column;gap:13px}
+.side-menu{padding:8px 0}
+.mi{
+  height:62px;display:grid;grid-template-columns:40px 1fr;align-items:center;
+  padding:0 14px;border-bottom:1px solid rgba(214,162,80,.2);
+  color:var(--muted);letter-spacing:7px;font-size:20px;cursor:pointer;transition:.25s ease;
+}
+.mi:last-child{border-bottom:0}
+.mi.cur,.mi:hover{color:var(--gold-hi);background:linear-gradient(90deg,rgba(200,148,67,.16),transparent)}
+.mini-ico{width:25px;height:25px;display:grid;place-items:center;color:var(--gold-hi)}
+.daily-tip{min-height:112px;padding:19px 17px 18px}
+.tip-title{font-family:var(--display);font-size:22px;letter-spacing:5px;color:var(--gold-hi);margin-bottom:9px}
+.tip-copy{font-size:13px;letter-spacing:1.4px;line-height:1.75;color:var(--muted)}
+#stepPanel{padding:22px 18px 18px}
+.steps-title{text-align:center;font-family:var(--display);font-size:25px;letter-spacing:6px;color:var(--gold-hi);margin-bottom:16px}
+.steps-title::after{content:"";display:block;height:1px;margin:14px 4px 0;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+.step{
+  display:grid;grid-template-columns:52px 1fr;gap:10px;min-height:84px;padding:4px 0 13px;
+  border-bottom:1px solid rgba(214,162,80,.18);
+}
+.step:last-child{border-bottom:0}
+.num{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(214,162,80,.72);color:var(--gold-hi);font-family:Georgia,serif;font-size:27px;
+  background:rgba(72,47,16,.25);box-shadow:inset 0 0 18px rgba(200,148,67,.12);
+}
+.step h3{font-family:var(--display);font-size:20px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:6px}
+.step p{font-size:13px;line-height:1.62;letter-spacing:1.2px;color:var(--muted)}
+#centerStage{height:100%;display:grid;place-items:end center;pointer-events:none}
+#chartGlow{
+  width:min(40vw,560px);aspect-ratio:1;border-radius:50%;margin-bottom:7vh;opacity:.9;
+  background:
+    radial-gradient(circle,rgba(255,231,180,.42) 0 2px,transparent 4px),
+    repeating-radial-gradient(circle,rgba(255,231,180,.4) 0 1px,transparent 1px 38px),
+    conic-gradient(from 8deg,transparent 0 4deg,rgba(255,231,180,.18) 5deg 6deg,transparent 7deg 30deg);
+  box-shadow:0 0 34px rgba(255,231,180,.32),inset 0 0 32px rgba(255,231,180,.22);
+  transform:perspective(900px) rotateX(58deg);
+  animation:plateSpin 18s linear infinite;
+}
+@keyframes plateSpin{to{rotate:360deg}}
+#tapHint{
+  position:fixed;z-index:18;left:50%;bottom:30px;transform:translateX(-50%);
+  color:var(--gold-hi);font-size:14px;letter-spacing:4px;text-shadow:0 0 16px rgba(200,148,67,.48);
+  opacity:.78;animation:hint 2.7s ease-in-out infinite;pointer-events:none;white-space:nowrap;
+}
+@keyframes hint{50%{opacity:1;filter:drop-shadow(0 0 10px rgba(200,148,67,.6))}}
+#rightcol{display:flex;flex-direction:column;gap:14px}
+.feature{
+  min-height:108px;display:grid;grid-template-columns:64px 1fr;align-items:center;gap:12px;padding:15px 18px;
+}
+.feature .round{
+  width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(214,162,80,.64);color:var(--gold-hi);background:rgba(5,7,5,.42);
+  animation:floatIcon 5s ease-in-out infinite;
+}
+.feature:nth-child(2) .round{animation-delay:.8s}.feature:nth-child(3) .round{animation-delay:1.4s}
+@keyframes floatIcon{50%{transform:translateY(-4px) rotate(3deg)}}
+.feature .round svg{width:31px;height:31px}
+.feature h3{font-family:var(--display);font-size:23px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:6px}
+.feature p{font-size:13px;line-height:1.65;letter-spacing:1.3px;color:var(--muted)}
+#startBtn{
+  height:77px;display:flex;align-items:center;justify-content:center;gap:14px;
+  color:var(--ink);font-family:var(--display);font-size:32px;letter-spacing:10px;text-indent:10px;
+  background:linear-gradient(90deg,rgba(200,148,67,.13),rgba(255,231,180,.24),rgba(200,148,67,.13));
+  box-shadow:0 0 28px rgba(200,148,67,.24),inset 0 0 22px rgba(255,231,180,.09);
+  animation:goldPulse 2.9s ease-in-out infinite;
+}
+@keyframes goldPulse{50%{box-shadow:0 0 46px rgba(200,148,67,.5),inset 0 0 30px rgba(255,231,180,.18)}}
+.quote{min-height:104px;padding:22px 24px 18px 70px;font-size:21px;line-height:1.65;letter-spacing:6px;color:var(--gold-hi)}
+.quote .mark{position:absolute;left:24px;top:7px;font-size:42px;color:var(--gold-hi);opacity:.72}
+
+.layer{position:fixed;z-index:16;inset:0;opacity:0;pointer-events:none;transition:opacity .86s ease,transform .86s ease}
+body[data-stage="opening"] #openingLayer,
+body[data-stage="form"] #formLayer,
+body[data-stage="climax"] #climaxLayer,
+body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
+#openingLayer,#climaxLayer{display:flex;align-items:flex-end;justify-content:center;padding:0 24px 7vh}
+.ritual-card{
+  width:min(980px,94vw);padding:24px 28px 24px;text-align:center;
+  transform:translateY(20px);transition:transform .8s ease;
+}
+body[data-stage="opening"] .ritual-card,
+body[data-stage="climax"] .ritual-card{transform:none}
+.ritual-card h2{font-family:var(--display);font-size:clamp(26px,3.2vw,40px);letter-spacing:8px;color:var(--gold-hi);font-weight:500;margin-bottom:12px}
+.ritual-card p{max-width:760px;margin:0 auto;color:var(--muted);font-size:14px;line-height:1.85;letter-spacing:1.8px}
+.focus-row{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:18px auto 16px}
+.chip{
+  min-height:42px;padding:0 18px;border:1px solid rgba(214,162,80,.34);
+  color:var(--muted);background:rgba(4,5,4,.56);letter-spacing:2px;transition:.22s ease;
+}
+.chip:hover,.chip.sel{color:#1c1308;background:linear-gradient(120deg,var(--gold-hi),var(--gold));border-color:var(--gold-hi);box-shadow:0 0 20px rgba(200,148,67,.42)}
+.primary{
+  min-width:190px;height:46px;margin-top:5px;padding:0 26px;
+  border:1px solid rgba(255,231,180,.62);color:var(--gold-hi);
+  background:linear-gradient(90deg,rgba(102,67,23,.76),rgba(32,48,32,.84));
+  letter-spacing:5px;box-shadow:0 0 20px rgba(200,148,67,.2),inset 0 0 18px rgba(255,231,180,.08);
+}
+.primary:hover{box-shadow:0 0 28px rgba(200,148,67,.38),inset 0 0 20px rgba(255,231,180,.13)}
+.ghost{
+  min-width:120px;height:38px;padding:0 18px;border:1px solid rgba(214,162,80,.28);color:var(--muted);
+  background:rgba(4,5,4,.45);letter-spacing:3px;
+}
+.ghost:hover{color:var(--gold-hi);border-color:var(--gold)}
+
+#formLayer{display:grid;place-items:start center;padding:80px 24px 18px;overflow-y:auto}
+#formCard{width:min(1040px,94vw);padding:22px;display:grid;grid-template-columns:1.05fr .95fr;gap:20px}
+.form-head h2{font-family:var(--display);font-size:36px;letter-spacing:8px;color:var(--gold-hi);font-weight:500;margin-bottom:10px}
+.form-head p{font-size:14px;line-height:1.85;letter-spacing:1.6px;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.field{border:1px solid rgba(214,162,80,.28);background:rgba(4,5,4,.48);padding:8px 10px}
+.field label{display:block;font-size:12px;letter-spacing:2px;color:var(--gold-hi);margin-bottom:8px}
+.field input,.field select{width:100%;height:30px;color:var(--ink);font-size:15px}
+.field select option{background:#10100d;color:#f5ead0}
+.focus-select{margin-top:15px}
+.focus-select h3,.side-note h3{font-family:var(--display);font-weight:500;color:var(--gold-hi);letter-spacing:5px;font-size:22px;margin-bottom:10px}
+.form-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.side-note{padding:16px}
+.method-list{display:grid;gap:12px;margin-top:10px}
+.method{
+  display:grid;grid-template-columns:40px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid rgba(214,162,80,.16);
+}
+.method:last-child{border-bottom:0}
+.method b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--gold-hi);font-family:var(--roman);font-weight:400}
+.method h4{font-size:16px;letter-spacing:3px;color:var(--gold-hi);font-weight:500;margin-bottom:4px}
+.method p{font-size:12.5px;letter-spacing:1.2px;line-height:1.65;color:var(--muted)}
+#climaxLayer .ritual-card{width:min(780px,92vw)}
+#skipBtn{position:fixed;right:28px;bottom:26px;z-index:40;opacity:0;pointer-events:none}
+body[data-stage="climax"] #skipBtn{opacity:.82;pointer-events:auto}
+
+#resultLayer{z-index:22;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,rgba(4,5,4,.88),rgba(4,5,4,.98) 52%,#040403)}
+#resultInner{max-width:1180px;margin:0 auto;padding:104px 26px 90px;display:flex;flex-direction:column;gap:28px}
+.result-head{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.result-head h1{font-family:var(--display);font-size:clamp(34px,4vw,52px);font-weight:500;letter-spacing:10px;color:var(--gold-hi);text-shadow:0 0 22px rgba(200,148,67,.42)}
+#resultMeta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#resultMeta span{font-size:12px;letter-spacing:2px;color:var(--jade-hi);border:1px solid rgba(184,230,191,.28);padding:5px 12px;background:rgba(106,166,125,.08)}
+.result-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.overview-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
+.block{padding:22px}
+.block h2{font-family:var(--display);font-size:27px;letter-spacing:6px;font-weight:500;color:var(--gold-hi);margin-bottom:14px}
+.block p{font-size:14px;letter-spacing:1.2px;line-height:1.9;color:var(--muted);margin-bottom:10px}
+.chart-board{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+#palaceWheel{
+  min-height:520px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);
+  gap:10px;padding:14px;
+}
+.palace-card{
+  min-height:104px;padding:12px;border:1px solid rgba(214,162,80,.25);
+  background:linear-gradient(160deg,rgba(15,18,13,.78),rgba(5,6,5,.7));
+  position:relative;overflow:hidden;
+}
+.palace-card.core{grid-column:2 / 4;grid-row:2 / 4;display:flex;flex-direction:column;justify-content:center;text-align:center;background:radial-gradient(circle,rgba(200,148,67,.22),rgba(7,7,6,.78) 62%)}
+.palace-card h3{font-size:16px;letter-spacing:3px;color:var(--gold-hi);font-weight:500;margin-bottom:7px}
+.palace-card .star{font-size:13px;color:var(--jade-hi);letter-spacing:1.4px;margin-bottom:5px}
+.palace-card p{font-size:12px;line-height:1.55;color:var(--muted);letter-spacing:.8px;margin:0}
+.palace-card.active{border-color:rgba(255,231,180,.7);box-shadow:0 0 20px rgba(200,148,67,.24)}
+#starGrid,.section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mini-card{
+  min-height:130px;padding:16px;border:1px solid rgba(214,162,80,.25);
+  background:rgba(4,5,4,.42);
+}
+.mini-card h3{font-size:18px;letter-spacing:3px;color:var(--gold-hi);font-weight:500;margin-bottom:8px}
+.mini-card p{font-size:13px;line-height:1.75;letter-spacing:1px;color:var(--muted);margin:0}
+.tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tag{font-size:12px;letter-spacing:1.6px;color:var(--gold-hi);border:1px solid rgba(214,162,80,.3);padding:5px 9px;background:rgba(200,148,67,.07)}
+#toast{
+  position:fixed;z-index:120;left:50%;bottom:28px;transform:translate(-50%,16px);
+  min-width:190px;padding:10px 18px;text-align:center;border:1px solid var(--line);background:rgba(4,5,4,.86);
+  color:var(--gold-hi);letter-spacing:2px;opacity:0;pointer-events:none;transition:.25s ease;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1180px){
+  #topnav{grid-template-columns:190px 1fr auto 1fr 100px;padding:0 20px}
+  .navside{gap:30px}
+  #navTitle{min-width:240px;font-size:36px}
+  #home{grid-template-columns:170px 260px 1fr 300px;gap:18px;padding-left:24px;padding-right:24px}
+}
+@media (max-width:920px){
+  body{overflow:auto}
+  #topnav{height:auto;min-height:70px;grid-template-columns:1fr auto auto;padding:12px 14px}
+  .navside{display:none}
+  #navTitle{min-width:0;font-size:31px;letter-spacing:8px;text-indent:8px}
+  .navIcons{display:none}
+  #home{position:relative;min-height:100vh;grid-template-columns:1fr;padding:88px 16px 76px}
+  #leftcol,#stepPanel,#rightcol{width:100%}
+  #rightcol{order:1}
+  #startBtn{order:-1}
+  #leftcol{order:2}
+  #stepPanel{order:3}
+  #centerStage{display:none}
+  #formCard,.overview-grid,.chart-board{grid-template-columns:1fr}
+  #palaceWheel{min-height:auto;grid-template-columns:1fr}
+  .palace-card.core{grid-column:auto;grid-row:auto}
+  #starGrid,.section-grid{grid-template-columns:1fr}
+  .frame-line{inset:8px}
+}
+@media (max-width:560px){
+  #projBtn{width:150px;font-size:13px;letter-spacing:2px}
+  #navTitle{font-size:27px}
+  .form-grid{grid-template-columns:1fr}
+  .ritual-card,#formCard{padding:22px 16px}
+  .ritual-card h2{letter-spacing:5px}
+  #resultInner{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body data-stage="home">
+<div id="bg" aria-hidden="true"></div>
+<div id="videoLayer" aria-hidden="true">
+  <video id="openingVideo" src="assets/ziwei/opening.mp4" playsinline muted preload="auto"></video>
+  <video id="climaxVideo" src="assets/ziwei/climax.mp4" playsinline muted preload="auto"></video>
+</div>
+<div id="veil" aria-hidden="true"></div>
+<div id="stardust" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div class="frame-line" aria-hidden="true"><i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i></div>
+
+<nav id="topnav" data-ui>
+  <button id="projBtn" aria-expanded="false">
+    <span>玄学项目</span><span class="car">⌄</span>
+    <div id="projMenu" class="pnl"></div>
+  </button>
+  <div class="navside">
+    <button class="navlink cur" data-nav="home">首页</button>
+    <button class="navlink" data-nav="ming">命理</button>
+    <button class="navlink" data-nav="service">服务</button>
+  </div>
+  <div id="navTitle">紫微斗数</div>
+  <div class="navside">
+    <button class="navlink" data-nav="daily">每日运势</button>
+    <button class="navlink" data-nav="archive">档案</button>
+    <button class="navlink" data-nav="about">关于我们</button>
+  </div>
+  <div class="navIcons">
+    <button class="navico ico" data-nav="profile" aria-label="档案"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.8-4.4 14.2-4.4 16 0"/></svg></button>
+    <button class="navico ico" id="soundBtn" aria-label="声音"><svg viewBox="0 0 24 24"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M18 9a5 5 0 0 1 0 6"/></svg></button>
+  </div>
+</nav>
+
+<main id="home">
+  <aside id="leftcol" data-ui>
+    <section class="side-menu pnl">
+      <div class="panel-corners"></div>
+      <button class="mi cur" data-side="ziwei"><span class="mini-ico">◎</span><span>紫微</span></button>
+      <button class="mi" data-side="minggong"><span class="mini-ico">宮</span><span>命宫</span></button>
+      <button class="mi" data-side="stars"><span class="mini-ico">✦</span><span>星曜</span></button>
+      <button class="mi" data-side="palaces"><span class="mini-ico">田</span><span>宫位</span></button>
+      <button class="mi" data-side="sihua"><span class="mini-ico">化</span><span>四化</span></button>
+      <button class="mi" data-side="year"><span class="mini-ico">历</span><span>流年</span></button>
+    </section>
+    <section class="daily-tip pnl">
+      <div class="panel-corners"></div>
+      <div class="tip-title">今日紫微提示</div>
+      <p class="tip-copy">观命先观心，定盘先定问。今日宜取一事深看，不宜多线并推。</p>
+    </section>
+  </aside>
+
+  <section id="stepPanel" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div class="steps-title">推演步骤</div>
+    <div class="step"><b class="num">1</b><div><h3>定盘</h3><p>录入生辰时刻，确定命宫、身宫与十二宫起局。</p></div></div>
+    <div class="step"><b class="num">2</b><div><h3>安星</h3><p>布十四主星，辅曜煞曜同看，判断格局高低。</p></div></div>
+    <div class="step"><b class="num">3</b><div><h3>飞化</h3><p>以年干起四化，观察化禄、化权、化科、化忌落宫。</p></div></div>
+    <div class="step"><b class="num">4</b><div><h3>推运</h3><p>合参大限流年，落到当下机会、阻力与行动节奏。</p></div></div>
+  </section>
+
+  <section id="centerStage"><div id="chartGlow" aria-hidden="true"></div></section>
+
+  <aside id="rightcol" data-ui>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/><circle cx="12" cy="12" r="2"/></svg></span>
+      <div><h3>命宫解析</h3><p>解析命宫主星、三方四正与先天禀赋。</p></div>
+    </section>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><path d="m12 3 2.3 6.2L21 10l-5 4.3L17.5 21 12 17.4 6.5 21 8 14.3 3 10l6.7-.8L12 3z"/></svg></span>
+      <div><h3>星曜格局</h3><p>十四主星、吉曜煞曜并看，读格局强弱。</p></div>
+    </section>
+    <section class="feature pnl">
+      <div class="panel-corners"></div>
+      <span class="round ico"><svg viewBox="0 0 24 24"><path d="M4 17c4-7 8 1 12-6 1.2-2 2.5-3 4-4"/><path d="M4 21h16M4 4v17"/></svg></span>
+      <div><h3>流年趋势</h3><p>把握年度起伏，识别宜进、宜守与化忌所在。</p></div>
+    </section>
+    <button id="startBtn" class="pnl" data-act="start-opening"><span>开启推演</span></button>
+    <section class="quote pnl"><div class="panel-corners"></div><span class="mark">“</span>星有其位，命有其机。</section>
+  </aside>
+  <div id="tapHint">轻点空白处，入紫微命盘</div>
+</main>
+
+<section id="openingLayer" class="layer">
+  <div class="ritual-card pnl" data-ui>
+    <div class="panel-corners"></div>
+    <h2>先定所问，再观星垣</h2>
+    <p>紫微斗数不以单星断全局，而以命宫、身宫、三方四正、四化飞星与流年同参。请选择本次推演重点，随后继续定盘。</p>
+    <div id="openingFocus" class="focus-row"></div>
+    <button class="primary" data-act="opening-next">继续定盘</button>
+  </div>
+</section>
+
+<section id="formLayer" class="layer">
+  <div id="formCard" class="pnl" data-ui>
+    <div class="panel-corners"></div>
+    <div>
+      <div class="form-head">
+        <h2>定盘资料</h2>
+        <p>本页先做可运行的专业演示盘：依据出生年月日时生成稳定命盘，完整呈现命宫、身宫、十二宫、十四主星、四化飞星、大限与流年解读。后续可无缝替换为真实农历排盘服务。</p>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label for="birthYear">出生年</label><input id="birthYear" type="number" min="1900" max="2099" value="1992"></div>
+        <div class="field"><label for="birthMonth">出生月</label><input id="birthMonth" type="number" min="1" max="12" value="8"></div>
+        <div class="field"><label for="birthDay">出生日</label><input id="birthDay" type="number" min="1" max="31" value="18"></div>
+        <div class="field"><label for="birthHour">出生时辰</label><select id="birthHour"></select></div>
+        <div class="field"><label for="gender">性别</label><select id="gender"><option value="neutral">不限定阴阳</option><option value="female">女命</option><option value="male">男命</option></select></div>
+        <div class="field"><label for="calendarType">日期类型</label><select id="calendarType"><option value="solar">公历生日</option><option value="lunar">农历生日</option></select></div>
+      </div>
+      <div class="focus-select">
+        <h3>推演方向</h3>
+        <div id="formFocus" class="focus-row"></div>
+      </div>
+      <div class="form-actions">
+        <button class="primary" data-act="start-climax">继续推演</button>
+        <button class="ghost" data-act="homeback">返回首页</button>
+      </div>
+    </div>
+    <aside class="side-note pnl">
+      <div class="panel-corners"></div>
+      <h3>专业合参法</h3>
+      <div class="method-list">
+        <div class="method"><b>1</b><div><h4>命身同看</h4><p>命宫看先天底色，身宫看后天用力处，二者不可偏废。</p></div></div>
+        <div class="method"><b>2</b><div><h4>三方四正</h4><p>命、财、官、迁形成主轴，决定格局是否能落到现实。</p></div></div>
+        <div class="method"><b>3</b><div><h4>四化飞星</h4><p>化禄看资源，化权看掌控，化科看名誉，化忌看牵挂与课题。</p></div></div>
+        <div class="method"><b>4</b><div><h4>大限流年</h4><p>先看十年大限，再看年度流年，最终落到当下策略。</p></div></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section id="climaxLayer" class="layer">
+  <div class="ritual-card pnl" data-ui>
+    <div class="panel-corners"></div>
+    <h2>星曜入垣，四化飞临</h2>
+    <p>正在依次安命身、布十二宫、排十四主星，并以年干飞四化。动画结束后将展开完整命盘解读。</p>
+  </div>
+  <button id="skipBtn" class="ghost" data-act="finish-climax">跳过动画</button>
+</section>
+
+<section id="resultLayer" class="layer">
+  <div id="resultInner" data-ui>
+    <header class="result-head">
+      <h1>紫微斗数结果解读</h1>
+      <div id="resultMeta"></div>
+      <div class="result-actions">
+        <button class="ghost" data-act="copy">复制解读</button>
+        <button class="ghost" data-act="again">重新推演</button>
+        <button class="ghost" data-act="homeback">返回首页</button>
+      </div>
+    </header>
+    <section class="overview-grid">
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>命盘总览</h2>
+        <div id="overviewText"></div>
+      </article>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>命宫主轴</h2>
+        <div id="axisText"></div>
+      </article>
+    </section>
+    <section class="chart-board">
+      <div id="palaceWheel" class="pnl"></div>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>星曜格局</h2>
+        <div id="starGrid"></div>
+      </article>
+    </section>
+    <section class="section-grid">
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>四化飞星</h2>
+        <div id="sihuaText"></div>
+      </article>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>流年提示</h2>
+        <div id="yearText"></div>
+      </article>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>行动建议</h2>
+        <div id="adviceText"></div>
+      </article>
+      <article class="block pnl">
+        <div class="panel-corners"></div>
+        <h2>说明</h2>
+        <p>紫微斗数为传统术数文化体验。本页面结果仅作传统文化体验与自我观察参考，不构成医疗、法律、投资、婚恋或其他现实决策建议。重要事务仍应结合专业意见、现实证据与自主判断。</p>
+      </article>
+    </section>
+  </div>
+</section>
+<div id="toast"></div>
+
+<script>
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+const STAGES = ['home','opening','form','climax','result'];
+const state = {
+  stage:'home',
+  focus:'overall',
+  sound:false,
+  chart:null,
+  reading:null,
+  climaxTimer:null
+};
+
+const V = {
+  opening: $('#openingVideo'),
+  climax: $('#climaxVideo')
+};
+
+const FOCUS_OPTIONS = [
+  {key:'overall', label:'综合命盘', title:'综合命盘', desc:'总看先天格局、现实主轴与近期节奏。'},
+  {key:'life', label:'本命格局', title:'本命格局', desc:'聚焦命宫、身宫、主星组合与人格底色。'},
+  {key:'career', label:'事业财帛', title:'事业财帛', desc:'重点解读官禄宫、财帛宫与迁移宫。'},
+  {key:'love', label:'情感婚姻', title:'情感婚姻', desc:'重点解读夫妻宫、福德宫与人际互动。'},
+  {key:'year', label:'流年运势', title:'流年运势', desc:'重点看今年流年四化与宜进宜守。'}
+];
+
+const EARTHLY_HOURS = [
+  ['zi','子时','23:00-00:59'],['chou','丑时','01:00-02:59'],['yin','寅时','03:00-04:59'],
+  ['mao','卯时','05:00-06:59'],['chen','辰时','07:00-08:59'],['si','巳时','09:00-10:59'],
+  ['wu','午时','11:00-12:59'],['wei','未时','13:00-14:59'],['shen','申时','15:00-16:59'],
+  ['you','酉时','17:00-18:59'],['xu','戌时','19:00-20:59'],['hai','亥时','21:00-22:59']
+];
+
+const PALACES = [
+  {key:'ming', name:'命宫', theme:'人格底色、先天禀赋与处世姿态'},
+  {key:'siblings', name:'兄弟宫', theme:'同辈缘分、合作助力与竞争关系'},
+  {key:'spouse', name:'夫妻宫', theme:'伴侣互动、关系模式与承诺议题'},
+  {key:'children', name:'子女宫', theme:'表达创造、传承与晚辈缘分'},
+  {key:'wealth', name:'财帛宫', theme:'收入方式、现金流与资源调度'},
+  {key:'health', name:'疾厄宫', theme:'身心节律、压力承载与修复方式'},
+  {key:'travel', name:'迁移宫', theme:'外部机会、远行变动与贵人场域'},
+  {key:'friends', name:'交友宫', theme:'团队圈层、人脉质量与社群位置'},
+  {key:'career', name:'官禄宫', theme:'事业角色、专业路径与名望承担'},
+  {key:'estate', name:'田宅宫', theme:'家庭根基、资产沉淀与空间归属'},
+  {key:'fortune', name:'福德宫', theme:'内在满足、精神能量与享受方式'},
+  {key:'parents', name:'父母宫', theme:'长辈助力、规则来源与背景资源'}
+];
+
+const MAIN_STARS = [
+  {name:'紫微', group:'帝星', gift:'统筹、定调、领导中枢', risk:'好面子，容易把责任一肩扛起'},
+  {name:'天机', group:'谋星', gift:'机变、策划、学习转化', risk:'思虑过密，反复摇摆'},
+  {name:'太阳', group:'贵星', gift:'公开表达、照亮他人、担当', risk:'过度外放，消耗精力'},
+  {name:'武曲', group:'财星', gift:'执行、纪律、财务管理', risk:'刚硬直接，关系弹性不足'},
+  {name:'天同', group:'福星', gift:'亲和、享受、缓冲压力', risk:'安逸拖延，抗压不足'},
+  {name:'廉贞', group:'囚星', gift:'原则、边界、魅力与改革', risk:'情绪执拗，容易卷入是非'},
+  {name:'天府', group:'库星', gift:'承载、资源整合、守成', risk:'保守，慢热，不喜冒险'},
+  {name:'太阴', group:'阴星', gift:'细腻、审美、积累与照护', risk:'敏感内耗，安全感议题重'},
+  {name:'贪狼', group:'桃花', gift:'欲望、社交、多才多艺', risk:'贪多分散，诱惑较多'},
+  {name:'巨门', group:'暗星', gift:'口才、辨析、研究隐藏信息', risk:'口舌是非，疑虑加重'},
+  {name:'天相', group:'印星', gift:'协调、制度、服务与辅佐', risk:'过度顾全，失去主张'},
+  {name:'天梁', group:'荫星', gift:'护持、原则、长辈缘', risk:'说教感强，标准过高'},
+  {name:'七杀', group:'将星', gift:'突破、决断、独立作战', risk:'急进，风险控制不足'},
+  {name:'破军', group:'耗星', gift:'革新、破旧立新、开疆', risk:'起伏大，先破后立'}
+];
+
+const TRANSFORMATIONS = {
+  甲:['廉贞','破军','武曲','太阳'],
+  乙:['天机','天梁','紫微','太阴'],
+  丙:['天同','天机','文昌','廉贞'],
+  丁:['太阴','天同','天机','巨门'],
+  戊:['贪狼','太阴','右弼','天机'],
+  己:['武曲','贪狼','天梁','文曲'],
+  庚:['太阳','武曲','太阴','天同'],
+  辛:['巨门','太阳','文曲','文昌'],
+  壬:['天梁','紫微','左辅','武曲'],
+  癸:['破军','巨门','太阴','贪狼']
+};
+const STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const FIVE_BUREAUS = ['水二局','木三局','金四局','土五局','火六局'];
+const LUCK_TEXT = {
+  overall:'先稳命财官迁的主轴，再扩展人际与外部机会。',
+  life:'先修命宫气质，再把身宫所在宫位作为今年用力点。',
+  career:'重视官禄宫与财帛宫的闭环，少做短线热闹，多做可交付成果。',
+  love:'关系先看福德，再看夫妻；内在安稳，外在关系才不易失衡。',
+  year:'今年宜以四化落点为先，化禄处可进，化忌处要慢。'
+};
+
+const PROJECTS = [
+  {key:'ziwei', label:'紫微斗数', current:true},
+  {key:'tarot', label:'塔罗占卜', href:'index_6.html'},
+  {key:'astro', label:'星盘占星', href:'index_astrology.html'},
+  {key:'mianxiang', label:'面相解读', href:'index_mianxiang.html'},
+  {key:'zodiac', label:'生肖运势', href:'index_zodiac.html'},
+  {key:'lingqian', label:'观音灵签', href:'index_lingqian.html'},
+  {key:'zhougong', label:'周公解梦', href:'index_zhougong.html'},
+  {key:'bazi', label:'八字命理'}
+];
+
+function toast(text){
+  const el = $('#toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function setStage(stage){
+  if (!STAGES.includes(stage)) return;
+  state.stage = stage;
+  document.body.dataset.stage = stage;
+  if (stage !== 'opening') stopVideo('opening');
+  if (stage !== 'climax') stopVideo('climax');
+}
+
+function stopVideo(key){
+  const video = V[key];
+  video.classList.remove('on');
+  try { video.pause(); video.currentTime = 0; } catch(e) {}
+}
+
+function playVideo(key, fallbackMs){
+  const video = V[key];
+  Object.keys(V).forEach(k => { if (k !== key) stopVideo(k); });
+  video.muted = !state.sound;
+  video.classList.add('on');
+  const p = video.play();
+  if (p && p.catch) p.catch(() => {});
+  if (fallbackMs) {
+    clearTimeout(playVideo.timers && playVideo.timers[key]);
+    playVideo.timers = playVideo.timers || {};
+    playVideo.timers[key] = setTimeout(() => {
+      if (state.stage === key || (key === 'opening' && state.stage === 'opening') || (key === 'climax' && state.stage === 'climax')) {
+        if (key === 'climax') finishClimax();
+      }
+    }, fallbackMs);
+  }
+}
+
+function flash(){
+  const f = $('#flash');
+  f.classList.remove('on');
+  void f.offsetWidth;
+  f.classList.add('on');
+}
+
+function startOpening(){
+  setStage('opening');
+  playVideo('opening');
+}
+
+function continueFromOpening(){
+  setStage('form');
+}
+
+function startClimax(){
+  state.chart = buildChart();
+  state.reading = buildInterpretation(state.chart);
+  setStage('climax');
+  flash();
+  playVideo('climax', 8500);
+}
+
+function finishClimax(){
+  if (!state.chart) state.chart = buildChart();
+  if (!state.reading) state.reading = buildInterpretation(state.chart);
+  flash();
+  renderResult();
+  setStage('result');
+  $('#resultLayer').scrollTop = 0;
+}
+
+function backHome(){
+  state.reading = null;
+  state.chart = null;
+  setStage('home');
+}
+
+function again(){
+  state.reading = null;
+  state.chart = null;
+  setStage('opening');
+  playVideo('opening');
+}
+
+function buildProjectMenu(){
+  $('#projMenu').innerHTML = PROJECTS.map(p => `
+    <button class="pm-it${p.current ? ' cur' : ''}" data-proj="${p.key}">
+      <span class="mini">${p.current ? '◎' : '✦'}</span>${p.label}
+    </button>`).join('');
+}
+
+function buildFocusRows(){
+  const html = FOCUS_OPTIONS.map(item => `<button class="chip${item.key === state.focus ? ' sel' : ''}" data-focus="${item.key}">${item.label}</button>`).join('');
+  $('#openingFocus').innerHTML = html;
+  $('#formFocus').innerHTML = html;
+}
+
+function syncFocus(key){
+  if (!FOCUS_OPTIONS.some(item => item.key === key)) return;
+  state.focus = key;
+  $$('[data-focus]').forEach(btn => btn.classList.toggle('sel', btn.dataset.focus === key));
+}
+
+function buildHourOptions(){
+  $('#birthHour').innerHTML = EARTHLY_HOURS.map(([key,label,time]) => `<option value="${key}"${key === 'chen' ? ' selected' : ''}>${label} ${time}</option>`).join('');
+}
+
+function intValue(id, fallback){
+  const value = parseInt($('#' + id).value, 10);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function hourIndex(key){
+  const index = EARTHLY_HOURS.findIndex(item => item[0] === key);
+  return index >= 0 ? index : 4;
+}
+
+function stemOfYear(year){
+  return STEMS[(year - 4) % 10 < 0 ? ((year - 4) % 10) + 10 : (year - 4) % 10];
+}
+
+function seedFrom(parts){
+  const raw = parts.join('|');
+  let h = 2166136261;
+  for (let i = 0; i < raw.length; i++) {
+    h ^= raw.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function deriveMingGong(month, hIndex){
+  return (month + 1 - hIndex + 12) % 12;
+}
+
+function deriveBodyPalace(month, hIndex){
+  return (month + hIndex + 1) % 12;
+}
+
+function buildChart(){
+  const year = intValue('birthYear', 1992);
+  const month = Math.min(12, Math.max(1, intValue('birthMonth', 8)));
+  const day = Math.min(31, Math.max(1, intValue('birthDay', 18)));
+  const hourKey = $('#birthHour').value || 'chen';
+  const hIndex = hourIndex(hourKey);
+  const stem = stemOfYear(year);
+  const seed = seedFrom([year,month,day,hourKey,$('#gender').value,$('#calendarType').value,state.focus]);
+  const mingIndex = deriveMingGong(month, hIndex);
+  const bodyIndex = deriveBodyPalace(month, hIndex);
+  const bureau = FIVE_BUREAUS[(year + month + hIndex) % FIVE_BUREAUS.length];
+  const palaces = PALACES.map((p, i) => ({...p, index:i, stars:[], transforms:[], active:i === mingIndex || i === bodyIndex}));
+  const start = seed % 12;
+  MAIN_STARS.forEach((star, i) => {
+    const palaceIndex = (start + i * 5 + (i > 6 ? hIndex : month)) % 12;
+    palaces[palaceIndex].stars.push(star);
+  });
+  const transformStars = TRANSFORMATIONS[stem] || TRANSFORMATIONS.甲;
+  ['化禄','化权','化科','化忌'].forEach((name, i) => {
+    const starName = transformStars[i];
+    let found = palaces.find(p => p.stars.some(s => s.name === starName));
+    if (!found) found = palaces[(start + i * 3) % 12];
+    found.transforms.push({name, star:starName});
+  });
+  const decadeStart = Math.max(2, ((seed % 7) + 2) * 2);
+  const currentYear = new Date().getFullYear();
+  const yearIndex = (currentYear + seed) % 12;
+  return {
+    year, month, day, hourKey, hIndex, stem, seed, bureau,
+    gender:$('#gender').value,
+    calendarType:$('#calendarType').value,
+    focus:FOCUS_OPTIONS.find(item => item.key === state.focus) || FOCUS_OPTIONS[0],
+    mingIndex, bodyIndex,
+    ming:palaces[mingIndex],
+    body:palaces[bodyIndex],
+    palaces,
+    decadeStart,
+    currentYear,
+    yearPalace:palaces[yearIndex]
+  };
+}
+
+function palaceMainStar(palace){
+  return palace.stars[0] || MAIN_STARS[palace.index % MAIN_STARS.length];
+}
+
+function trinePalaces(chart){
+  return [chart.mingIndex, (chart.mingIndex + 4) % 12, (chart.mingIndex + 8) % 12].map(i => chart.palaces[i]);
+}
+
+function buildInterpretation(chart){
+  const mingStar = palaceMainStar(chart.ming);
+  const bodyStar = palaceMainStar(chart.body);
+  const trine = trinePalaces(chart);
+  const careerPalace = chart.palaces.find(p => p.key === 'career');
+  const wealthPalace = chart.palaces.find(p => p.key === 'wealth');
+  const spousePalace = chart.palaces.find(p => p.key === 'spouse');
+  const yearTransforms = chart.yearPalace.transforms.map(t => `${t.name}临${t.star}`).join('、') || '无四化同宫，宜看对宫牵动';
+  const transformLines = chart.palaces.flatMap(p => p.transforms.map(t => ({
+    title:`${t.name} · ${t.star}`,
+    text:`${t.star}${t.name}落在${p.name}，表示${transformMeaning(t.name, p.name)}。此处是本盘需优先观察的星气流转点。`
+  })));
+  const starCards = [chart.ming, chart.body, careerPalace, wealthPalace].map(p => {
+    const s = palaceMainStar(p);
+    return {
+      title:`${p.name} · ${s.name}`,
+      text:`${s.name}为${s.group}，主${s.gift}；在${p.name}，宜发挥${s.gift}，同时留意${s.risk}。${p.theme}是此星落宫后的现实题目。`
+    };
+  });
+  const overview = [
+    `本盘以${chart.ming.name}立命，主星取${mingStar.name}，身宫落${chart.body.name}，身宫主星为${bodyStar.name}。${chart.bureau}定局，年干${chart.stem}起四化，说明先天格局需在“${chart.focus.title}”这条线上落地。`,
+    `紫微斗数讲究全盘合参：命宫看本质，身宫看后天用力，三方四正看格局能否成势，四化飞星看资源、权柄、名望与牵挂的流向。本盘不宜单看一颗星，而应以${trine.map(p => p.name).join('、')}连成主轴。`
+  ];
+  const axis = [
+    `${chart.ming.name}见${mingStar.name}，先天有${mingStar.gift}之象。若能把${mingStar.risk}转为自觉，格局会更稳。`,
+    `${chart.body.name}见${bodyStar.name}，后天行动多落在“${chart.body.theme}”。这不是被动命定，而是最容易通过选择改变局面的用力处。`,
+    `三方四正落在${trine.map(p => `${p.name}(${palaceMainStar(p).name})`).join('、')}，表示命、财、官、迁之间要形成闭环：能做什么、凭什么变现、在哪里承担角色、向外如何打开。`
+  ];
+  const year = [
+    `${chart.currentYear}年流年宫落${chart.yearPalace.name}，主题为${chart.yearPalace.theme}。${yearTransforms}。`,
+    `大限起点约${chart.decadeStart}岁一轮，当前宜先看大限给出的主场，再以流年判断今年应进应守。${LUCK_TEXT[chart.focus.key]}`,
+    focusYearAdvice(chart, {careerPalace, wealthPalace, spousePalace})
+  ];
+  const advice = buildAdvice(chart, {mingStar, bodyStar, careerPalace, wealthPalace, spousePalace});
+  return {overview, axis, transformLines, starCards, year, advice};
+}
+
+function transformMeaning(name, palaceName){
+  const map = {
+    '化禄':`资源、人缘与顺势机会聚于${palaceName}，宜主动承接可兑现的善缘`,
+    '化权':`${palaceName}需要掌控、决断与责任，越能定规则越能见成果`,
+    '化科':`${palaceName}有名誉、文书、贵人与修饰之力，适合以专业与口碑取胜`,
+    '化忌':`${palaceName}藏有牵挂、执念或反复课题，宜慢看、复盘、少冲动`
+  };
+  return map[name] || `${palaceName}被飞星触动`;
+}
+
+function focusYearAdvice(chart, ctx){
+  if (chart.focus.key === 'career') return `事业财帛重看${ctx.careerPalace.name}与${ctx.wealthPalace.name}：${palaceMainStar(ctx.careerPalace).name}主事业打法，${palaceMainStar(ctx.wealthPalace).name}主收入来源，二者要形成交付闭环。`;
+  if (chart.focus.key === 'love') return `情感婚姻重看${ctx.spousePalace.name}与福德宫：关系不是只看对方，也要看自己是否安稳、有余裕、有边界。`;
+  if (chart.focus.key === 'year') return `流年运势先看${chart.yearPalace.name}，再看化忌落点。化禄处可争取，化忌处宜修补流程与情绪，不宜硬撞。`;
+  if (chart.focus.key === 'life') return `本命格局以${chart.ming.name}为体，以${chart.body.name}为用。先识别自己的天赋惯性，再决定今年要把力气用在哪里。`;
+  return `综合来看，本盘宜以命身为核心、以四化为动线、以流年为节奏。先取一事，连续推进七日，效果最容易显现。`;
+}
+
+function buildAdvice(chart, ctx){
+  const tags = [
+    `宜修${chart.ming.name}`,
+    `宜用${chart.body.name}`,
+    `贵在${ctx.mingStar.gift.split('、')[0]}`,
+    chart.palaces.some(p => p.transforms.some(t => t.name === '化忌')) ? '忌处先慢' : '顺势推进'
+  ];
+  const focus = chart.focus.key;
+  const lines = [
+    `事业：以${palaceMainStar(ctx.careerPalace).name}的方式做事，重视可见成果与长期声望。若遇阻，不要只加速，应先检查职责边界与资源配置。`,
+    `财富：${ctx.wealthPalace.name}见${palaceMainStar(ctx.wealthPalace).name}，钱财宜从专业能力、稳定交付与可复利的资源而来，少碰短线情绪化选择。`,
+    `关系：先稳福德，再谈夫妻与交友。关系中的误会多半来自期待未明，宜把需求说清，把承诺做小而准。`,
+    `修心：化忌所在处不是坏事，而是命盘提醒你反复修炼的功课。越能正视牵挂，越能把阻力变成结构。`
+  ];
+  if (focus === 'career') lines.unshift('本次重点在事业财帛：先确定主战场，再定义作品、交付、收益三件事。');
+  if (focus === 'love') lines.unshift('本次重点在情感婚姻：先辨别安全感来源，再决定如何沟通与承诺。');
+  if (focus === 'year') lines.unshift('本次重点在流年：本年宜以一个明确目标贯穿，不宜频繁换方向。');
+  return {lines, tags};
+}
+
+function renderPalaceWheel(chart){
+  const positions = [0,1,2,3,11,'core',4,10,9,8,7,6,5];
+  const html = [];
+  positions.forEach(pos => {
+    if (pos === 'core') {
+      html.push(`<article class="palace-card core">
+        <h3>命盘中枢</h3>
+        <div class="star">${chart.bureau} · 年干${chart.stem}</div>
+        <p>命宫：${chart.ming.name}<br>身宫：${chart.body.name}<br>${chart.currentYear}流年：${chart.yearPalace.name}</p>
+      </article>`);
+      return;
+    }
+    const p = chart.palaces[pos];
+    const s = palaceMainStar(p);
+    const transforms = p.transforms.map(t => t.name).join(' ');
+    html.push(`<article class="palace-card${p.active ? ' active' : ''}">
+      <h3>${p.name}</h3>
+      <div class="star">${p.stars.map(x => x.name).slice(0,2).join('、') || s.name}${transforms ? ' · ' + transforms : ''}</div>
+      <p>${p.theme}</p>
+    </article>`);
+  });
+  $('#palaceWheel').innerHTML = html.join('');
+}
+
+function renderResult(){
+  const chart = state.chart;
+  const r = state.reading;
+  $('#resultMeta').innerHTML = [
+    `${chart.year}年${chart.month}月${chart.day}日`,
+    EARTHLY_HOURS[chart.hIndex][1],
+    chart.calendarType === 'solar' ? '公历定盘' : '农历定盘',
+    chart.focus.title,
+    `${chart.bureau}`
+  ].map(x => `<span>${x}</span>`).join('');
+  $('#overviewText').innerHTML = r.overview.map(p => `<p>${p}</p>`).join('');
+  $('#axisText').innerHTML = r.axis.map(p => `<p>${p}</p>`).join('');
+  renderPalaceWheel(chart);
+  $('#starGrid').innerHTML = r.starCards.map(item => `<article class="mini-card"><h3>${item.title}</h3><p>${item.text}</p></article>`).join('');
+  $('#sihuaText').innerHTML = r.transformLines.map(item => `<p><b style="color:var(--gold-hi)">${item.title}</b>：${item.text}</p>`).join('');
+  $('#yearText').innerHTML = r.year.map(p => `<p>${p}</p>`).join('');
+  $('#adviceText').innerHTML = r.advice.lines.map(p => `<p>${p}</p>`).join('') + `<div class="tag-row">${r.advice.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>`;
+}
+
+function readingText(){
+  const chart = state.chart;
+  const r = state.reading;
+  if (!chart || !r) return '';
+  return `紫微斗数结果解读
+${chart.year}年${chart.month}月${chart.day}日 ${EARTHLY_HOURS[chart.hIndex][1]} ${chart.focus.title}
+
+命盘总览
+${r.overview.join('\n')}
+
+命宫主轴
+${r.axis.join('\n')}
+
+十二宫
+${chart.palaces.map(p => `${p.name}：${p.stars.map(s => s.name).join('、') || palaceMainStar(p).name}${p.transforms.length ? '；' + p.transforms.map(t => `${t.star}${t.name}`).join('、') : ''}。${p.theme}`).join('\n')}
+
+四化飞星
+${r.transformLines.map(x => `${x.title}：${x.text}`).join('\n')}
+
+流年提示
+${r.year.join('\n')}
+
+行动建议
+${r.advice.lines.join('\n')}
+
+仅作传统文化体验与自我观察参考，不构成医疗、法律、投资、婚恋或其他现实决策建议。`;
+}
+
+function copyReading(){
+  const text = readingText();
+  if (!text) return toast('暂无可复制的解读');
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('解读已复制'); } catch(e) { toast('复制失败，请手动选择文本'); }
+    ta.remove();
+  };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('解读已复制')).catch(fallback);
+  else fallback();
+}
+
+function handleProject(key){
+  const p = PROJECTS.find(item => item.key === key);
+  if (!p) return;
+  if (p.href) {
+    location.href = p.href;
+    return;
+  }
+  toast(p.current ? '你正在紫微斗数殿堂' : `${p.label}将在后续开发中补充`);
+}
+
+function handleAction(action){
+  if (action === 'start-opening') startOpening();
+  if (action === 'opening-next') continueFromOpening();
+  if (action === 'start-climax') startClimax();
+  if (action === 'finish-climax') finishClimax();
+  if (action === 'copy') copyReading();
+  if (action === 'again') again();
+  if (action === 'homeback') backHome();
+}
+
+document.addEventListener('click', event => {
+  const target = event.target;
+  if (target.closest('#soundBtn')) {
+    state.sound = !state.sound;
+    V.opening.muted = !state.sound;
+    V.climax.muted = !state.sound;
+    toast(state.sound ? '声音已开启' : '声音已静默');
+    return;
+  }
+  if (target.closest('#projBtn')) {
+    const item = target.closest('.pm-it');
+    if (item) {
+      handleProject(item.dataset.proj);
+      $('#projMenu').classList.remove('show');
+      $('#projBtn').classList.remove('open');
+      $('#projBtn').setAttribute('aria-expanded','false');
+      return;
+    }
+    const open = !$('#projMenu').classList.contains('show');
+    $('#projMenu').classList.toggle('show', open);
+    $('#projBtn').classList.toggle('open', open);
+    $('#projBtn').setAttribute('aria-expanded', String(open));
+    return;
+  } else {
+    $('#projMenu').classList.remove('show');
+    $('#projBtn').classList.remove('open');
+    $('#projBtn').setAttribute('aria-expanded','false');
+  }
+  const nav = target.closest('[data-nav]');
+  if (nav) {
+    const key = nav.dataset.nav;
+    if (key === 'home') { backHome(); return; }
+    if (key === 'ming' || key === 'service') { toast('该模块将在后续开发中补充'); return; }
+    if (key === 'daily') { syncFocus('year'); startOpening(); return; }
+    toast('该模块将在后续开发中补充');
+    return;
+  }
+  const side = target.closest('.mi');
+  if (side) {
+    $$('.mi').forEach(item => item.classList.toggle('cur', item === side));
+    if (side.dataset.side !== 'ziwei') toast(`${side.textContent.trim()}模块将在后续开发中展开`);
+    return;
+  }
+  const focus = target.closest('[data-focus]');
+  if (focus) {
+    syncFocus(focus.dataset.focus);
+    return;
+  }
+  const act = target.closest('[data-act]');
+  if (act) {
+    handleAction(act.dataset.act);
+    return;
+  }
+  if (state.stage === 'home' && !target.closest('[data-ui]')) {
+    startOpening();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    if (state.stage === 'home') return;
+    if (state.stage === 'climax') finishClimax();
+    else backHome();
+  }
+  if (event.key === 'Enter') {
+    if (state.stage === 'home') startOpening();
+    else if (state.stage === 'opening') continueFromOpening();
+    else if (state.stage === 'form') startClimax();
+  }
+});
+
+V.climax.addEventListener('ended', finishClimax);
+V.opening.addEventListener('error', () => toast('开场视频载入失败，可继续定盘'));
+V.climax.addEventListener('error', finishClimax);
+
+(function init(){
+  buildProjectMenu();
+  buildHourOptions();
+  buildFocusRows();
+})();
+</script>
+</body>
+</html>

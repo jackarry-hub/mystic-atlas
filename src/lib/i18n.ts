@@ -1,0 +1,976 @@
+import type { Product } from "../data/products";
+
+export const languages = [
+  { code: "zh-Hans", label: "简体中文", short: "简", htmlLang: "zh-CN" },
+  { code: "zh-Hant", label: "繁體中文", short: "繁", htmlLang: "zh-Hant" },
+  { code: "en", label: "English", short: "EN", htmlLang: "en" },
+  { code: "ja", label: "日本語", short: "JP", htmlLang: "ja" },
+  { code: "ko", label: "한국어", short: "KR", htmlLang: "ko" },
+  { code: "es", label: "Español", short: "ES", htmlLang: "es" },
+  { code: "fr", label: "Français", short: "FR", htmlLang: "fr" },
+  { code: "de", label: "Deutsch", short: "DE", htmlLang: "de" },
+  { code: "pt", label: "Português", short: "PT", htmlLang: "pt" }
+] as const;
+
+export type LanguageCode = (typeof languages)[number]["code"];
+
+type TranslationKey =
+  | "nav.home"
+  | "nav.shop"
+  | "nav.cart"
+  | "nav.language"
+  | "nav.mine"
+  | "nav.openMenu"
+  | "nav.closeMenu"
+  | "nav.languageSelect"
+  | "side.aria"
+  | "side.tagline"
+  | "side.home"
+  | "side.services"
+  | "side.knowledge"
+  | "side.reports"
+  | "side.shop"
+  | "side.cart"
+  | "side.afterSales"
+  | "side.mine"
+  | "bottom.online"
+  | "bottom.reports"
+  | "bottom.shop"
+  | "bottom.knowledge"
+  | "home.title"
+  | "home.subtitle"
+  | "home.start"
+  | "home.browse"
+  | "home.alt"
+  | "shop.menu.amulets"
+  | "shop.menu.crystals"
+  | "shop.menu.incense"
+  | "shop.menu.buddha"
+  | "shop.menu.cards"
+  | "shop.menu.reports"
+  | "shop.menu.collectibles"
+  | "shop.aria.categories"
+  | "shop.title.top"
+  | "shop.title.bottom"
+  | "shop.description"
+  | "shop.featuredTitle"
+  | "shop.featuredSubtitle"
+  | "shop.add"
+  | "shop.view"
+  | "virtual.title"
+  | "virtual.subtitle"
+  | "virtual.category.all"
+  | "virtual.category.reports"
+  | "virtual.category.talismans"
+  | "virtual.category.audio"
+  | "virtual.category.membership"
+  | "virtual.category.courses"
+  | "virtual.alt"
+  | "product.backToShop"
+  | "product.quantity"
+  | "product.decrease"
+  | "product.increase"
+  | "product.addToCart"
+  | "product.addedToCart"
+  | "product.buyNow"
+  | "product.favorite"
+  | "product.favorited"
+  | "product.intro"
+  | "product.physicalIntro"
+  | "product.virtualIntro"
+  | "product.stockPhysical"
+  | "product.stockVirtual"
+  | "product.physicalBullet1"
+  | "product.physicalBullet2"
+  | "product.physicalBullet3"
+  | "product.virtualBullet1"
+  | "product.virtualBullet2"
+  | "product.virtualBullet3"
+  | "product.support"
+  | "dock.aria"
+  | "dock.open"
+  | "dock.close"
+  | "dock.main"
+  | "dock.home"
+  | "dock.shop"
+  | "dock.login"
+  | "dock.account"
+  | "dock.cart";
+
+const zhHans: Record<TranslationKey, string> = {
+  "nav.home": "首页",
+  "nav.shop": "商城",
+  "nav.cart": "购物车",
+  "nav.language": "语言",
+  "nav.mine": "我的",
+  "nav.openMenu": "打开菜单",
+  "nav.closeMenu": "关闭菜单",
+  "nav.languageSelect": "语言选择",
+  "side.aria": "Mystic Atlas 侧边菜单",
+  "side.tagline": "命运、知识与仪式的入口",
+  "side.home": "首页",
+  "side.services": "在线占卜",
+  "side.knowledge": "知识概览",
+  "side.reports": "报告中心",
+  "side.shop": "神秘商城",
+  "side.cart": "购物车",
+  "side.afterSales": "售后服务",
+  "side.mine": "我的",
+  "bottom.online": "在线占卜",
+  "bottom.reports": "报告中心",
+  "bottom.shop": "神秘商城",
+  "bottom.knowledge": "知识宇宙",
+  "home.title": "探索命运的隐秘轨迹",
+  "home.subtitle": "在星辰、传统与直觉之间，寻找属于你的指引。",
+  "home.start": "开启探索",
+  "home.browse": "浏览服务",
+  "home.alt": "星辉水晶星盘主视觉",
+  "shop.menu.amulets": "护符",
+  "shop.menu.crystals": "水晶",
+  "shop.menu.incense": "香薰",
+  "shop.menu.buddha": "佛牌",
+  "shop.menu.cards": "塔罗神谕卡",
+  "shop.menu.reports": "数字报告",
+  "shop.menu.collectibles": "宗教收藏",
+  "shop.aria.categories": "商城分类",
+  "shop.title.top": "神秘之物，",
+  "shop.title.bottom": "来自古老智慧的馈赠。",
+  "shop.description": "每一件物品都承载着能量与祝福，为你的旅程指引方向。",
+  "shop.featuredTitle": "精选推荐",
+  "shop.featuredSubtitle": "为你的能量场，选择一件共鸣之物。",
+  "shop.add": "加入",
+  "shop.view": "查看",
+  "virtual.title": "虚拟商品",
+  "virtual.subtitle": "数字报告、电子护符、冥想音频、会员服务与仪式课程。",
+  "virtual.category.all": "全部",
+  "virtual.category.reports": "数字报告",
+  "virtual.category.talismans": "电子护符",
+  "virtual.category.audio": "冥想音频",
+  "virtual.category.membership": "会员服务",
+  "virtual.category.courses": "仪式课程",
+  "virtual.alt": "虚拟商城水晶平台主视觉",
+  "product.backToShop": "返回商城",
+  "product.quantity": "数量",
+  "product.decrease": "减少数量",
+  "product.increase": "增加数量",
+  "product.addToCart": "加入购物车",
+  "product.addedToCart": "已加入购物车",
+  "product.buyNow": "立即购买",
+  "product.favorite": "加入收藏",
+  "product.favorited": "已加入收藏",
+  "product.intro": "商品介绍",
+  "product.physicalIntro": "该商品以黑金克制的仪式美学为基调，适合随身佩戴、空间陈列或作为咨询前后的个人提醒。",
+  "product.virtualIntro": "这是 Mystic Atlas 的数字商品，支付完成后会自动开通到你的账户，可在报告中心或个人中心查看。",
+  "product.stockPhysical": "现货供应",
+  "product.stockVirtual": "支付后立即开通",
+  "product.physicalBullet1": "安全包装：防震礼盒发货",
+  "product.physicalBullet2": "物流追踪：订单中心更新",
+  "product.physicalBullet3": "售后保障：支持退款换货",
+  "product.virtualBullet1": "数字交付：支付后开通",
+  "product.virtualBullet2": "账户同步：可重复查看",
+  "product.virtualBullet3": "会员权益：支持折扣叠加",
+  "product.support": "专业客服：售前售后协助",
+  "dock.aria": "主站快速入口",
+  "dock.open": "打开主站入口",
+  "dock.close": "关闭主站入口",
+  "dock.main": "主站",
+  "dock.home": "返回首页",
+  "dock.shop": "神秘商城",
+  "dock.login": "登录注册",
+  "dock.account": "我的账户",
+  "dock.cart": "购物车"
+};
+
+const dictionaries: Record<LanguageCode, Record<TranslationKey, string>> = {
+  "zh-Hans": zhHans,
+  "zh-Hant": {
+    ...zhHans,
+    "nav.home": "首頁",
+    "nav.shop": "商城",
+    "nav.cart": "購物車",
+    "nav.language": "語言",
+    "nav.mine": "我的",
+    "side.tagline": "命運、知識與儀式的入口",
+    "side.services": "線上占卜",
+    "side.knowledge": "知識概覽",
+    "side.reports": "報告中心",
+    "side.shop": "神秘商城",
+    "side.cart": "購物車",
+    "side.afterSales": "售後服務",
+    "bottom.online": "線上占卜",
+    "bottom.reports": "報告中心",
+    "bottom.shop": "神秘商城",
+    "bottom.knowledge": "知識宇宙",
+    "home.title": "探索命運的隱秘軌跡",
+    "home.subtitle": "在星辰、傳統與直覺之間，尋找屬於你的指引。",
+    "home.start": "開啟探索",
+    "home.browse": "瀏覽服務",
+    "shop.title.top": "神秘之物，",
+    "shop.title.bottom": "來自古老智慧的饋贈。",
+    "shop.description": "每一件物品都承載著能量與祝福，為你的旅程指引方向。",
+    "shop.featuredTitle": "精選推薦",
+    "shop.featuredSubtitle": "為你的能量場，選擇一件共鳴之物。",
+    "shop.add": "加入",
+    "dock.home": "返回首頁",
+    "dock.login": "登入註冊",
+    "dock.account": "我的帳戶"
+  },
+  en: {
+    ...zhHans,
+    "nav.home": "Home",
+    "nav.shop": "Shop",
+    "nav.cart": "Cart",
+    "nav.language": "Language",
+    "nav.mine": "Account",
+    "nav.openMenu": "Open menu",
+    "nav.closeMenu": "Close menu",
+    "nav.languageSelect": "Choose language",
+    "side.aria": "Mystic Atlas side menu",
+    "side.tagline": "A portal for fate, knowledge, and ritual",
+    "side.home": "Home",
+    "side.services": "Divination",
+    "side.knowledge": "Knowledge",
+    "side.reports": "Reports",
+    "side.shop": "Mystic Shop",
+    "side.cart": "Cart",
+    "side.afterSales": "After-sales",
+    "side.mine": "Account",
+    "bottom.online": "Divination",
+    "bottom.reports": "Reports",
+    "bottom.shop": "Mystic Shop",
+    "bottom.knowledge": "Knowledge",
+    "home.title": "Explore the Hidden Path of Fate",
+    "home.subtitle": "Between stars, tradition, and intuition, find the guidance meant for you.",
+    "home.start": "Start Exploring",
+    "home.browse": "Browse Services",
+    "home.alt": "Crystal astrolabe hero visual",
+    "shop.menu.amulets": "Amulets",
+    "shop.menu.crystals": "Crystals",
+    "shop.menu.incense": "Incense",
+    "shop.menu.buddha": "Talismans",
+    "shop.menu.cards": "Oracle Cards",
+    "shop.menu.reports": "Digital Reports",
+    "shop.menu.collectibles": "Sacred Collectibles",
+    "shop.aria.categories": "Shop categories",
+    "shop.title.top": "Mystic Objects,",
+    "shop.title.bottom": "Gifts of Ancient Wisdom.",
+    "shop.description": "Every object carries energy and blessing, guiding the next step of your journey.",
+    "shop.featuredTitle": "Featured Picks",
+    "shop.featuredSubtitle": "Choose an object that resonates with your energy field.",
+    "shop.add": "Add",
+    "shop.view": "View",
+    "virtual.title": "Virtual Goods",
+    "virtual.subtitle": "Digital reports, e-talismans, meditation audio, membership services, and ritual courses.",
+    "virtual.category.all": "All",
+    "virtual.category.reports": "Digital Reports",
+    "virtual.category.talismans": "E-Talismans",
+    "virtual.category.audio": "Meditation Audio",
+    "virtual.category.membership": "Membership",
+    "virtual.category.courses": "Ritual Courses",
+    "virtual.alt": "Virtual shop crystal platform hero visual",
+    "product.backToShop": "Back to Shop",
+    "product.quantity": "Quantity",
+    "product.decrease": "Decrease quantity",
+    "product.increase": "Increase quantity",
+    "product.addToCart": "Add to Cart",
+    "product.addedToCart": "Added to Cart",
+    "product.buyNow": "Buy Now",
+    "product.favorite": "Add to Favorites",
+    "product.favorited": "Favorited",
+    "product.intro": "Product Details",
+    "product.physicalIntro": "This object follows Mystic Atlas' restrained black-gold ritual aesthetic, suitable for wearing, display, or personal reminders before and after consultations.",
+    "product.virtualIntro": "This is a Mystic Atlas digital product. After payment, it opens automatically in your account and can be viewed from Reports or Account.",
+    "product.stockPhysical": "In stock",
+    "product.stockVirtual": "Available immediately after payment",
+    "product.physicalBullet1": "Secure packaging with a protective gift box",
+    "product.physicalBullet2": "Shipment tracking updates in Order Center",
+    "product.physicalBullet3": "After-sales support for refunds and exchanges",
+    "product.virtualBullet1": "Digital delivery opens after payment",
+    "product.virtualBullet2": "Synced to account for repeated access",
+    "product.virtualBullet3": "Membership discounts can be applied",
+    "product.support": "Specialist support before and after purchase",
+    "dock.aria": "Main site shortcuts",
+    "dock.open": "Open main site shortcuts",
+    "dock.close": "Close main site shortcuts",
+    "dock.main": "Site",
+    "dock.home": "Home",
+    "dock.shop": "Mystic Shop",
+    "dock.login": "Sign In",
+    "dock.account": "Account",
+    "dock.cart": "Cart"
+  },
+  ja: {
+    ...zhHans,
+    "nav.home": "ホーム",
+    "nav.shop": "ショップ",
+    "nav.cart": "カート",
+    "nav.language": "言語",
+    "nav.mine": "マイページ",
+    "home.title": "運命の隠れた軌跡を探す",
+    "home.subtitle": "星、伝統、直感のあいだで、あなたの導きを見つける。",
+    "home.start": "探索を始める",
+    "home.browse": "サービスを見る",
+    "bottom.online": "占い",
+    "bottom.reports": "レポート",
+    "bottom.shop": "ショップ",
+    "bottom.knowledge": "知識宇宙",
+    "shop.featuredTitle": "おすすめ",
+    "shop.add": "追加",
+    "dock.main": "サイト",
+    "dock.home": "ホーム",
+    "dock.shop": "ショップ",
+    "dock.login": "ログイン",
+    "dock.account": "アカウント",
+    "dock.cart": "カート"
+  },
+  ko: {
+    ...zhHans,
+    "nav.home": "홈",
+    "nav.shop": "상점",
+    "nav.cart": "장바구니",
+    "nav.language": "언어",
+    "nav.mine": "내 계정",
+    "home.title": "운명의 숨겨진 궤적 탐색",
+    "home.subtitle": "별, 전통, 직관 사이에서 당신의 안내를 찾으세요.",
+    "home.start": "탐색 시작",
+    "home.browse": "서비스 보기",
+    "bottom.online": "점술",
+    "bottom.reports": "보고서",
+    "bottom.shop": "상점",
+    "bottom.knowledge": "지식 우주",
+    "shop.featuredTitle": "추천",
+    "shop.add": "담기",
+    "dock.main": "사이트",
+    "dock.home": "홈",
+    "dock.shop": "상점",
+    "dock.login": "로그인",
+    "dock.account": "계정",
+    "dock.cart": "장바구니"
+  },
+  es: {
+    ...zhHans,
+    "nav.home": "Inicio",
+    "nav.shop": "Tienda",
+    "nav.cart": "Carrito",
+    "nav.language": "Idioma",
+    "nav.mine": "Cuenta",
+    "home.title": "Explora el Sendero Oculto del Destino",
+    "home.subtitle": "Entre estrellas, tradición e intuición, encuentra tu guía.",
+    "home.start": "Comenzar",
+    "home.browse": "Ver servicios",
+    "bottom.online": "Adivinación",
+    "bottom.reports": "Reportes",
+    "bottom.shop": "Tienda",
+    "bottom.knowledge": "Conocimiento",
+    "shop.featuredTitle": "Selección",
+    "shop.add": "Añadir",
+    "dock.main": "Sitio",
+    "dock.home": "Inicio",
+    "dock.shop": "Tienda",
+    "dock.login": "Acceder",
+    "dock.account": "Cuenta",
+    "dock.cart": "Carrito"
+  },
+  fr: {
+    ...zhHans,
+    "nav.home": "Accueil",
+    "nav.shop": "Boutique",
+    "nav.cart": "Panier",
+    "nav.language": "Langue",
+    "nav.mine": "Compte",
+    "home.title": "Explorez le Chemin Caché du Destin",
+    "home.subtitle": "Entre les astres, la tradition et l'intuition, trouvez votre guide.",
+    "home.start": "Explorer",
+    "home.browse": "Services",
+    "bottom.online": "Divination",
+    "bottom.reports": "Rapports",
+    "bottom.shop": "Boutique",
+    "bottom.knowledge": "Savoirs",
+    "shop.featuredTitle": "Sélection",
+    "shop.add": "Ajouter",
+    "dock.main": "Site",
+    "dock.home": "Accueil",
+    "dock.shop": "Boutique",
+    "dock.login": "Connexion",
+    "dock.account": "Compte",
+    "dock.cart": "Panier"
+  },
+  de: {
+    ...zhHans,
+    "nav.home": "Start",
+    "nav.shop": "Shop",
+    "nav.cart": "Warenkorb",
+    "nav.language": "Sprache",
+    "nav.mine": "Konto",
+    "home.title": "Entdecke den Verborgenen Pfad des Schicksals",
+    "home.subtitle": "Zwischen Sternen, Tradition und Intuition findest du deine Führung.",
+    "home.start": "Erkunden",
+    "home.browse": "Dienste",
+    "bottom.online": "Orakel",
+    "bottom.reports": "Berichte",
+    "bottom.shop": "Shop",
+    "bottom.knowledge": "Wissen",
+    "shop.featuredTitle": "Empfohlen",
+    "shop.add": "Hinzufügen",
+    "dock.main": "Site",
+    "dock.home": "Start",
+    "dock.shop": "Shop",
+    "dock.login": "Anmelden",
+    "dock.account": "Konto",
+    "dock.cart": "Warenkorb"
+  },
+  pt: {
+    ...zhHans,
+    "nav.home": "Início",
+    "nav.shop": "Loja",
+    "nav.cart": "Carrinho",
+    "nav.language": "Idioma",
+    "nav.mine": "Conta",
+    "home.title": "Explore o Caminho Oculto do Destino",
+    "home.subtitle": "Entre estrelas, tradição e intuição, encontre sua orientação.",
+    "home.start": "Explorar",
+    "home.browse": "Serviços",
+    "bottom.online": "Adivinhação",
+    "bottom.reports": "Relatórios",
+    "bottom.shop": "Loja",
+    "bottom.knowledge": "Conhecimento",
+    "shop.featuredTitle": "Destaques",
+    "shop.add": "Adicionar",
+    "dock.main": "Site",
+    "dock.home": "Início",
+    "dock.shop": "Loja",
+    "dock.login": "Entrar",
+    "dock.account": "Conta",
+    "dock.cart": "Carrinho"
+  }
+};
+
+const productTranslations: Partial<Record<LanguageCode, Record<string, Partial<Product>>>> = {
+  "zh-Hant": {
+    "crystal-pendant": {
+      name: "星輝守護水晶吊墜",
+      category: "限量護符",
+      description: "白水晶、星象符號與守護意象結合的隨身吊墜。"
+    },
+    "blue-moon-necklace": {
+      name: "藍月輝石項鏈",
+      category: "月相系列",
+      description: "適合冥想、夜間記錄和情緒穩定儀式。"
+    },
+    "astrolabe-crystal-platform": {
+      name: "星盤水晶陣台",
+      category: "儀式器物",
+      description: "用於塔羅展開、月相冥想和個人儀式佈置。"
+    }
+  },
+  en: {
+    "crystal-pendant": {
+      name: "Starlight Guardian Crystal Pendant",
+      category: "Limited Amulet",
+      description: "A white crystal pendant combining astral symbols and protective intent.",
+      stockLabel: "Global limited edition: 999 pieces"
+    },
+    "blue-moon-necklace": {
+      name: "Blue Moonstone Necklace",
+      category: "Moon Phase Series",
+      description: "Designed for meditation, night journaling, and emotional steadiness.",
+      stockLabel: "42 in stock"
+    },
+    "astrolabe-crystal-platform": {
+      name: "Astrolabe Crystal Platform",
+      category: "Ritual Object",
+      description: "For tarot spreads, moon-phase meditation, and personal ritual layouts.",
+      stockLabel: "Pre-order"
+    },
+    "guardian-statue": {
+      name: "Guardian Deity Statue",
+      category: "Space Protection",
+      description: "A calm black-gold form for study rooms and consultation spaces.",
+      stockLabel: "18 in stock"
+    },
+    "aurum-guard-coin": {
+      name: "Aurum Guard Medallion",
+      category: "Protective Accessory",
+      description: "Carry it in a wallet, notebook, or travel bag as a quiet symbol of protection.",
+      stockLabel: "76 in stock"
+    },
+    "incense-compass-bottle": {
+      name: "Incense Compass Vessel",
+      category: "Energy Aroma",
+      description: "A woody mist aroma for arranging thoughts before sleep.",
+      stockLabel: "31 in stock"
+    },
+    "natal-report-digital": {
+      name: "Natal Chart Deep Digital Report",
+      category: "Digital Report",
+      description: "Includes natal chart themes, annual focus, relationship patterns, and action guidance."
+    },
+    "seven-day-talisman": {
+      name: "Seven-Day E-Talisman",
+      category: "E-Talisman",
+      description: "A daily symbol card and short guidance for focus and personal reminders."
+    },
+    "moon-meditation-audio": {
+      name: "Moon Phase Meditation Audio",
+      category: "Meditation Audio",
+      description: "Three audio sessions for new-moon intention, full-moon release, and night grounding."
+    },
+    "black-gold-membership": {
+      name: "Black Gold Membership",
+      category: "Membership",
+      description: "Report discounts, priority interpretations, and access to exclusive content."
+    },
+    "personal-ritual-course": {
+      name: "Personal Ritual Course",
+      category: "Ritual Course",
+      description: "A complete workflow from space clearing and spread journaling to moon-phase review."
+    }
+  }
+};
+
+const englishInlineTranslations: Record<string, string> = {
+  "底部主导航": "Bottom navigation",
+  "欢迎回来": "Welcome back",
+  "登录": "Sign in",
+  "注册": "Create account",
+  "邮箱": "Email",
+  "密码": "Password",
+  "输入你的访问密钥": "Enter your access key",
+  "隐藏密码": "Hide password",
+  "显示密码": "Show password",
+  "邀请口令": "Invitation code",
+  "可选，用于绑定专属顾问": "Optional, used to bind a dedicated advisor",
+  "记住我与本机访问状态": "Remember this device",
+  "进入我的星图": "Enter my chart",
+  "创建 Mystic ID": "Create Mystic ID",
+  "查看详情": "View details",
+  "进入": "Enter",
+  "密度": " density",
+  "当前状态：": "Status: ",
+  "首页": "Home",
+  "商城": "Shop",
+  "购物车": "Cart",
+  "语言": "Language",
+  "我的": "Account",
+  "账户中心概览": "Account Center",
+  "会员等级、预约、订单、报告与收藏内容集中管理。": "Manage membership, bookings, orders, reports, and saved content in one place.",
+  "玄夜旅人": "Mystic Traveler",
+  "当前会员成长值 6,420，距离 Aurum 还需 1,580。": "Current growth value is 6,420; 1,580 more to reach Aurum.",
+  "我的预约": "My Bookings",
+  "查看顾问咨询、仪式课程和待确认时间。": "View advisor sessions, ritual courses, and pending schedules.",
+  "我的订单": "My Orders",
+  "商品订单、报告订单与支付记录集中管理。": "Manage product orders, report orders, and payment records.",
+  "售后服务": "After-sales Service",
+  "发起退款、换货、服务改期与进度追踪。": "Request refunds, exchanges, rescheduling, and track progress.",
+  "我的报告": "My Reports",
+  "近期生成、已收藏和历史归档报告。": "Recently generated, saved, and archived reports.",
+  "收藏内容": "Saved Content",
+  "保存商品、文章、卡片和仪式清单。": "Save products, articles, cards, and ritual checklists.",
+  "支付方式": "Payment Methods",
+  "管理银行卡、钱包与默认结算方式。": "Manage cards, wallet, and default payment settings.",
+  "账户设置": "Account Settings",
+  "语言、通知、安全和隐私偏好。": "Language, notifications, security, and privacy preferences.",
+  "个人中心仪表盘": "Personal Dashboard",
+  "你的报告、收藏、预约与会员权益总览。": "Overview of reports, saved items, bookings, and membership benefits.",
+  "最近一次报告指出，你的行动节奏正在从整理期进入推进期，建议保留每周一次复盘。": "Your latest report suggests your pace is moving from sorting into execution. Keep a weekly review.",
+  "会员权益素材": "Member benefits",
+  "本月可领取：水晶冥想与深度报告折扣": "Available this month: crystal meditation and deep report discounts",
+  "权益会随成长值解锁，当前已开放虚拟报告折扣、音频内容与预约优先。": "Benefits unlock with growth value. Digital report discounts, audio content, and booking priority are active.",
+  "会员等级": "Membership Tiers",
+  "成长值、等级路线与会员权益。": "Growth value, tier path, and membership benefits.",
+  "当前等级 Starlight": "Current tier: Starlight",
+  "成长值 6,420 / 8,000": "Growth value 6,420 / 8,000",
+  "入门会员": "Entry Member",
+  "当前等级": "Current Tier",
+  "高阶会员": "Advanced Member",
+  "适合偶尔使用报告和知识库的用户。": "For occasional report and knowledge-base users.",
+  "报告、商城与顾问服务的平衡权益。": "Balanced benefits across reports, shop, and advisor services.",
+  "面向长期记录与高频咨询用户。": "For long-term tracking and frequent consultation users.",
+  "基础报告折扣": "Basic report discount",
+  "每月一张神谕卡": "One oracle card each month",
+  "知识库收藏": "Knowledge-base saves",
+  "深度报告 85 折": "15% off deep reports",
+  "优先生成队列": "Priority generation queue",
+  "会员专属冥想音频": "Member meditation audio",
+  "顾问预约优先": "Advisor booking priority",
+  "商城限量预售": "Limited shop pre-sales",
+  "季度复盘报告": "Quarterly review report",
+  "已生成报告": "Generated Reports",
+  "会员成长值": "Membership Growth",
+  "预约进行中": "Active Bookings",
+  "发起售后": "Start after-sales request",
+  "退款、换货、服务改期与客服处理进度统一管理。": "Manage refunds, exchanges, rescheduling, and support progress.",
+  "暂无可售后的订单": "No eligible orders",
+  "完成一笔模拟支付后，这里会出现可申请售后的订单。": "After completing a simulated payment, eligible orders will appear here.",
+  "前往商城": "Go to Shop",
+  "选择订单": "Choose order",
+  "售后类型": "After-sales type",
+  "当前状态": "Current status",
+  "未选择": "Not selected",
+  "问题描述": "Issue description",
+  "提交售后申请": "Submit after-sales request",
+  "售后申请": "After-sales request",
+  "已创建。": " created.",
+  "处理进度": "Progress",
+  "暂无售后记录。": "No after-sales records yet.",
+  "退货退款": "Return and refund",
+  "仅退款": "Refund only",
+  "换货": "Exchange",
+  "服务改期": "Reschedule service",
+  "处理中": "Processing",
+  "购物车暂时为空": "Your cart is empty",
+  "你可以从商城挑选护符器物，也可以把玄学服务加入预约清单。": "Choose ritual objects from the shop or add mystic services to your booking list.",
+  "浏览服务": "Browse Services",
+  "订单摘要": "Order Summary",
+  "商品小计": "Subtotal",
+  "服务处理费": "Service Fee",
+  "物流费用": "Shipping",
+  "应付合计": "Total Due",
+  "去结算": "Checkout",
+  "继续选购": "Continue Shopping",
+  "减少": "Decrease",
+  "增加": "Increase",
+  "数量": "quantity",
+  "移除": "Remove",
+  "订单结算": "Checkout",
+  "确认联系人、服务时间与物流信息，下一步进入模拟支付。": "Confirm contact, service time, and shipping details before simulated payment.",
+  "没有可结算的项目": "No items to checkout",
+  "请先从商城或服务详情页加入购物车。": "Please add items from the shop or service detail page first.",
+  "返回商城": "Back to Shop",
+  "联系人信息": "Contact Information",
+  "姓名": "Name",
+  "手机": "Phone",
+  "服务时间偏好": "Preferred Service Time",
+  "收货地址": "Shipping Address",
+  "交付说明": "Delivery Notes",
+  "实物商品支持物流追踪；虚拟商品支付后立即开通；服务预约由顾问在 24 小时内确认。": "Physical goods support shipment tracking; digital goods open immediately after payment; service bookings are confirmed by an advisor within 24 hours.",
+  "本次结算": "This Checkout",
+  "提交订单": "Submit Order",
+  "返回购物车": "Back to Cart",
+  "支付订单": "Pay Order",
+  "这是前端模拟支付流程，不会产生真实扣款。": "This is a front-end simulated payment flow. No real charge will be made.",
+  "订单已失效": "Order Expired",
+  "请重新从购物车提交订单。": "Please submit the order again from your cart.",
+  "支付金额": "Payment Amount",
+  "支付处理中": "Processing payment",
+  "确认支付": "Confirm payment",
+  "返回结算": "Back to Checkout",
+  "推荐，用账户余额与会员权益完成支付。": "Recommended. Use account balance and member benefits.",
+  "银行卡": "Bank Card",
+  "支持 Visa、Mastercard 与本地银行卡。": "Supports Visa, Mastercard, and local bank cards.",
+  "适合跨境付款，支付结果实时同步。": "Best for cross-border payment with real-time status sync.",
+  "付款成功，顾问将在 24 小时内确认咨询时间。": "Payment successful. An advisor will confirm the session time within 24 hours.",
+  "付款成功，数字内容已开通，可在报告中心或账户中心查看。": "Payment successful. Digital content is active and available in Reports or Account.",
+  "付款成功，仓库将开始拣货并更新物流状态。": "Payment successful. Warehouse picking will begin and logistics will update.",
+  "服务预约": "Service Booking",
+  "报告订单": "Report Order",
+  "商品订单": "Product Order",
+  "待顾问确认": "Awaiting advisor confirmation",
+  "已开通": "Activated",
+  "待发货": "Awaiting shipment",
+  "已完成": "Completed",
+  "待确认": "Pending confirmation",
+  "全部订单": "All Orders",
+  "商品订单、报告订单与虚拟商品开通状态。": "Product orders, report orders, and digital activation status.",
+  "订单详情": "Order Details",
+  "订单状态、支付信息、交付进度与售后入口。": "Order status, payment details, delivery progress, and after-sales access.",
+  "订单不存在": "Order not found",
+  "没有找到这笔订单": "This order was not found",
+  "请回到订单中心查看最新订单列表。": "Return to the order center to view the latest list.",
+  "返回订单中心": "Back to Order Center",
+  "历史订单": "Historical Order",
+  "这笔订单来自初始示例数据，可在订单中心查看状态。新下单的订单会展示完整明细。": "This order comes from sample data. Newly placed orders will show full details.",
+  "订单状态": "Order Status",
+  "订单类型": "Order Type",
+  "示例订单": "Sample Order",
+  "实付金额": "Paid Amount",
+  "申请售后": "Request After-sales",
+  "返回订单": "Back to Orders",
+  "世界七大宗教": "Seven World Religions",
+  "东方玄学": "Eastern Metaphysics",
+  "西方神秘学": "Western Mysticism",
+  "香港非遗民俗": "Hong Kong Intangible Folk Traditions",
+  "地域玄学地图": "Regional Mystic Map",
+  "玄学百科": "Mystic Encyclopedia",
+  "知识概览": "Knowledge Overview",
+  "跨越时空的智慧结晶，探索人类对于宇宙与自我的永恒追问。": "Explore humanity's enduring questions about the cosmos and the self across time and culture.",
+  "以历史、仪式、象征与信仰结构建立跨文化视角。": "Build a cross-cultural view through history, ritual, symbolism, and belief structures.",
+  "八字、六爻、紫微、风水与相术的系统化入口。": "A structured gateway to Bazi, Liuyao, Zi Wei, feng shui, and physiognomy.",
+  "塔罗、占星、炼金术、月相与神圣几何的谱系。": "Lineages of tarot, astrology, alchemy, moon phases, and sacred geometry.",
+  "黄大仙灵签、车公转运、打小人与节庆仪式。": "Wong Tai Sin lots, Che Kung rituals, villain hitting, and festival customs.",
+  "以地域、信仰源流和实践场景组织世界民俗知识。": "Organize world folk knowledge by region, belief lineage, and practice setting.",
+  "术语、仪式、符号和工具的可检索知识索引。": "A searchable index of terms, rituals, symbols, and tools.",
+  "信仰、仪式与文明记忆": "Belief, ritual, and civilizational memory",
+  "从核心观念、经典传统、仪式空间与生活伦理理解宗教系统。": "Understand religious systems through core ideas, canons, ritual spaces, and lived ethics.",
+  "佛教": "Buddhism",
+  "基督教": "Christianity",
+  "伊斯兰教": "Islam",
+  "印度教": "Hinduism",
+  "犹太教": "Judaism",
+  "道教": "Taoism",
+  "民间信仰": "Folk Belief",
+  "以觉悟、缘起与修行为核心，重视慈悲与智慧的实践。": "Centered on awakening, dependent arising, and practice, emphasizing compassion and wisdom.",
+  "围绕救赎、爱与共同体展开，形成丰富的礼仪传统。": "Built around salvation, love, and community, with rich liturgical traditions.",
+  "以信仰、功修与共同体秩序构成完整的生活方式。": "A complete way of life shaped by faith, practice, and community order.",
+  "融合神话、仪式、哲学与瑜伽传统的多层体系。": "A layered system of myth, ritual, philosophy, and yogic traditions.",
+  "以经典、律法、节期与族群记忆维系信仰传承。": "Sustains tradition through scripture, law, festivals, and collective memory.",
+  "关注道、气、修真、符箓与人与自然的协调。": "Focuses on Dao, qi, cultivation, talismans, and harmony with nature.",
+  "来自地方生活、祖先崇拜、守护神与节庆仪式。": "Rooted in local life, ancestor veneration, guardians, and festival rites.",
+  "天时、地利与人的秩序": "Time, place, and human order",
+  "用传统术数语言观察时间、空间、姓名、相貌与人生选择。": "Observe time, space, names, appearance, and choices through traditional systems.",
+  "八字": "Bazi",
+  "六爻": "Liuyao",
+  "紫微斗数": "Zi Wei Dou Shu",
+  "风水罗盘": "Feng Shui Compass",
+  "风水堪舆": "Feng Shui",
+  "取名择日": "Naming and Auspicious Dates",
+  "手相解读": "Palm Reading",
+  "面相解读": "Face Reading",
+  "周公解梦": "Dream Interpretation",
+  "生肖运势": "Zodiac Forecast",
+  "用出生年月日时推演五行结构、格局与流年节奏。": "Use birth time to read five-element structure, pattern, and yearly rhythm.",
+  "以起卦、爻象、动变回应具体问题与短期判断。": "Use hexagrams, lines, and changes for specific questions and short-term judgment.",
+  "通过命盘宫位与星曜组合观察人生主线。": "Read the main life path through palaces and star combinations.",
+  "以方位、形势和气场组织空间建议。": "Organize spatial advice through direction, form, and field energy.",
+  "结合五行、音义与时机安排关键命名和仪式节点。": "Plan names and ritual timing through elements, sound, meaning, and timing.",
+  "从掌纹、丘位与手型观察状态、优势与提醒。": "Observe state, strengths, and reminders through palm lines, mounts, and hand shape.",
+  "从形貌、纹理与气色观察个性与状态。": "Read personality and state through facial form, texture, and complexion.",
+  "记录梦境关键词，拆解梦象、情绪线索与现实提醒。": "Record dream keywords and interpret symbols, emotions, and practical reminders.",
+  "结合流年、月份与人际场域提供节奏参考。": "Offer rhythm guidance through yearly flow, months, and social context.",
+  "星体、符号与内在炼金": "Celestial bodies, symbols, and inner alchemy",
+  "以象征语言理解人格原型、周期、仪式和精神传统。": "Understand archetypes, cycles, rituals, and spiritual traditions through symbols.",
+  "塔罗": "Tarot",
+  "炼金术": "Alchemy",
+  "月相": "Moon Phases",
+  "占星术": "Astrology",
+  "神圣几何": "Sacred Geometry",
+  "神谕传统": "Oracle Traditions",
+  "用大阿尔卡那与小阿尔卡那组织叙事、选择和洞察。": "Use the Major and Minor Arcana to frame stories, choices, and insight.",
+  "将物质转化隐喻为心灵整合和自我完善。": "Treat material transformation as a metaphor for integration and refinement.",
+  "以新月、满月与盈亏节奏安排复盘和行动。": "Use new moon, full moon, and lunar rhythm for review and action.",
+  "从行星、宫位、相位理解人格和阶段主题。": "Read personality and life phases through planets, houses, and aspects.",
+  "以比例、形体和图案象征宇宙秩序。": "Use proportion, form, and pattern as symbols of cosmic order.",
+  "从神谕卡、梦境与象征讯息建立个人指引。": "Build personal guidance from oracle cards, dreams, and symbolic messages.",
+  "城市里的香火、签文与转运仪式": "Incense, lots, and turning-fortune rituals in the city",
+  "黄大仙灵签": "Wong Tai Sin Lots",
+  "车公转运": "Che Kung Fortune Turning",
+  "打小人": "Villain Hitting",
+  "太岁守护": "Tai Sui Protection",
+  "民间仪式": "Folk Rituals",
+  "节庆风俗": "Festival Customs",
+  "用地域线索理解不同文化中的神秘传统。": "Understand mystical traditions across cultures through regional clues.",
+  "信仰源流": "Belief Lineage",
+  "术数系统": "Divination Systems",
+  "民俗仪式": "Folk Rituals",
+  "护符器物": "Talismans and Objects",
+  "疗愈实践": "Healing Practices",
+  "东亚": "East Asia",
+  "南亚": "South Asia",
+  "中东": "Middle East",
+  "欧洲": "Europe",
+  "美洲": "Americas",
+  "高密度": "High density",
+  "中密度": "Medium density",
+  "中高密度": "Medium-high density",
+  "高": "High",
+  "中": "Medium",
+  "中高": "Medium-high",
+  "服务总览": "Services",
+  "多元智慧工具，探寻属于你的答案。": "A spectrum of wisdom tools for finding your answer.",
+  "塔罗互动占卜": "Interactive Tarot Reading",
+  "星盘占星": "Natal Astrology",
+  "八字命盘": "Bazi Chart",
+  "六爻问卦": "Liuyao Divination",
+  "灵签求问": "Spiritual Lots",
+  "返回服务总览": "Back to Services",
+  "服务价格": "Price",
+  "服务时长": "Duration",
+  "服务形式": "Format",
+  "进入测算": "Start Reading",
+  "立即预约": "Book Now",
+  "已加入购物车": "Added to Cart",
+  "加入购物车": "Add to Cart",
+  "查看相关知识": "Related Knowledge",
+  "查看报告示例": "View Report Sample",
+  "报告中心总览": "Report Center",
+  "将星盘、塔罗、八字与空间建议沉淀为可保存的个人档案。": "Save astrology, tarot, Bazi, and spatial advice as personal records.",
+  "星盘深度报告": "Natal Chart Deep Report",
+  "塔罗关系洞察": "Tarot Relationship Insight",
+  "八字流年摘要": "Bazi Annual Summary",
+  "空间能量建议": "Space Energy Advice",
+  "已生成样例": "Sample generated",
+  "可立即开启": "Ready to open",
+  "待补充生日": "Birth data needed",
+  "顾问可预约": "Advisor available",
+  "本命盘、年度主题、关键相位与行动建议。": "Natal chart, annual themes, key aspects, and action advice.",
+  "当前关系状态、隐性期待、沟通建议与时间窗口。": "Relationship status, hidden expectations, communication advice, and timing.",
+  "五行结构、年度节奏、事业与财务重点。": "Five-element structure, annual rhythm, career and finance focus.",
+  "面向居家与办公空间的方位、陈设和清理建议。": "Direction, layout, and clearing advice for home and office spaces.",
+  "专属报告详情": "Personal Report Detail",
+  "星盘图、指标进度与深度解读入口。": "Chart visual, metric progress, and deep interpretation entry.",
+  "报告已加载": "Report loaded",
+  "星辉周期报告": "Starlight Cycle Report",
+  "近期主题集中在关系边界、资源分配与行动节奏。建议先完成一轮七日记录，再进入深度解读。": "Recent themes focus on relationship boundaries, resource allocation, and action rhythm. Complete a seven-day record before deep interpretation.",
+  "情绪稳定度": "Emotional Stability",
+  "行动清晰度": "Action Clarity",
+  "关系协调度": "Relationship Harmony",
+  "财务节奏感": "Financial Rhythm",
+  "已保存到报告中心": "Saved to Report Center",
+  "分享链接已生成": "Share link generated",
+  "保存报告": "Save Report",
+  "分享报告": "Share Report",
+  "购买深度解读": "Buy Deep Interpretation",
+  "历史报告归档": "Report Archive",
+  "按状态整理已生成、已收藏和历史归档报告。": "Organize generated, saved, and archived reports by status.",
+  "全部": "All",
+  "收藏": "Saved",
+  "2026 上半年关系复盘": "Relationship Review, First Half of 2026",
+  "夏至月相冥想记录": "Summer Solstice Moon Meditation Record",
+  "年度事业方向报告": "Annual Career Direction Report",
+  "居家风水罗盘建议": "Home Feng Shui Compass Advice",
+  "登录注册页": "Sign In / Register",
+  "页面未找到": "Page Not Found",
+  "这条路径暂时没有对应的星图。": "No chart corresponds to this path yet.",
+  "进入安全结算": "secure checkout",
+  "互动项目": "interactive project",
+  "确认商品、服务与虚拟内容，统一进入安全结算。": "Review products, services, and digital content before secure checkout.",
+  "服务水晶主视觉": "Service crystal hero visual",
+  "知识书本与水晶主视觉": "Knowledge book and crystal hero visual",
+  "世界玄学地图主视觉": "World mystic map hero visual",
+  "报告书本主视觉": "Report book hero visual",
+  "星盘报告主视觉": "Astrology report hero visual",
+  "归档水晶主视觉": "Archive crystal hero visual",
+  "账户水晶头像主视觉": "Account crystal avatar hero visual",
+  "个人头像主视觉": "Profile avatar hero visual",
+  "权益水晶簇素材": "Benefits crystal cluster asset",
+  "会员等级徽章主视觉": "Membership badge hero visual",
+  "登录轨道平台主视觉": "Login orbit platform hero visual",
+  "主视觉": "hero visual",
+  "沉浸式抽牌、牌阵选择、每日塔罗与解读档案。": "Immersive card drawing, spread selection, daily tarot, and reading archives.",
+  "输入出生信息，生成本命、行运、宫位与相位解读。": "Enter birth information to generate natal, transit, house, and aspect readings.",
+  "四柱归位，观察五行结构、十神关系与流年节奏。": "Place the four pillars and read five-element structure, ten-god relations, and yearly rhythm.",
+  "三枚铜钱起六爻，生成本卦、变卦、动爻与世应解读。": "Cast Liuyao with three coins to generate base, changing, moving-line, and host-guest readings.",
+  "以命宫、十二宫与星曜组合呈现人生主线。": "Reveal the life storyline through life palace, twelve palaces, and star combinations.",
+  "一事一问，静心摇签，得签后观诗、释义与行事建议。": "Ask one focused question, draw a lot calmly, then read the poem, meaning, and action advice.",
+  "生肖流年、每日运程与阶段提醒的沉浸式解读。": "Immersive readings for zodiac year flow, daily fortune, and phase reminders.",
+  "宅运布局、方位罗盘与空间气场建议。": "Home layout, directional compass, and spatial energy-field advice.",
+  "通过掌纹、丘位与手型观察状态、优势与提醒。": "Observe state, strengths, and reminders through palm lines, mounts, and hand shape.",
+  "从五官、气色与面部结构观察性格与阶段状态。": "Observe personality and current phase through features, complexion, and facial structure.",
+  "结合五行、音义与时机安排取名和关键日期。": "Arrange names and key dates through five elements, sound, meaning, and timing.",
+  "结合五行、音义与时机安排姓名和关键日期。": "Arrange names and key dates through five elements, sound, meaning, and timing.",
+  "结合五行、音义与时机安排Name和关键日期。": "Arrange names and key dates through five elements, sound, meaning, and timing.",
+  "牌阵咨询": "Spread Consultation",
+  "45 分钟线上咨询": "45-minute online consultation",
+  "互动测算 / 顾问复盘": "Interactive reading / advisor review",
+  "沉浸式抽牌": "Immersive card drawing",
+  "一份牌阵结论与行动建议": "A spread conclusion and action guidance",
+  "牌阵选择": "Spread selection",
+  "每日塔罗档案": "Daily tarot archive",
+  "把香港民俗仪式放回庙宇、街区和日常生活的真实语境。": "Place Hong Kong folk rituals back into temples, streets, and everyday life.",
+  "以签诗、典故与解签传统回应现实疑问。": "Respond to real questions through lot poems, stories, and interpretation traditions.",
+  "围绕风车、祈福与新年转运形成的地方仪式。": "A local ritual formed around windmills, blessings, and New Year fortune turning.",
+  "以民俗方式表达驱厄、化解口舌与心理释放。": "A folk way to express warding off misfortune, easing conflict, and releasing pressure.",
+  "在流年系统中理解犯太岁、摄太岁与守护仪轨。": "Understand Tai Sui conflict, appeasement, and protection rites within yearly cycles.",
+  "香火、供奉、祈愿与还愿构成社区信仰网络。": "Incense, offerings, prayers, and fulfilled vows form a community belief network.",
+  "从农历节日、庙会与巡游观察城市民俗记忆。": "Observe urban folk memory through lunar festivals, temple fairs, and processions.",
+  "民俗器物": "Folk Object",
+  "黄大仙灵签签筒": "Wong Tai Sin Lot Canister",
+  "签筒、签文与解签流程的仪式化呈现。": "A ritual presentation of lot canister, lot texts, and interpretation flow.",
+  "馆藏展示": "Collection Display",
+  "庙宇意象": "Temple Imagery",
+  "民俗守护神像": "Folk Guardian Statue",
+  "象征守护、祈福和社区香火的民间信仰图像。": "A folk-belief image symbolizing protection, blessing, and community incense.",
+  "仪式道具": "Ritual Tool",
+  "替身纸偶": "Substitute Paper Figure",
+  "民间仪式中用于象征转移、化解和祈愿的物件。": "A ritual object used for symbolic transfer, resolution, and prayer.",
+  "护身符号": "Protective Symbol",
+  "守护铜牌": "Guardian Copper Plaque",
+  "以神像和纹样承载守护、平安与镇宅意象。": "Carries protection, peace, and home-guarding symbolism through deity and pattern.",
+  "香火仪式": "Incense Ritual",
+  "香炉供器": "Incense Vessel",
+  "香火、供奉和愿望表达的核心器物。": "A core vessel for incense, offerings, and expressing wishes.",
+  "祈福宫灯": "Blessing Palace Lantern",
+  "连接庙宇空间、夜间巡游和节庆祝愿。": "Connects temple space, night processions, and festival blessings.",
+  "术数、祖先信仰、庙宇仪式": "Divination systems, ancestor belief, and temple ritual",
+  "八字、风水、灵签": "Bazi, feng shui, and spiritual lots",
+  "吠陀、瑜伽、占星传统": "Vedic, yogic, and astrological traditions",
+  "印度教仪式、吠陀占星": "Hindu rituals and Vedic astrology",
+  "一神信仰、经典传统、历法": "Monotheistic belief, canonical traditions, and calendars",
+  "犹太、伊斯兰文化符号": "Jewish and Islamic cultural symbols",
+  "炼金术、塔罗、占星复兴": "Alchemy, tarot, and astrology revival",
+  "神秘学社群、仪式魔法": "Mystic communities and ritual magic",
+  "新灵性、原住民传统融合": "New spirituality blended with Indigenous traditions",
+  "能量疗愈、神谕卡": "Energy healing and oracle cards",
+  "近期主题集中在关系边界、资源分配与行动节奏。建议先完成一轮七日记录，": "Recent themes focus on relationship boundaries, resource allocation, and action rhythm. Complete a seven-day record,",
+  "再进入深度解读。": "then proceed to deep interpretation.",
+  "沟通模式、关系边界与下一阶段建议。": "Communication patterns, relationship boundaries, and next-stage advice.",
+  "新月设定、满月释放与睡前情绪记录。": "New-moon intention, full-moon release, and pre-sleep emotion notes.",
+  "职业动机、机会窗口和资源整理策略。": "Career motivation, opportunity windows, and resource-organization strategy.",
+  "书桌、睡眠区和玄关的动线微调建议。": "Micro-adjustments for the desk, sleep area, and entryway flow.",
+  "塔罗解读": "Tarot Reading",
+  "星辉守护水晶吊坠": "Starlight Guardian Crystal Pendant",
+  "限量护符商品订单，预计 48 小时内发出。": "Limited amulet product order, expected to ship within 48 hours.",
+  "星盘深度数字报告": "Natal Chart Deep Digital Report",
+  "报告已生成，可在报告中心查看与分享。": "The report has been generated and can be viewed or shared in Report Center.",
+  "月相冥想音频": "Moon Phase Meditation Audio",
+  "虚拟商品已开通，支持重复播放。": "Digital product activated, with repeat playback available.",
+  "关系塔罗深度解读": "Relationship Tarot Deep Reading",
+  "顾问确认中，预计今晚前更新排期。": "Advisor confirmation in progress; schedule is expected to update tonight.",
+  "商品或服务与预期不符，希望客服协助处理。": "The product or service did not match expectations; support assistance is requested.",
+  "回到首页": "Back Home"
+};
+
+const inlineTranslations: Partial<Record<LanguageCode, Record<string, string>>> = {
+  en: englishInlineTranslations,
+  ja: englishInlineTranslations,
+  ko: englishInlineTranslations,
+  es: englishInlineTranslations,
+  fr: englishInlineTranslations,
+  de: englishInlineTranslations,
+  pt: englishInlineTranslations,
+  "zh-Hant": englishInlineTranslations
+};
+
+const chineseTextPattern = /[\u4e00-\u9fff]/;
+
+export function translateInlineText(language: LanguageCode, text: string) {
+  if (language === "zh-Hans" || !chineseTextPattern.test(text)) {
+    return text;
+  }
+
+  const dictionary = inlineTranslations[language] ?? englishInlineTranslations;
+  let translated = text;
+
+  Object.entries(dictionary)
+    .sort(([left], [right]) => right.length - left.length)
+    .forEach(([source, target]) => {
+      if (source.length <= 2) {
+        if (translated.trim() === source) {
+          translated = translated.replace(source, target);
+        }
+
+        return;
+      }
+
+      translated = translated.split(source).join(target);
+    });
+
+  return translated;
+}
+
+export function getLanguageMeta(language: LanguageCode) {
+  return languages.find((item) => item.code === language) ?? languages[0];
+}
+
+export function translate(language: LanguageCode, key: TranslationKey) {
+  return dictionaries[language]?.[key] ?? zhHans[key];
+}
+
+export function localizeProduct(product: Product, language: LanguageCode): Product {
+  const fallbackLanguage = language === "zh-Hans" ? undefined : "en";
+  const localized =
+    productTranslations[language]?.[product.id] ??
+    (fallbackLanguage ? productTranslations[fallbackLanguage]?.[product.id] : undefined);
+
+  return localized ? { ...product, ...localized } : product;
+}
