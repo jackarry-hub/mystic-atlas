@@ -264,6 +264,8 @@ body[data-stage="intro"] #veil,
 body[data-stage="climax"] #veil{opacity:.48}
 body[data-stage="result"] #bg{filter:saturate(.82) contrast(1.06) brightness(.37)}
 body[data-stage="result"] #veil{opacity:.78}
+body[data-stage="intro"] #introLayer,
+body[data-stage="home"] #home .pnl:not(button){cursor:pointer}
 
 #introLayer,#climaxLayer{display:grid;place-items:end center;padding:0 24px 82px}
 .ritualLine{
@@ -275,6 +277,12 @@ body[data-stage="result"] #veil{opacity:.78}
 #climaxLayer .ritualLine{transform:translateY(12px)}
 
 #captureLayer,#selectLayer{display:grid;place-items:center;padding:94px 34px 34px}
+body[data-stage="select"] #selectLayer{
+  place-items:start center;
+  overflow-y:auto;
+  padding-top:78px;
+  padding-bottom:160px;
+}
 .capture-shell{
   width:min(1180px,94vw);display:grid;grid-template-columns:minmax(520px,1fr) 330px;gap:22px;align-items:stretch;
 }
@@ -291,6 +299,7 @@ body[data-stage="result"] #veil{opacity:.78}
   box-shadow:inset 0 0 40px rgba(0,0,0,.7);
 }
 #cameraVideo,#snapshotCanvas,#snapshotImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cameraVideo{display:none}
 #snapshotCanvas{display:none}
 #snapshotImg{display:none}
 .has-shot #snapshotImg{display:block}
@@ -340,17 +349,17 @@ body[data-stage="result"] #veil{opacity:.78}
 .scan-step.done .meter i{width:100%}
 .mode-note{margin-top:16px;font-size:12px;line-height:1.7;letter-spacing:1.2px;color:var(--muted)}
 
-.select-shell{width:min(1060px,94vw);display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:stretch}
+.select-shell{width:min(1120px,94vw);display:grid;grid-template-columns:minmax(0,1.36fr) minmax(280px,.64fr);gap:22px;align-items:start}
 .select-card,.reading-preview{padding:22px}
 .select-head h2{font-size:28px;margin-bottom:10px}
 .select-head p{font-size:13.5px;line-height:1.8;letter-spacing:1.3px;color:var(--muted)}
-.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
 .choice{
-  min-height:86px;text-align:left;padding:15px;border:1px solid rgba(201,149,74,.32);
+  min-height:74px;text-align:left;padding:12px;border:1px solid rgba(201,149,74,.32);
   background:rgba(7,4,10,.55);transition:.22s ease;
 }
 .choice:hover,.choice.sel{border-color:var(--gold-hi);background:rgba(201,149,74,.14)}
-.choice h3{font-family:var(--f-display);font-size:20px;letter-spacing:4px;color:var(--gold-hi);font-weight:500;margin-bottom:5px}
+.choice h3{font-family:var(--f-display);font-size:18px;letter-spacing:3px;color:var(--gold-hi);font-weight:500;margin-bottom:4px}
 .choice p{font-size:12.5px;line-height:1.55;letter-spacing:1px;color:var(--muted)}
 .profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
 .field{display:grid;gap:7px}
@@ -570,7 +579,7 @@ body[data-stage="result"] #veil{opacity:.78}
       <div class="panel-corners"></div>
       <div class="camera-head">
         <h2>掌纹采样</h2>
-        <div id="cameraStatus" class="camera-status">等待开启摄像头</div>
+        <div id="cameraStatus" class="camera-status">请上传一张清晰手相照片</div>
       </div>
       <div id="viewfinder" class="viewfinder">
         <video id="cameraVideo" autoplay muted playsinline></video>
@@ -596,19 +605,17 @@ body[data-stage="result"] #veil{opacity:.78}
         <span class="line-label fate">事业线</span>
       </div>
       <div class="capture-actions">
-        <button class="act primary" data-act="capture">定格掌纹</button>
-        <button class="act" data-act="upload">上传手相照片</button>
+        <button class="act primary" data-act="upload">上传手相照片</button>
         <input id="uploadInput" type="file" accept="image/*">
-        <button class="act" data-act="retake">重新采样</button>
-        <button class="act" data-act="skip-camera">无摄像头继续</button>
+        <button class="act" data-act="retake">重新上传</button>
       </div>
-      <div class="camera-note">照片仅在本地浏览器用于本次传统文化体验，不上传、不保存、不做人手身份识别。建议掌心充满画面 70%，手腕入镜，避免强背光、手掌弯曲或掌纹被遮挡。</div>
+      <div class="camera-note">仅支持上传清晰手相照片，照片只在本地浏览器用于本次传统文化体验，不上传、不保存、不做人手身份识别。建议掌心充满画面 70%，手腕入镜，避免强背光、手掌弯曲或掌纹被遮挡。</div>
     </section>
     <aside class="analysis-panel pnl" data-ui>
       <div class="panel-corners"></div>
       <h3>掌纹扫描</h3>
       <div id="scanSteps" class="scan-steps"></div>
-      <div class="mode-note">本页以传统手相的主线、辅线、掌丘、手型与主副手规则生成体验式报告。当前版本用本地画面采样模拟分析，后续可替换为 AI 视觉模型接口。</div>
+      <div class="mode-note">本页以传统手相的主线、辅线、掌丘、手型与主副手规则生成体验式报告。当前版本用本地上传照片采样模拟分析，后续可替换为 AI 视觉模型接口。</div>
     </aside>
   </div>
 </section>
@@ -671,7 +678,7 @@ body[data-stage="result"] #veil{opacity:.78}
       </div>
       <div class="select-actions">
         <button class="act primary" data-act="reveal">生成手相启示</button>
-        <button class="act" data-act="retake">重新采样</button>
+        <button class="act" data-act="retake">重新上传</button>
       </div>
     </section>
     <aside class="reading-preview pnl" data-ui>
@@ -939,33 +946,11 @@ function toIntro(){
 function toCapture(){
   if (state.stage !== 'intro' && state.stage !== 'select') return;
   stopVideos();
+  stopCamera();
   setStage('capture');
   $('#viewfinder').classList.remove('has-shot');
+  $('#cameraStatus').textContent = '请上传一张清晰手相照片';
   resetScanSteps();
-  startCamera();
-}
-
-async function startCamera(){
-  const status = $('#cameraStatus');
-  status.textContent = '正在请求摄像头权限';
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    status.textContent = '当前浏览器不支持摄像头';
-    toast('当前环境无法开启摄像头，可上传照片或选择无摄像头继续');
-    return;
-  }
-  try {
-    stopCamera();
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:960}},
-      audio:false
-    });
-    state.cameraStream = stream;
-    $('#cameraVideo').srcObject = stream;
-    status.textContent = '摄像头已开启，请让掌心对齐辅助线';
-  } catch(error) {
-    status.textContent = '摄像头权限未开启';
-    toast('摄像头未开启，可调整权限、上传照片或选择无摄像头继续');
-  }
 }
 
 function stopCamera(){
@@ -1426,24 +1411,28 @@ document.addEventListener('click', event => {
   const act = target.closest('[data-act]');
   if (act) {
     const a = act.dataset.act;
-    if (a === 'capture') capturePalm();
-    if (a === 'upload') $('#uploadInput').click();
+    if (a === 'capture' || a === 'upload') $('#uploadInput').click();
     if (a === 'retake') {
       state.photoData = '';
       state.metrics = null;
       $('#viewfinder').classList.remove('has-shot');
+      $('#cameraStatus').textContent = '请上传一张清晰手相照片';
       resetScanSteps();
       if (state.stage === 'select') toCapture();
-      else startCamera();
+      else stopCamera();
     }
-    if (a === 'skip-camera') skipCamera();
     if (a === 'reveal') toClimax();
     if (a === 'copy') copyReading();
     if (a === 'again') again();
     if (a === 'homeback') backHome();
     return;
   }
-  if (state.stage === 'home' && !target.closest('[data-ui]')) toIntro();
+  const flowControl = target.closest('#soundBtn, #projBtn, #projMenu, button, input, select, textarea, a, [data-nav], [data-side], [data-focus], [data-act]');
+  if (state.stage === 'intro' && !flowControl) {
+    toCapture();
+    return;
+  }
+  if (state.stage === 'home' && !flowControl) toIntro();
 });
 
 document.addEventListener('keydown', event => {

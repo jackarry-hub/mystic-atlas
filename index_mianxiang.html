@@ -342,6 +342,7 @@ body[data-stage="result"] #veil{opacity:.78}
   box-shadow:0 0 22px rgba(201,164,92,.24);
 }
 .act[disabled]{opacity:.42;cursor:not-allowed}
+#uploadInput{display:none}
 .camera-note{margin-top:13px;color:var(--muted);font-size:12.5px;line-height:1.7;letter-spacing:1.2px}
 .analysis-panel{padding:22px 20px}
 .analysis-panel h3{font-family:var(--f-display);font-size:24px;letter-spacing:5px;color:var(--gold-hi);font-weight:500;margin-bottom:14px;text-align:center}
@@ -553,7 +554,7 @@ body[data-stage="result"] #veil{opacity:.78}
     <div class="panel-corners"></div>
     <div class="steps-title">面相解读步骤</div>
     <div class="step"><div class="num">1</div><div><h3>静观</h3><p>放平视线，保持自然表情，先定形神气色</p></div></div>
-    <div class="step"><div class="num">2</div><div><h3>采相</h3><p>开启摄像头定格面部，读取三庭五眼参考</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>采相</h3><p>摄像头定格或上传照片，自动对齐三庭五眼参考</p></div></div>
     <div class="step"><div class="num">3</div><div><h3>分宫</h3><p>按五官十二宫梳理财帛、官禄与情缘</p></div></div>
     <div class="step"><div class="num">4</div><div><h3>解局</h3><p>结合关注方向生成面相总论与行动建议</p></div></div>
   </section>
@@ -615,16 +616,17 @@ body[data-stage="result"] #veil{opacity:.78}
       </div>
       <div class="capture-actions">
         <button class="act primary" data-act="capture">定格面相</button>
+        <button class="act" data-act="upload">上传面相照片</button>
+        <input id="uploadInput" type="file" accept="image/*">
         <button class="act" data-act="retake">重新采相</button>
-        <button class="act" data-act="skip-camera">无摄像头继续</button>
       </div>
-      <div class="camera-note">照片仅在本地浏览器用于本次传统文化体验，不上传、不保存、不做人脸身份识别。请让额头、眉眼、鼻准、口唇与下颌落在辅助线内。</div>
+      <div class="camera-note">照片仅在本地浏览器用于本次传统文化体验，不上传、不保存、不做人脸身份识别。拍摄或上传后会自动裁切居中，让额头、眉眼、鼻准、口唇与下颌尽量落在三庭五眼辅助线内。</div>
     </section>
     <aside class="analysis-panel pnl" data-ui>
       <div class="panel-corners"></div>
       <h3>面相扫描</h3>
       <div id="scanSteps" class="scan-steps"></div>
-      <div class="mode-note">本页以三庭五眼、五官十二宫、形神气色为解读框架。当前静态版用本地画面取样生成体验式结果，后续可替换为 AI 视觉模型接口。</div>
+      <div class="mode-note">本页以三庭五眼、五官十二宫、形神气色为解读框架。当前静态版用本地摄像头或上传照片取样生成体验式结果，后续可替换为 AI 视觉模型接口。</div>
     </aside>
   </div>
 </section>
@@ -947,7 +949,7 @@ async function startCamera(){
   status.textContent = '正在请求摄像头权限';
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     status.textContent = '当前浏览器不支持摄像头';
-    toast('当前环境无法开启摄像头，可选择无摄像头继续');
+    toast('当前环境无法开启摄像头，可上传面相照片');
     return;
   }
   try {
@@ -961,7 +963,7 @@ async function startCamera(){
     status.textContent = '摄像头已开启，请对齐三庭辅助线';
   } catch(error) {
     status.textContent = '摄像头权限未开启';
-    toast('摄像头未开启，可调整权限或选择无摄像头继续');
+    toast('摄像头未开启，可调整权限或上传面相照片');
   }
 }
 
@@ -973,24 +975,118 @@ function stopCamera(){
   $('#cameraVideo').srcObject = null;
 }
 
-function captureFace(){
-  const video = $('#cameraVideo');
-  const canvas = $('#snapshotCanvas');
-  const img = $('#snapshotImg');
-  const width = video.videoWidth || 1280;
-  const height = video.videoHeight || 720;
-  canvas.width = width;
-  canvas.height = height;
+const FACE_CANVAS_WIDTH = 1280;
+const FACE_CANVAS_HEIGHT = 720;
+
+function detectFaceBoxFromCanvas(canvas){
   const ctx = canvas.getContext('2d', { willReadFrequently:true });
-  if (video.readyState >= 2) {
-    ctx.drawImage(video, 0, 0, width, height);
-  } else {
-    drawFallbackPortrait(ctx, width, height);
+  const {width, height} = canvas;
+  const data = ctx.getImageData(0, 0, width, height).data;
+  const step = Math.max(3, Math.floor(Math.max(width, height) / 220));
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  let count = 0;
+
+  for (let y = Math.floor(height * .08); y < Math.floor(height * .96); y += step) {
+    for (let x = Math.floor(width * .12); x < Math.floor(width * .88); x += step) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const lum = r * .299 + g * .587 + b * .114;
+      const centerBias = Math.abs(x / width - .5);
+      const skinLike =
+        lum > 46 &&
+        lum < 245 &&
+        r > 52 &&
+        g > 36 &&
+        b > 24 &&
+        r >= g * .88 &&
+        r > b * 1.06 &&
+        Math.abs(r - g) < 88 &&
+        centerBias < .42;
+
+      if (!skinLike) continue;
+
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+      count += 1;
+    }
   }
+
+  if (count < 24 || maxX <= minX || maxY <= minY) {
+    return {
+      x: width * .36,
+      y: height * .18,
+      width: width * .28,
+      height: height * .58
+    };
+  }
+
+  const boxWidth = maxX - minX;
+  const boxHeight = maxY - minY;
+  const padX = boxWidth * .42;
+  const padTop = boxHeight * .5;
+  const padBottom = boxHeight * .42;
+
+  return {
+    x: Math.max(0, minX - padX),
+    y: Math.max(0, minY - padTop),
+    width: Math.min(width, maxX + padX) - Math.max(0, minX - padX),
+    height: Math.min(height, maxY + padBottom) - Math.max(0, minY - padTop)
+  };
+}
+
+function drawAlignedFaceToCanvas(source, canvas, sourceWidth, sourceHeight){
+  canvas.width = FACE_CANVAS_WIDTH;
+  canvas.height = FACE_CANVAS_HEIGHT;
+
+  const probeScale = Math.min(1, 920 / Math.max(sourceWidth, sourceHeight));
+  const probe = document.createElement('canvas');
+  probe.width = Math.max(1, Math.round(sourceWidth * probeScale));
+  probe.height = Math.max(1, Math.round(sourceHeight * probeScale));
+  const probeCtx = probe.getContext('2d', { willReadFrequently:true });
+  probeCtx.drawImage(source, 0, 0, probe.width, probe.height);
+
+  const detected = detectFaceBoxFromCanvas(probe);
+  const box = {
+    x: detected.x / probeScale,
+    y: detected.y / probeScale,
+    width: detected.width / probeScale,
+    height: detected.height / probeScale
+  };
+
+  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  const targetFaceWidth = canvas.width * .36;
+  const targetFaceHeight = canvas.height * .72;
+  const faceScale = Math.min(targetFaceWidth / Math.max(1, box.width), targetFaceHeight / Math.max(1, box.height));
+  const coverScale = Math.max(canvas.width / sourceWidth, canvas.height / sourceHeight);
+  const scale = Math.max(coverScale, faceScale);
+  const faceCenterX = box.x + box.width / 2;
+  const faceCenterY = box.y + box.height * .5;
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  let dx = canvas.width * .5 - faceCenterX * scale;
+  let dy = canvas.height * .53 - faceCenterY * scale;
+
+  dx = drawWidth <= canvas.width ? (canvas.width - drawWidth) / 2 : Math.min(0, Math.max(canvas.width - drawWidth, dx));
+  dy = drawHeight <= canvas.height ? (canvas.height - drawHeight) / 2 : Math.min(0, Math.max(canvas.height - drawHeight, dy));
+
+  ctx.fillStyle = '#07040f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(source, dx, dy, drawWidth, drawHeight);
+}
+
+function completeFaceCapture(canvas, img, statusText){
   state.photoData = canvas.toDataURL('image/jpeg', .88);
   img.src = state.photoData;
   $('#selectSnapshot').src = state.photoData;
   $('#viewfinder').classList.add('has-shot');
+  $('#cameraStatus').textContent = statusText || '已自动对齐三庭五眼参考线';
   state.metrics = analyzeFaceImage(canvas);
   runScanAnimation(() => {
     renderSampleSummary();
@@ -998,6 +1094,43 @@ function captureFace(){
     setStage('select');
   });
   sfx('photo');
+}
+
+function captureFace(){
+  const video = $('#cameraVideo');
+  const canvas = $('#snapshotCanvas');
+  const img = $('#snapshotImg');
+
+  if (video.readyState >= 2 && video.videoWidth && video.videoHeight) {
+    drawAlignedFaceToCanvas(video, canvas, video.videoWidth, video.videoHeight);
+  } else {
+    canvas.width = FACE_CANVAS_WIDTH;
+    canvas.height = FACE_CANVAS_HEIGHT;
+    drawFallbackPortrait(canvas.getContext('2d'), canvas.width, canvas.height);
+  }
+
+  completeFaceCapture(canvas, img, '摄像头采相已自动对齐三庭五眼参考线');
+}
+
+function uploadFace(file){
+  if (!file || !file.type.startsWith('image/')) {
+    toast('请选择一张面相照片');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = $('#snapshotCanvas');
+      const img = $('#snapshotImg');
+      drawAlignedFaceToCanvas(image, canvas, image.naturalWidth || image.width, image.naturalHeight || image.height);
+      completeFaceCapture(canvas, img, '上传照片已自动对齐三庭五眼参考线');
+    };
+    image.onerror = () => toast('照片读取失败，请换一张清晰面相照片');
+    image.src = reader.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function drawFallbackPortrait(ctx, width, height){
@@ -1367,6 +1500,7 @@ document.addEventListener('click', event => {
   if (act) {
     const a = act.dataset.act;
     if (a === 'capture') captureFace();
+    if (a === 'upload') $('#uploadInput').click();
     if (a === 'retake') {
       state.photoData = '';
       state.metrics = null;
@@ -1375,16 +1509,18 @@ document.addEventListener('click', event => {
       resetScanSteps();
       startCamera();
     }
-    if (a === 'skip-camera') skipCamera();
     if (a === 'reveal') toClimax();
     if (a === 'copy') copyReading();
     if (a === 'again') again();
     if (a === 'homeback') backHome();
     return;
   }
-  if (state.stage === 'home' && !target.closest('[data-ui]')) {
-    toIntro();
+  const flowControl = target.closest('#soundBtn, #projBtn, #projMenu, button, input, select, textarea, a, [data-nav], .mi, [data-focus], [data-act]');
+  if (state.stage === 'intro' && !flowControl) {
+    toCapture();
+    return;
   }
+  if (state.stage === 'home' && !flowControl) toIntro();
 });
 
 document.addEventListener('keydown', event => {
@@ -1397,6 +1533,12 @@ document.addEventListener('keydown', event => {
     if (state.stage === 'home') toIntro();
     else if (state.stage === 'select') toClimax();
   }
+});
+
+$('#uploadInput').addEventListener('change', event => {
+  const file = event.target.files && event.target.files[0];
+  uploadFace(file);
+  event.target.value = '';
 });
 
 Object.values(V).forEach(video => {
