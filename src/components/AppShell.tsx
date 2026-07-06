@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Globe2, Menu, ShoppingBag, UserRound } from "lucide-react";
 import { useCommerce } from "../context/CommerceContext";
 import { useLanguage } from "../context/LanguageContext";
-import { languages } from "../lib/i18n";
+import { selectableLanguages } from "../lib/i18n";
 import { BottomNav } from "./BottomNav";
 import { SideMenu } from "./SideMenu";
 
@@ -68,7 +68,7 @@ export function AppShell() {
                 className="language-menu__panel"
                 role="menu"
               >
-                {languages.map((item) => (
+                {selectableLanguages.map((item) => (
                   <button
                     className={`language-menu__option${
                       item.code === language ? " is-active" : ""

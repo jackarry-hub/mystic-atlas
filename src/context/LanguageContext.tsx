@@ -10,6 +10,7 @@ import {
   getLanguageMeta,
   languages,
   localizeProduct,
+  selectableLanguages,
   translate,
   translateInlineText,
   type LanguageCode
@@ -37,7 +38,7 @@ function readInitialLanguage(): LanguageCode {
   }
 
   const saved = window.localStorage.getItem(storageKey);
-  const found = languages.find((item) => item.code === saved);
+  const found = selectableLanguages.find((item) => item.code === saved);
   return found?.code ?? "zh-Hans";
 }
 
@@ -88,11 +89,20 @@ export function useLanguage() {
 
 function LocalizedDocumentText({ language }: { language: LanguageCode }) {
   const textOriginals = useMemo(() => new WeakMap<Text, string>(), []);
+  const textRenderedTranslations = useMemo(() => new WeakMap<Text, string>(), []);
   const attributeOriginals = useMemo(
     () => new WeakMap<Element, Partial<Record<(typeof translatableAttributes)[number], string>>>(),
     []
   );
+  const attributeRenderedTranslations = useMemo(
+    () => new WeakMap<Element, Partial<Record<(typeof translatableAttributes)[number], string>>>(),
+    []
+  );
   const valueOriginals = useMemo(
+    () => new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>(),
+    []
+  );
+  const valueRenderedTranslations = useMemo(
     () => new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>(),
     []
   );
@@ -211,10 +221,13 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
               node.nodeValue = original;
             }
           } else {
-            const source = original ?? (chinesePattern.test(value) ? value : "");
+            const previousRendered = textRenderedTranslations.get(node);
+            const hasFreshChineseSource =
+              chinesePattern.test(value) && value !== previousRendered && value !== original;
+            const source = hasFreshChineseSource ? value : original ?? "";
 
             if (source) {
-              if (!original) {
+              if (!original || hasFreshChineseSource) {
                 textOriginals.set(node, source);
               }
 
@@ -223,6 +236,8 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
               if (value !== nextValue) {
                 node.nodeValue = nextValue;
               }
+
+              textRenderedTranslations.set(node, nextValue);
             }
           }
         }
@@ -245,6 +260,7 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
           }
 
           const originals = attributeOriginals.get(element) ?? {};
+          const renderedTranslations = attributeRenderedTranslations.get(element) ?? {};
           const original = originals[attribute];
 
           if (language === "zh-Hans") {
@@ -254,13 +270,16 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
             return;
           }
 
-          const source = original ?? (chinesePattern.test(value) ? value : "");
+          const previousRendered = renderedTranslations[attribute];
+          const hasFreshChineseSource =
+            chinesePattern.test(value) && value !== previousRendered && value !== original;
+          const source = hasFreshChineseSource ? value : original ?? "";
 
           if (!source) {
             return;
           }
 
-          if (!original) {
+          if (!original || hasFreshChineseSource) {
             attributeOriginals.set(element, {
               ...originals,
               [attribute]: source
@@ -272,6 +291,11 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
           if (value !== nextValue) {
             element.setAttribute(attribute, nextValue);
           }
+
+          attributeRenderedTranslations.set(element, {
+            ...renderedTranslations,
+            [attribute]: nextValue
+          });
         });
       });
     };
@@ -296,13 +320,16 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
           return;
         }
 
-        const source = original ?? (chinesePattern.test(value) ? value : "");
+        const previousRendered = valueRenderedTranslations.get(element);
+        const hasFreshChineseSource =
+          chinesePattern.test(value) && value !== previousRendered && value !== original;
+        const source = hasFreshChineseSource ? value : original ?? "";
 
         if (!source) {
           return;
         }
 
-        if (!original) {
+        if (!original || hasFreshChineseSource) {
           valueOriginals.set(element, source);
         }
 
@@ -311,6 +338,8 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
         if (value !== nextValue) {
           element.value = nextValue;
         }
+
+        valueRenderedTranslations.set(element, nextValue);
       });
     };
 
@@ -342,7 +371,15 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
     return () => {
       cleanups.forEach((cleanup) => cleanup());
     };
-  }, [attributeOriginals, language, textOriginals, valueOriginals]);
+  }, [
+    attributeOriginals,
+    attributeRenderedTranslations,
+    language,
+    textOriginals,
+    textRenderedTranslations,
+    valueOriginals,
+    valueRenderedTranslations
+  ]);
 
   return null;
 }

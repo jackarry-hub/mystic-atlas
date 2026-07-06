@@ -6,10 +6,9 @@ import {
   LogIn,
   Menu,
   ShoppingBag,
+  Sparkles,
   Store,
   UserRound,
-  Volume2,
-  VolumeX,
   X
 } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
@@ -20,7 +19,7 @@ import {
   getProjectByServiceId,
   getProjectSource
 } from "../data/mysticProjects";
-import { languages } from "../lib/i18n";
+import { selectableLanguages } from "../lib/i18n";
 
 type ProjectFrameWindow = Window & {
   __mysticAtlasSyncCleanup?: () => void;
@@ -30,35 +29,15 @@ type ProjectFrameWindow = Window & {
 export function ProjectHostPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { currentLanguage, language, setLanguage, t } = useLanguage();
+  const { currentLanguage, language, lt, setLanguage, t } = useLanguage();
   const [dockOpen, setDockOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const project = getProjectByServiceId(serviceId);
   const projectSrc = useMemo(
     () => (project ? getProjectSource(project.file) : ""),
     [project]
   );
-
-  const syncFrameSound = useCallback((enabled: boolean) => {
-    try {
-      const frameDocument = iframeRef.current?.contentDocument;
-      const button = frameDocument?.querySelector<HTMLElement>("#soundBtn");
-
-      if (!button) {
-        return;
-      }
-
-      const isOff = button.classList.contains("off");
-
-      if (isOff === enabled) {
-        button.click();
-      }
-    } catch {
-      // Some browser privacy states can block iframe access; the parent control remains usable.
-    }
-  }, []);
 
   const prepareProjectDocument = useCallback(() => {
     const frameWindow = iframeRef.current?.contentWindow;
@@ -646,7 +625,6 @@ export function ProjectHostPage() {
 
     try {
       prepareProjectDocument();
-      syncFrameSound(soundEnabled);
       const file = frameWindow.location.pathname.split("/").pop();
       const nextProject = getProjectByFile(file);
 
@@ -656,15 +634,7 @@ export function ProjectHostPage() {
     } catch {
       // Same-origin iframe is expected; if the browser blocks access, keep the host stable.
     }
-  }, [navigate, prepareProjectDocument, serviceId, soundEnabled, syncFrameSound]);
-
-  const toggleProjectSound = useCallback(() => {
-    setSoundEnabled((current) => {
-      const next = !current;
-      syncFrameSound(next);
-      return next;
-    });
-  }, [syncFrameSound]);
+  }, [navigate, prepareProjectDocument, serviceId]);
 
   useEffect(() => {
     return () => {
@@ -676,10 +646,6 @@ export function ProjectHostPage() {
       }
     };
   }, []);
-
-  useEffect(() => {
-    syncFrameSound(soundEnabled);
-  }, [projectSrc, soundEnabled, syncFrameSound]);
 
   if (!project) {
     return <Navigate replace to="/services" />;
@@ -758,7 +724,7 @@ export function ProjectHostPage() {
 
           {languageOpen ? (
             <div className="project-language-switch__panel">
-              {languages.map((item) => (
+              {selectableLanguages.map((item) => (
                 <button
                   className={`project-language-switch__option${
                     item.code === language ? " is-active" : ""
@@ -787,12 +753,12 @@ export function ProjectHostPage() {
           <UserRound size={21} />
         </button>
         <button
-          aria-label={soundEnabled ? "Mute project sound" : "Enable project sound"}
-          className={`project-top-actions__icon${soundEnabled ? "" : " is-off"}`}
-          onClick={toggleProjectSound}
+          aria-label={lt("每日运势")}
+          className="project-top-actions__icon"
+          onClick={() => navigate(getLiveProjectPath("zodiac-forecast"))}
           type="button"
         >
-          {soundEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
+          <Sparkles size={22} />
         </button>
       </div>
     </main>
