@@ -147,5 +147,7 @@ export function getLiveProjectPath(serviceId: string) {
 }
 
 export function getProjectSource(file: string) {
-  return `/mystic-projects/${file}`;
+  const publicBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  return `${publicBase}/mystic-projects/${file}`;
 }

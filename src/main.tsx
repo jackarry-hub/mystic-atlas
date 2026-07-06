@@ -6,9 +6,13 @@ import { CommerceProvider } from "./context/CommerceContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import "./styles.css";
 
+const routerBasename =
+  import.meta.env.BASE_URL === "/" ? undefined : import.meta.env.BASE_URL;
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter
+      basename={routerBasename}
       future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
     >
       <LanguageProvider>

@@ -1,4 +1,5 @@
-const base = "/assets/mystic-atlas";
+const publicBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+const base = `${publicBase}/assets/mystic-atlas`;
 
 export const assets = {
   backgrounds: {
