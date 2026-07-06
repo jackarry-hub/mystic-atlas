@@ -105,6 +105,17 @@ export function ProjectHostPage() {
           touch-action: pan-y manipulation;
         }
 
+        * {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+
+        *::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+
         #topbar,
         #topnav,
         header[data-ui],
