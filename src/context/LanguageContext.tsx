@@ -49,6 +49,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(storageKey, language);
     document.documentElement.lang = currentLanguage.htmlLang;
     document.documentElement.dataset.lang = language;
+    window.dispatchEvent(
+      new CustomEvent("mystic-atlas-language-change", {
+        detail: { language }
+      })
+    );
   }, [currentLanguage.htmlLang, language]);
 
   const value = useMemo<LanguageContextValue>(
@@ -101,7 +106,11 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
 
     let scheduled = false;
     const observedIframes = new WeakSet<HTMLIFrameElement>();
-    const iframeCleanups: Array<() => void> = [];
+    const observedDocuments = new WeakSet<Document>();
+    const cleanups: Array<() => void> = [];
+    const languageMeta = getLanguageMeta(language);
+
+    const isElementNode = (node: Node): node is Element => node.nodeType === Node.ELEMENT_NODE;
 
     const shouldSkipTextNode = (node: Text) => {
       const parent = node.parentElement;
@@ -111,6 +120,29 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
       }
 
       return ["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"].includes(parent.tagName);
+    };
+
+    const syncDocumentLanguage = (doc: Document) => {
+      doc.documentElement.lang = languageMeta.htmlLang;
+      doc.documentElement.dataset.lang = language;
+
+      try {
+        doc.defaultView?.localStorage.setItem(storageKey, language);
+      } catch {
+        // Same-origin storage can still be blocked by browser privacy settings.
+      }
+
+      try {
+        const FrameCustomEvent = doc.defaultView?.CustomEvent ?? CustomEvent;
+
+        doc.defaultView?.dispatchEvent(
+          new FrameCustomEvent("mystic-atlas-language-change", {
+            detail: { language }
+          })
+        );
+      } catch {
+        // Older embedded documents can ignore the broadcast safely.
+      }
     };
 
     const getTranslationRoots = () => {
@@ -131,7 +163,27 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
       return roots;
     };
 
-    const observeIframeLoads = (scheduleTranslations: () => void) => {
+    const observeDocument = (doc: Document) => {
+      if (observedDocuments.has(doc) || !doc.body) {
+        return;
+      }
+
+      observedDocuments.add(doc);
+      syncDocumentLanguage(doc);
+
+      const Observer = doc.defaultView?.MutationObserver ?? MutationObserver;
+      const observer = new Observer(scheduleTranslations);
+      observer.observe(doc.body, {
+        attributeFilter: [...translatableAttributes],
+        attributes: true,
+        characterData: true,
+        childList: true,
+        subtree: true
+      });
+      cleanups.push(() => observer.disconnect());
+    };
+
+    const observeIframeLoads = () => {
       root.querySelectorAll<HTMLIFrameElement>("iframe").forEach((iframe) => {
         if (observedIframes.has(iframe)) {
           return;
@@ -139,13 +191,13 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
 
         observedIframes.add(iframe);
         iframe.addEventListener("load", scheduleTranslations);
-        iframeCleanups.push(() => iframe.removeEventListener("load", scheduleTranslations));
+        cleanups.push(() => iframe.removeEventListener("load", scheduleTranslations));
       });
     };
 
-    const translateTextNodes = () => {
-      getTranslationRoots().forEach((translationRoot) => {
-        const walker = document.createTreeWalker(translationRoot, NodeFilter.SHOW_TEXT);
+    const translateTextNodes = (translationRoot: Node) => {
+      const rootDocument = translationRoot.ownerDocument ?? document;
+      const walker = rootDocument.createTreeWalker(translationRoot, NodeFilter.SHOW_TEXT);
       let current = walker.nextNode();
 
       while (current) {
@@ -177,16 +229,14 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
 
         current = walker.nextNode();
       }
-      });
     };
 
-    const translateAttributes = () => {
-      getTranslationRoots().forEach((translationRoot) => {
-        if (!(translationRoot instanceof Element)) {
-          return;
-        }
+    const translateAttributes = (translationRoot: Node) => {
+      if (!isElementNode(translationRoot)) {
+        return;
+      }
 
-        translationRoot.querySelectorAll("*").forEach((element) => {
+      translationRoot.querySelectorAll("*").forEach((element) => {
         translatableAttributes.forEach((attribute) => {
           const value = element.getAttribute(attribute);
 
@@ -224,17 +274,15 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
           }
         });
       });
-      });
     };
 
-    const translateFormValues = () => {
-      getTranslationRoots().forEach((translationRoot) => {
-        if (!(translationRoot instanceof Element)) {
-          return;
-        }
+    const translateFormValues = (translationRoot: Node) => {
+      if (!isElementNode(translationRoot)) {
+        return;
+      }
 
-        translationRoot.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea").forEach((element) => {
-        if (document.activeElement === element) {
+      translationRoot.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea").forEach((element) => {
+        if (element.ownerDocument.activeElement === element) {
           return;
         }
 
@@ -264,40 +312,35 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
           element.value = nextValue;
         }
       });
-      });
     };
 
-    const applyTranslations = () => {
+    function applyTranslations() {
       scheduled = false;
-      observeIframeLoads(scheduleTranslations);
-      translateTextNodes();
-      translateAttributes();
-      translateFormValues();
-    };
+      observeIframeLoads();
 
-    const scheduleTranslations = () => {
+      getTranslationRoots().forEach((translationRoot) => {
+        const rootDocument = translationRoot.ownerDocument ?? document;
+        observeDocument(rootDocument);
+        syncDocumentLanguage(rootDocument);
+        translateTextNodes(translationRoot);
+        translateAttributes(translationRoot);
+        translateFormValues(translationRoot);
+      });
+    }
+
+    function scheduleTranslations() {
       if (scheduled) {
         return;
       }
 
       scheduled = true;
       window.requestAnimationFrame(applyTranslations);
-    };
+    }
 
     applyTranslations();
 
-    const observer = new MutationObserver(scheduleTranslations);
-    observer.observe(root, {
-      attributeFilter: [...translatableAttributes],
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true
-    });
-
     return () => {
-      observer.disconnect();
-      iframeCleanups.forEach((cleanup) => cleanup());
+      cleanups.forEach((cleanup) => cleanup());
     };
   }, [attributeOriginals, language, textOriginals, valueOriginals]);
 

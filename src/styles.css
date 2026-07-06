@@ -2894,7 +2894,9 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
 .project-host-page--immersive {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   padding-top: 0;
 }
@@ -2902,12 +2904,14 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
 .project-frame-wrap--immersive {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
 }
 
 .project-frame-wrap--immersive .project-frame {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
 }
 
 .project-quick-dock {
@@ -2977,6 +2981,64 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
 }
 
 .project-quick-dock__panel a:hover {
+  border-color: rgba(201, 164, 106, 0.34);
+  color: var(--gold-bright);
+  background: rgba(201, 164, 106, 0.1);
+}
+
+.project-quick-dock__language {
+  display: grid;
+  gap: 7px;
+  margin-top: 3px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(201, 164, 106, 0.18);
+}
+
+.project-quick-dock__language-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--gold-bright);
+  font-family: Inter, "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+}
+
+.project-quick-dock__language-options {
+  display: grid;
+  gap: 4px;
+  max-height: min(46vh, 278px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.project-quick-dock__language-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-family: Inter, "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  text-align: left;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.project-quick-dock__language-option em {
+  color: rgba(231, 193, 122, 0.72);
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.project-quick-dock__language-option:hover,
+.project-quick-dock__language-option.is-active {
   border-color: rgba(201, 164, 106, 0.34);
   color: var(--gold-bright);
   background: rgba(201, 164, 106, 0.1);
@@ -3116,7 +3178,13 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
   }
 
   .project-quick-dock__panel {
-    width: 154px;
+    width: min(238px, calc(100vw - 24px));
+    max-height: calc(100dvh - 68px);
+    overflow-y: auto;
+  }
+
+  .project-quick-dock__language-options {
+    max-height: 32vh;
   }
 
   .page-background__content {
