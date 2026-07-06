@@ -103,6 +103,7 @@ export function ProjectHostPage() {
         header.home-ui,
         .topbar {
           width: 100% !important;
+          max-width: 100vw !important;
           min-width: 0 !important;
           min-height: 70px !important;
           height: auto !important;
@@ -112,8 +113,21 @@ export function ProjectHostPage() {
           gap: 8px !important;
           padding-left: 96px !important;
           padding-right: 12px !important;
-          overflow-x: auto !important;
+          overflow-x: hidden !important;
           overflow-y: visible !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+
+        #topbar::-webkit-scrollbar,
+        #topnav::-webkit-scrollbar,
+        header[data-ui]::-webkit-scrollbar,
+        header.topbar::-webkit-scrollbar,
+        header.home-ui::-webkit-scrollbar,
+        .topbar::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
         }
 
         #projBtn,
@@ -252,9 +266,19 @@ export function ProjectHostPage() {
 
         .choice-grid,
         .chips,
+        .navside,
         #spreads {
           overflow-x: auto !important;
           scrollbar-width: none;
+        }
+
+        .choice-grid::-webkit-scrollbar,
+        .chips::-webkit-scrollbar,
+        .navside::-webkit-scrollbar,
+        #spreads::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
         }
 
         img,
