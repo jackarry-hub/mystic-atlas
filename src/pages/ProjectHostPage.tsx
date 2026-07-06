@@ -90,6 +90,15 @@ export function ProjectHostPage() {
           min-width: 0 !important;
           max-width: 100vw !important;
           overflow-x: hidden !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
         }
 
         body {
@@ -315,7 +324,6 @@ export function ProjectHostPage() {
         .pillar-table,
         .luck-table,
         .featureRow,
-        .side-menu,
         #layoutStep,
         #layoutStep.show,
         .choice-grid,
@@ -340,10 +348,13 @@ export function ProjectHostPage() {
         .pillar-table,
         .luck-table,
         .featureRow,
-        .side-menu,
         #layoutStep,
         #layoutStep.show {
           grid-template-columns: 1fr !important;
+        }
+
+        .side-menu {
+          grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)) !important;
         }
 
         .featureRow,
