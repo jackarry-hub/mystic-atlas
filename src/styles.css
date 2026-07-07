@@ -3341,11 +3341,12 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
   background: transparent;
+  cursor: pointer;
   transform: translate(-50%, -50%);
 }
 

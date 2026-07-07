@@ -66,6 +66,93 @@ const defaultCategories = [
   "服务套餐"
 ] as const;
 
+const calibratedHotspots: Record<string, Pick<ThemeShopProduct, "x" | "y">> = {
+  "bazi-basic-report": { x: 49, y: 55 },
+  "bazi-deep-reading": { x: 61, y: 34 },
+  "bazi-luck-cycle": { x: 57, y: 22 },
+  "bazi-relationship-match": { x: 75, y: 52 },
+  "bazi-career-money": { x: 82, y: 55 },
+  "bazi-five-element-scroll": { x: 49, y: 70 },
+  "bazi-handbook": { x: 36, y: 37 },
+  "liuyao-one-question": { x: 46, y: 73 },
+  "liuyao-love-reading": { x: 76, y: 56 },
+  "liuyao-career-decision": { x: 50, y: 52 },
+  "liuyao-investment": { x: 30, y: 82 },
+  "liuyao-coin-set": { x: 29, y: 83 },
+  "liuyao-hexagram-plate": { x: 62, y: 42 },
+  "liuyao-handbook": { x: 69, y: 75 },
+  "astrology-natal-chart": { x: 45, y: 65 },
+  "astrology-synastry": { x: 62, y: 28 },
+  "astrology-transit-year": { x: 14, y: 38 },
+  "astrology-career": { x: 31, y: 51 },
+  "astrology-moon-journal": { x: 50, y: 76 },
+  "astrology-zodiac-poster": { x: 67, y: 28 },
+  "astrology-deck": { x: 74, y: 62 },
+  "naming-baby": { x: 51, y: 60 },
+  "naming-adult": { x: 69, y: 33 },
+  "naming-brand": { x: 61, y: 74 },
+  "date-wedding": { x: 31, y: 78 },
+  "date-opening": { x: 86, y: 68 },
+  "date-moving": { x: 72, y: 66 },
+  "almanac-book": { x: 59, y: 55 },
+  "dream-single": { x: 49, y: 59 },
+  "dream-series": { x: 51, y: 70 },
+  "dream-love": { x: 60, y: 42 },
+  "dream-subconscious": { x: 82, y: 34 },
+  "dream-journal": { x: 23, y: 49 },
+  "dream-book": { x: 77, y: 62 },
+  "dream-moon-lamp": { x: 84, y: 38 },
+  "tarot-love-reading": { x: 35, y: 50 },
+  "tarot-three-card": { x: 51, y: 75 },
+  "tarot-yearly": { x: 65, y: 27 },
+  "tarot-reconciliation": { x: 68, y: 58 },
+  "tarot-deck": { x: 66, y: 64 },
+  "tarot-candle": { x: 11, y: 30 },
+  "tarot-guidebook": { x: 74, y: 58 },
+  "palm-basic": { x: 61, y: 66 },
+  "palm-love-line": { x: 78, y: 42 },
+  "palm-career-money": { x: 70, y: 75 },
+  "palm-full-report": { x: 47, y: 77 },
+  "palm-atlas": { x: 26, y: 50 },
+  "palm-record-book": { x: 35, y: 76 },
+  "palm-magnifier": { x: 72, y: 74 },
+  "lingqian-single": { x: 17, y: 51 },
+  "lingqian-love": { x: 82, y: 47 },
+  "lingqian-career": { x: 52, y: 47 },
+  "lingqian-money": { x: 75, y: 28 },
+  "lingqian-card": { x: 72, y: 76 },
+  "lingqian-cup": { x: 35, y: 54 },
+  "lingqian-sachet": { x: 53, y: 82 },
+  "zodiac-year": { x: 53, y: 55 },
+  "zodiac-month": { x: 52, y: 75 },
+  "zodiac-money": { x: 91, y: 77 },
+  "zodiac-match": { x: 50, y: 38 },
+  "zodiac-guardian": { x: 61, y: 75 },
+  "zodiac-ornament": { x: 83, y: 41 },
+  "zodiac-scroll": { x: 20, y: 71 },
+  "ziwei-chart-report": { x: 43, y: 38 },
+  "ziwei-year": { x: 63, y: 53 },
+  "ziwei-marriage-career": { x: 48, y: 78 },
+  "ziwei-match": { x: 71, y: 36 },
+  "ziwei-chart-book": { x: 30, y: 56 },
+  "ziwei-star-cards": { x: 75, y: 67 },
+  "ziwei-book": { x: 86, y: 76 },
+  "face-basic": { x: 62, y: 40 },
+  "face-love": { x: 47, y: 55 },
+  "face-money": { x: 64, y: 58 },
+  "face-full-report": { x: 41, y: 72 },
+  "face-atlas": { x: 15, y: 50 },
+  "face-mirror": { x: 45, y: 52 },
+  "face-handbook": { x: 24, y: 78 },
+  "fengshui-home": { x: 39, y: 75 },
+  "fengshui-office": { x: 80, y: 74 },
+  "fengshui-wealth": { x: 74, y: 55 },
+  "fengshui-year-adjustment": { x: 44, y: 54 },
+  "fengshui-compass": { x: 55, y: 43 },
+  "fengshui-ornament": { x: 30, y: 51 },
+  "fengshui-book": { x: 82, y: 72 }
+};
+
 const publicBase = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function shopRoute(slug: ThemeShopSlug) {
@@ -77,13 +164,14 @@ function sceneBackground(slug: ThemeShopSlug) {
 }
 
 function product(draft: ThemeShopProductDraft): ThemeShopProduct {
+  const hotspot = calibratedHotspots[draft.id] ?? draft;
   const typeDelivery = {
     physical: "实体发货，支持物流追踪。",
     service: "付款后进入资料提交或预约流程。",
     virtual: "付款后即时开通，可在账户中心查看。"
   } satisfies Record<ThemeShopProductType, string>;
 
-  return {
+  const themeProduct = {
     ...draft,
     currency: "USD",
     delivery: draft.delivery ?? typeDelivery[draft.type],
@@ -96,6 +184,12 @@ function product(draft: ThemeShopProductDraft): ThemeShopProduct {
     notice:
       draft.notice ??
       "玄学内容用于自我探索、文化体验和娱乐参考，不替代法律、医疗、财务等专业意见。"
+  };
+
+  return {
+    ...themeProduct,
+    x: hotspot.x,
+    y: hotspot.y
   };
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import {
@@ -18,6 +18,7 @@ import {
   type ThemeShopProductType
 } from "../data/themeShops";
 import type { CommerceItem, CommerceItemType } from "../lib/commerce";
+import { mapImagePointToCoverContainer } from "../lib/themeHotspots";
 
 const themeProductTypeLabels: Record<ThemeShopProductType, string> = {
   physical: "实物",
@@ -62,10 +63,18 @@ export function ThemeShopPage() {
   const { slug } = useParams();
   const shop = getThemeShopBySlug(slug);
   const { addToCart, cartCount, startCheckout } = useCommerce();
+  const sceneRef = useRef<HTMLElement | null>(null);
+  const sceneImageRef = useRef<HTMLImageElement | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<ThemeShopProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [sceneMetrics, setSceneMetrics] = useState({
+    containerWidth: 0,
+    containerHeight: 0,
+    imageWidth: 1672,
+    imageHeight: 941
+  });
 
   const products = shop?.products ?? [];
   const selectedProduct =
@@ -76,6 +85,54 @@ export function ThemeShopPage() {
   useEffect(() => {
     setSelectedProductId(null);
   }, [slug]);
+
+  const refreshSceneMetrics = useCallback(() => {
+    const scene = sceneRef.current;
+    const image = sceneImageRef.current;
+
+    if (!scene) {
+      return;
+    }
+
+    const rect = scene.getBoundingClientRect();
+    const nextMetrics = {
+      containerWidth: rect.width,
+      containerHeight: rect.height,
+      imageWidth: image?.naturalWidth || 1672,
+      imageHeight: image?.naturalHeight || 941
+    };
+
+    setSceneMetrics((currentMetrics) =>
+      currentMetrics.containerWidth === nextMetrics.containerWidth &&
+      currentMetrics.containerHeight === nextMetrics.containerHeight &&
+      currentMetrics.imageWidth === nextMetrics.imageWidth &&
+      currentMetrics.imageHeight === nextMetrics.imageHeight
+        ? currentMetrics
+        : nextMetrics
+    );
+  }, []);
+
+  useEffect(() => {
+    refreshSceneMetrics();
+
+    const scene = sceneRef.current;
+    if (!scene) {
+      return undefined;
+    }
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(refreshSceneMetrics);
+
+    resizeObserver?.observe(scene);
+    window.addEventListener("resize", refreshSceneMetrics);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", refreshSceneMetrics);
+    };
+  }, [refreshSceneMetrics, shop?.background]);
 
   useEffect(() => {
     if (!toastMessage) {
@@ -139,26 +196,56 @@ export function ThemeShopPage() {
       </header>
 
       <section className="theme-shop-layout">
-        <section className="theme-shop-scene" aria-label={`${shop.title} 商品热点`}>
-          <img alt={`${shop.title} 场景底图`} src={shop.background} />
+        <section
+          className="theme-shop-scene"
+          ref={sceneRef}
+          aria-label={`${shop.title} 商品热点`}
+        >
+          <img
+            alt={`${shop.title} 场景底图`}
+            onLoad={refreshSceneMetrics}
+            ref={sceneImageRef}
+            src={shop.background}
+          />
           <div className="theme-shop-scene__shade" />
-          {products.map((product) => (
-            <button
-              className={`scene-hotspot${
-                product.id === selectedProductId ? " is-active" : ""
-              }`}
-              key={product.id}
-              onClick={() => setSelectedProductId(product.id)}
-              style={{ left: `${product.x}%`, top: `${product.y}%` }}
-              type="button"
-            >
-              <span className="scene-hotspot__dot" />
-              <span className="scene-hotspot__label">
-                <strong>{product.name}</strong>
-                <em>{formatThemePrice(product)}</em>
-              </span>
-            </button>
-          ))}
+          {products.map((product) => {
+            const hotspotPosition =
+              sceneMetrics.containerWidth > 0 && sceneMetrics.containerHeight > 0
+                ? mapImagePointToCoverContainer({
+                    ...sceneMetrics,
+                    x: product.x,
+                    y: product.y
+                  })
+                : null;
+            const hotspotStyle =
+              hotspotPosition === null
+                ? ({ left: `${product.x}%`, top: `${product.y}%` } as CSSProperties)
+                : ({
+                    left: `${hotspotPosition.left}px`,
+                    pointerEvents: hotspotPosition.visible ? undefined : "none",
+                    top: `${hotspotPosition.top}px`,
+                    visibility: hotspotPosition.visible ? undefined : "hidden"
+                  } as CSSProperties);
+
+            return (
+              <button
+                className={`scene-hotspot${
+                  product.id === selectedProductId ? " is-active" : ""
+                }`}
+                key={product.id}
+                onClick={() => setSelectedProductId(product.id)}
+                style={hotspotStyle}
+                tabIndex={hotspotPosition?.visible === false ? -1 : undefined}
+                type="button"
+              >
+                <span className="scene-hotspot__dot" />
+                <span className="scene-hotspot__label">
+                  <strong>{product.name}</strong>
+                  <em>{formatThemePrice(product)}</em>
+                </span>
+              </button>
+            );
+          })}
         </section>
 
         {selectedProduct ? (
