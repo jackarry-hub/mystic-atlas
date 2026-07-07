@@ -1,5 +1,6 @@
 export { AppShell } from "./AppShell";
 export { BottomNav } from "./BottomNav";
+export { CartDrawer } from "./CartDrawer";
 export { LoginPanel } from "./LoginPanel";
 export { MembershipTier } from "./MembershipTier";
 export { MysticButton } from "./MysticButton";

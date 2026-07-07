@@ -1,12 +1,16 @@
 import type { IconName } from "../components";
 
 export interface MysticProject {
+  aliases?: readonly string[];
   category: "东方玄学" | "西方神秘学" | "香港民俗";
   description: string;
   file: string;
   icon: IconName;
   knowledgeRoute: string;
+  publicServiceId: string;
   serviceId: string;
+  shopLabel: string;
+  shopRoute: string;
   slug: string;
   title: string;
 }
@@ -15,6 +19,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "tarot",
     serviceId: "tarot-reading",
+    publicServiceId: "tarot",
+    aliases: ["tarot"],
+    shopLabel: "塔罗商城",
+    shopRoute: "/shop/tarot",
     title: "塔罗互动占卜",
     file: "index_6.html",
     category: "西方神秘学",
@@ -25,6 +33,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "astrology",
     serviceId: "natal-astrology",
+    publicServiceId: "astrology",
+    aliases: ["astrology"],
+    shopLabel: "占星商城",
+    shopRoute: "/shop/astrology",
     title: "星盘占星",
     file: "index_astrology.html",
     category: "西方神秘学",
@@ -35,6 +47,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "bazi",
     serviceId: "bazi-chart",
+    publicServiceId: "bazi",
+    aliases: ["bazi"],
+    shopLabel: "八字商城",
+    shopRoute: "/shop/bazi",
     title: "八字命盘",
     file: "index_bazi.html",
     category: "东方玄学",
@@ -45,6 +61,9 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "liuyao",
     serviceId: "liuyao",
+    publicServiceId: "liuyao",
+    shopLabel: "六爻商城",
+    shopRoute: "/shop/liuyao",
     title: "六爻问卦",
     file: "index_liuyao.html",
     category: "东方玄学",
@@ -55,6 +74,9 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "ziwei",
     serviceId: "ziwei-doushu",
+    publicServiceId: "ziwei-doushu",
+    shopLabel: "紫微商城",
+    shopRoute: "/shop/ziwei",
     title: "紫微斗数",
     file: "index_ziwei.html",
     category: "东方玄学",
@@ -65,6 +87,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "lingqian",
     serviceId: "spiritual-lots",
+    publicServiceId: "lingqian",
+    aliases: ["lingqian"],
+    shopLabel: "灵签商城",
+    shopRoute: "/shop/lingqian",
     title: "灵签求问",
     file: "index_lingqian.html",
     category: "香港民俗",
@@ -75,6 +101,9 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "zhougong",
     serviceId: "dream-interpretation",
+    publicServiceId: "dream-interpretation",
+    shopLabel: "解梦商城",
+    shopRoute: "/shop/dream",
     title: "周公解梦",
     file: "index_zhougong.html",
     category: "东方玄学",
@@ -85,6 +114,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "zodiac",
     serviceId: "zodiac-forecast",
+    publicServiceId: "zodiac",
+    aliases: ["zodiac"],
+    shopLabel: "生肖商城",
+    shopRoute: "/shop/zodiac",
     title: "生肖运势",
     file: "index_zodiac.html",
     category: "东方玄学",
@@ -95,6 +128,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "fengshui",
     serviceId: "fengshui-compass",
+    publicServiceId: "fengshui-luopan",
+    aliases: ["fengshui-luopan"],
+    shopLabel: "风水商城",
+    shopRoute: "/shop/fengshui",
     title: "风水堪舆",
     file: "index_fengshui.html",
     category: "东方玄学",
@@ -105,6 +142,10 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "palm",
     serviceId: "palm-reading",
+    publicServiceId: "palmistry",
+    aliases: ["palmistry"],
+    shopLabel: "手相商城",
+    shopRoute: "/shop/palmistry",
     title: "手相解读",
     file: "index_palm.html",
     category: "东方玄学",
@@ -115,6 +156,9 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "face",
     serviceId: "face-reading",
+    publicServiceId: "face-reading",
+    shopLabel: "面相商城",
+    shopRoute: "/shop/face-reading",
     title: "面相解读",
     file: "index_mianxiang.html",
     category: "东方玄学",
@@ -125,6 +169,9 @@ export const mysticProjects: MysticProject[] = [
   {
     slug: "naming-date",
     serviceId: "naming-date",
+    publicServiceId: "naming-date",
+    shopLabel: "取名择日商城",
+    shopRoute: "/shop/naming-date",
     title: "取名择日",
     file: "index_name_date.html",
     category: "东方玄学",
@@ -135,7 +182,20 @@ export const mysticProjects: MysticProject[] = [
 ];
 
 export function getProjectByServiceId(serviceId?: string) {
-  return mysticProjects.find((project) => project.serviceId === serviceId);
+  return mysticProjects.find(
+    (project) =>
+      project.serviceId === serviceId ||
+      project.publicServiceId === serviceId ||
+      project.aliases?.includes(serviceId ?? "")
+  );
+}
+
+export function isProjectServiceId(project: MysticProject, serviceId?: string) {
+  return (
+    project.serviceId === serviceId ||
+    project.publicServiceId === serviceId ||
+    project.aliases?.includes(serviceId ?? "") === true
+  );
 }
 
 export function getProjectByFile(file?: string) {
@@ -143,7 +203,9 @@ export function getProjectByFile(file?: string) {
 }
 
 export function getLiveProjectPath(serviceId: string) {
-  return `/services/${serviceId}/live`;
+  const project = getProjectByServiceId(serviceId);
+
+  return `/services/${project?.publicServiceId ?? serviceId}/live`;
 }
 
 export function getProjectSource(file: string) {

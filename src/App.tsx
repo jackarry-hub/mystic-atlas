@@ -23,6 +23,7 @@ import { ReportsPage } from "./pages/ReportsPage";
 import { ServiceDetailPage } from "./pages/ServiceDetailPage";
 import { ServicesPage } from "./pages/ServicesPage";
 import { ShopPage } from "./pages/ShopPage";
+import { ThemeShopPage } from "./pages/ThemeShopPage";
 import { VirtualShopPage } from "./pages/VirtualShopPage";
 
 export default function App() {
@@ -61,6 +62,7 @@ export default function App() {
           element={<ProductDetailPage />}
           path="/shop/product/:productId"
         />
+        <Route element={<ThemeShopPage />} path="/shop/:slug" />
         <Route element={<ReportsPage />} path="/reports" />
         <Route element={<ReportDetailPage />} path="/reports/detail" />
         <Route element={<ReportArchivePage />} path="/reports/archive" />

@@ -31,6 +31,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 const storageKey = "mystic-atlas-language";
 const translatableAttributes = ["aria-label", "alt", "placeholder", "title"] as const;
 const chinesePattern = /[\u4e00-\u9fff]/;
+const reactManagedSelector = '[data-language-managed="react"]';
 
 function readInitialLanguage(): LanguageCode {
   if (typeof window === "undefined") {
@@ -122,6 +123,9 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
 
     const isElementNode = (node: Node): node is Element => node.nodeType === Node.ELEMENT_NODE;
 
+    const isReactManaged = (element: Element | null) =>
+      Boolean(element?.closest(reactManagedSelector));
+
     const shouldSkipTextNode = (node: Text) => {
       const parent = node.parentElement;
 
@@ -129,7 +133,10 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
         return true;
       }
 
-      return ["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"].includes(parent.tagName);
+      return (
+        isReactManaged(parent) ||
+        ["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"].includes(parent.tagName)
+      );
     };
 
     const syncDocumentLanguage = (doc: Document) => {
@@ -252,6 +259,10 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
       }
 
       translationRoot.querySelectorAll("*").forEach((element) => {
+        if (isReactManaged(element)) {
+          return;
+        }
+
         translatableAttributes.forEach((attribute) => {
           const value = element.getAttribute(attribute);
 
@@ -306,6 +317,10 @@ function LocalizedDocumentText({ language }: { language: LanguageCode }) {
       }
 
       translationRoot.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea").forEach((element) => {
+        if (isReactManaged(element)) {
+          return;
+        }
+
         if (element.ownerDocument.activeElement === element) {
           return;
         }

@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ChevronDown,
-  Globe2,
   Home,
   LogIn,
   Menu,
   ShoppingBag,
-  Sparkles,
   Store,
   UserRound,
   X
@@ -17,9 +14,9 @@ import {
   getLiveProjectPath,
   getProjectByFile,
   getProjectByServiceId,
-  getProjectSource
+  getProjectSource,
+  isProjectServiceId
 } from "../data/mysticProjects";
-import { selectableLanguages } from "../lib/i18n";
 
 type ProjectFrameWindow = Window & {
   __mysticAtlasSyncCleanup?: () => void;
@@ -29,9 +26,8 @@ type ProjectFrameWindow = Window & {
 export function ProjectHostPage() {
   const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { currentLanguage, language, lt, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
   const [dockOpen, setDockOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const project = getProjectByServiceId(serviceId);
   const projectSrc = useMemo(
@@ -121,19 +117,10 @@ export function ProjectHostPage() {
       };
     }
 
-    const dockOffset = frameWindow.innerWidth <= 760 ? "96px" : "126px";
-    const existingStyle = frameDocument.getElementById("main-site-dock-align");
+    const existingStyle = frameDocument.getElementById("mystic-host-integration");
     const style = existingStyle ?? frameDocument.createElement("style");
-    style.id = "main-site-dock-align";
+    style.id = "mystic-host-integration";
     style.textContent = `
-      #topbar,
-      header[data-ui],
-      header.topbar,
-      header.home-ui,
-      .topbar {
-        padding-left: ${dockOffset} !important;
-      }
-
       .navIcons,
       #soundBtn {
         display: none !important;
@@ -145,13 +132,39 @@ export function ProjectHostPage() {
         max-width: 100vw !important;
       }
 
+      body.mystic-project-menu-open #leftcol,
+      body.mystic-project-menu-open .side-rail {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
       html[data-lang]:not([data-lang="zh-Hans"]) #topbar,
       html[data-lang]:not([data-lang="zh-Hans"]) #topnav,
       html[data-lang]:not([data-lang="zh-Hans"]) header[data-ui],
       html[data-lang]:not([data-lang="zh-Hans"]) header.topbar,
       html[data-lang]:not([data-lang="zh-Hans"]) header.home-ui,
       html[data-lang]:not([data-lang="zh-Hans"]) .topbar {
-        gap: 12px !important;
+        gap: clamp(8px, 1vw, 16px) !important;
+        padding-left: clamp(18px, 2vw, 32px) !important;
+        padding-right: clamp(18px, 2vw, 32px) !important;
+        overflow: hidden !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) #topbar,
+      html[data-lang]:not([data-lang="zh-Hans"]) #topnav {
+        grid-template-columns: minmax(132px, auto) minmax(0, 1fr) auto !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .brand {
+        max-width: min(58vw, 620px) !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        text-indent: 0 !important;
+        letter-spacing: .12em !important;
+        font-size: clamp(28px, 2.8vw, 38px) !important;
+        line-height: 1.05 !important;
       }
 
       html[data-lang]:not([data-lang="zh-Hans"]) #navTitle {
@@ -159,15 +172,180 @@ export function ProjectHostPage() {
       }
 
       html[data-lang]:not([data-lang="zh-Hans"]) .navside {
-        gap: clamp(8px, 1.4vw, 22px) !important;
+        display: none !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .navside button,
+      html[data-lang]:not([data-lang="zh-Hans"]) .navlink {
+        max-width: 132px !important;
         min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: clamp(13px, .92vw, 15px) !important;
       }
 
       html[data-lang]:not([data-lang="zh-Hans"]) .navlink,
       html[data-lang]:not([data-lang="zh-Hans"]) #projBtn,
       html[data-lang]:not([data-lang="zh-Hans"]) .project-btn,
       html[data-lang]:not([data-lang="zh-Hans"]) .pm-it {
+        letter-spacing: .04em !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) #projBtn,
+      html[data-lang]:not([data-lang="zh-Hans"]) .project-btn,
+      html[data-lang]:not([data-lang="zh-Hans"]) #project {
+        width: auto !important;
+        max-width: 176px !important;
+        min-width: 118px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        font-size: 14px !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .feature,
+      html[data-lang]:not([data-lang="zh-Hans"]) .daily,
+      html[data-lang]:not([data-lang="zh-Hans"]) .today-tip,
+      html[data-lang]:not([data-lang="zh-Hans"]) .steps-card,
+      html[data-lang]:not([data-lang="zh-Hans"]) .quote,
+      html[data-lang]:not([data-lang="zh-Hans"]) .result-card,
+      html[data-lang]:not([data-lang="zh-Hans"]) .reading-card {
+        overflow-wrap: anywhere !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .side-rail,
+      html[data-lang]:not([data-lang="zh-Hans"]) #leftcol {
+        width: clamp(188px, 15vw, 230px) !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .rail-item,
+      html[data-lang]:not([data-lang="zh-Hans"]) #leftcol button,
+      html[data-lang]:not([data-lang="zh-Hans"]) #leftcol a {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
+        gap: 12px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        letter-spacing: .04em !important;
+        font-size: clamp(15px, 1.25vw, 18px) !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .steps-card {
+        width: min(300px, 23vw) !important;
+        padding: clamp(20px, 2vw, 26px) !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .panel-title {
+        letter-spacing: .1em !important;
+        font-size: clamp(22px, 2vw, 27px) !important;
+        line-height: 1.18 !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .right-stack {
+        width: min(390px, 31vw) !important;
+        right: clamp(24px, 3vw, 54px) !important;
+        gap: 14px !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .feature {
+        min-height: 96px !important;
+        padding: 16px 20px !important;
+        grid-template-columns: minmax(0, 1fr) 58px !important;
+        gap: 14px !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .feature-art {
+        height: 56px !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .daily {
+        width: min(390px, 31vw) !important;
+        left: clamp(24px, 3vw, 54px) !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .quote {
+        width: min(390px, 31vw) !important;
+        right: clamp(24px, 3vw, 54px) !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .start-plaque {
+        left: 50% !important;
+        right: auto !important;
+        bottom: clamp(84px, 12vh, 128px) !important;
+        width: min(300px, 24vw) !important;
+        height: 64px !important;
+        min-width: 248px !important;
+        transform: translateX(-50%) !important;
+        font-size: clamp(26px, 2.4vw, 34px) !important;
+        letter-spacing: .12em !important;
+        text-indent: .12em !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .feature h3,
+      html[data-lang]:not([data-lang="zh-Hans"]) .daily h3,
+      html[data-lang]:not([data-lang="zh-Hans"]) .today-tip h3,
+      html[data-lang]:not([data-lang="zh-Hans"]) .panel-title,
+      html[data-lang]:not([data-lang="zh-Hans"]) .steps-title,
+      html[data-lang]:not([data-lang="zh-Hans"]) .dock-title,
+      html[data-lang]:not([data-lang="zh-Hans"]) .rail-title,
+      html[data-lang]:not([data-lang="zh-Hans"]) .side-title {
         letter-spacing: .08em !important;
+        font-size: clamp(21px, 1.8vw, 30px) !important;
+        line-height: 1.16 !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .feature p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .daily p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .today-tip p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .steps-card p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .step span,
+      html[data-lang]:not([data-lang="zh-Hans"]) .quote,
+      html[data-lang]:not([data-lang="zh-Hans"]) .result-card p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .reading-card p,
+      html[data-lang]:not([data-lang="zh-Hans"]) .hint {
+        letter-spacing: .02em !important;
+        line-height: 1.55 !important;
+      }
+
+      html[data-lang]:not([data-lang="zh-Hans"]) .start-plaque,
+      html[data-lang]:not([data-lang="zh-Hans"]) .gold-btn,
+      html[data-lang]:not([data-lang="zh-Hans"]) .ghost-btn,
+      html[data-lang]:not([data-lang="zh-Hans"]) .chip {
+        letter-spacing: .04em !important;
+        white-space: normal !important;
+      }
+
+      @media (max-width: 1180px) {
+        html[data-lang]:not([data-lang="zh-Hans"]) #topbar,
+        html[data-lang]:not([data-lang="zh-Hans"]) #topnav,
+        html[data-lang]:not([data-lang="zh-Hans"]) header[data-ui],
+        html[data-lang]:not([data-lang="zh-Hans"]) header.topbar,
+        html[data-lang]:not([data-lang="zh-Hans"]) header.home-ui,
+        html[data-lang]:not([data-lang="zh-Hans"]) .topbar {
+          grid-template-columns: minmax(126px, auto) minmax(0, 1fr) auto !important;
+        }
+
+        html[data-lang]:not([data-lang="zh-Hans"]) .brand {
+          max-width: 46vw !important;
+        }
+
+        html[data-lang]:not([data-lang="zh-Hans"]) .navside {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 1400px) {
+        html[data-lang]:not([data-lang="zh-Hans"]) .daily,
+        html[data-lang]:not([data-lang="zh-Hans"]) .quote {
+          display: none !important;
+        }
+
+        html[data-lang]:not([data-lang="zh-Hans"]) .start-plaque {
+          bottom: 36px !important;
+        }
       }
 
       @media (max-width: 760px) {
@@ -215,10 +393,10 @@ export function ProjectHostPage() {
           min-height: 70px !important;
           height: auto !important;
           display: grid !important;
-          grid-template-columns: minmax(96px, auto) 1fr !important;
+          grid-template-columns: minmax(138px, auto) 1fr !important;
           align-items: center !important;
           gap: 8px !important;
-          padding-left: 96px !important;
+          padding-left: 12px !important;
           padding-right: 12px !important;
           overflow-x: hidden !important;
           overflow-y: visible !important;
@@ -249,8 +427,8 @@ export function ProjectHostPage() {
         #projBtn,
         .project-btn,
         #project {
-          width: min(172px, calc(100vw - 116px)) !important;
-          max-width: calc(100vw - 116px) !important;
+          width: min(172px, calc(100vw - 24px)) !important;
+          max-width: calc(100vw - 24px) !important;
           height: 38px !important;
           min-width: 0 !important;
           padding-left: 10px !important;
@@ -487,6 +665,30 @@ export function ProjectHostPage() {
       frameDocument.head.appendChild(style);
     }
 
+    if (frameDocument.body && !frameDocument.body.dataset.mysticProjectMenuWatcher) {
+      frameDocument.body.dataset.mysticProjectMenuWatcher = "true";
+
+      const syncProjectMenuState = () => {
+        const menuOpen = Boolean(
+          frameDocument.querySelector(
+            "#projMenu.show, .project.open .project-menu, .project-menu.show"
+          )
+        );
+
+        frameDocument.body.classList.toggle("mystic-project-menu-open", menuOpen);
+      };
+
+      const scheduleProjectMenuSync = () => frameWindow.setTimeout(syncProjectMenuState, 0);
+
+      frameDocument.addEventListener("click", scheduleProjectMenuSync, true);
+      frameDocument.addEventListener("keydown", scheduleProjectMenuSync, true);
+      syncProjectMenuState();
+    }
+
+    frameDocument
+      .querySelectorAll("[data-mystic-theme-shop-link]")
+      .forEach((shopLink) => shopLink.remove());
+
     const file = frameWindow.location.pathname.split("/").pop() ?? "";
     const isPalmOrFace = file === "index_palm.html" || file === "index_mianxiang.html";
 
@@ -605,16 +807,7 @@ export function ProjectHostPage() {
       });
     }
 
-    const projectControl = frameDocument.querySelector<HTMLElement>("#projBtn, #project");
-
-    if (projectControl) {
-      const position = frameWindow.getComputedStyle(projectControl).position;
-
-      if (position === "absolute" || position === "fixed") {
-        projectControl.style.setProperty("left", dockOffset, "important");
-      }
-    }
-  }, []);
+  }, [language, project]);
 
   const handleFrameLoad = useCallback(() => {
     const frameWindow = iframeRef.current?.contentWindow;
@@ -628,7 +821,7 @@ export function ProjectHostPage() {
       const file = frameWindow.location.pathname.split("/").pop();
       const nextProject = getProjectByFile(file);
 
-      if (nextProject && nextProject.serviceId !== serviceId) {
+      if (nextProject && !isProjectServiceId(nextProject, serviceId)) {
         navigate(getLiveProjectPath(nextProject.serviceId), { replace: true });
       }
     } catch {
@@ -653,6 +846,56 @@ export function ProjectHostPage() {
 
   return (
     <main className="project-host-page project-host-page--immersive">
+      <header className="project-host-bar project-host-bar--immersive">
+        <aside
+          aria-label={t("dock.aria")}
+          className={`project-quick-dock${dockOpen ? " is-open" : ""}`}
+        >
+          <button
+            aria-expanded={dockOpen}
+            aria-label={dockOpen ? t("dock.close") : t("dock.open")}
+            className="project-quick-dock__toggle"
+            onClick={() => setDockOpen((current) => !current)}
+            type="button"
+          >
+            {dockOpen ? <X size={18} /> : <Menu size={18} />}
+            <span>{t("dock.main")}</span>
+          </button>
+
+          {dockOpen ? (
+            <nav className="project-quick-dock__panel">
+              <Link to="/" onClick={() => setDockOpen(false)}>
+                <Home size={16} />
+                <span>{t("dock.home")}</span>
+              </Link>
+              <Link to="/shop" onClick={() => setDockOpen(false)}>
+                <Store size={16} />
+                <span>{t("dock.shop")}</span>
+              </Link>
+              <Link to="/login" onClick={() => setDockOpen(false)}>
+                <LogIn size={16} />
+                <span>{t("dock.login")}</span>
+              </Link>
+              <Link to="/account" onClick={() => setDockOpen(false)}>
+                <UserRound size={16} />
+                <span>{t("dock.account")}</span>
+              </Link>
+              <Link to="/shop/cart" onClick={() => setDockOpen(false)}>
+                <ShoppingBag size={16} />
+                <span>{t("dock.cart")}</span>
+              </Link>
+            </nav>
+          ) : null}
+        </aside>
+
+        <span className="project-host-bar__spacer" aria-hidden="true" />
+
+        <Link className="project-host-shop-link" to={project.shopRoute}>
+          <Store size={16} />
+          <span>{language === "en" ? "Shop" : project.shopLabel}</span>
+        </Link>
+      </header>
+
       <section className="project-frame-wrap project-frame-wrap--immersive">
         <iframe
           ref={iframeRef}
@@ -664,103 +907,6 @@ export function ProjectHostPage() {
           title={`${project.title} ${t("dock.aria")}`}
         />
       </section>
-
-      <aside
-        aria-label={t("dock.aria")}
-        className={`project-quick-dock${dockOpen ? " is-open" : ""}`}
-      >
-        <button
-          aria-expanded={dockOpen}
-          aria-label={dockOpen ? t("dock.close") : t("dock.open")}
-          className="project-quick-dock__toggle"
-          onClick={() => setDockOpen((current) => !current)}
-          type="button"
-        >
-          {dockOpen ? <X size={18} /> : <Menu size={18} />}
-          <span>{t("dock.main")}</span>
-        </button>
-
-        {dockOpen ? (
-          <nav className="project-quick-dock__panel">
-            <Link to="/" onClick={() => setDockOpen(false)}>
-              <Home size={16} />
-              <span>{t("dock.home")}</span>
-            </Link>
-            <Link to="/shop" onClick={() => setDockOpen(false)}>
-              <Store size={16} />
-              <span>{t("dock.shop")}</span>
-            </Link>
-            <Link to="/login" onClick={() => setDockOpen(false)}>
-              <LogIn size={16} />
-              <span>{t("dock.login")}</span>
-            </Link>
-            <Link to="/account" onClick={() => setDockOpen(false)}>
-              <UserRound size={16} />
-              <span>{t("dock.account")}</span>
-            </Link>
-            <Link to="/shop/cart" onClick={() => setDockOpen(false)}>
-              <ShoppingBag size={16} />
-              <span>{t("dock.cart")}</span>
-            </Link>
-          </nav>
-        ) : null}
-      </aside>
-
-      <div className="project-top-actions" aria-label={t("dock.aria")}>
-        <div className={`project-language-switch${languageOpen ? " is-open" : ""}`}>
-          <button
-            aria-expanded={languageOpen}
-            aria-label={t("nav.languageSelect")}
-            className="project-top-actions__button project-language-switch__button"
-            onClick={() => setLanguageOpen((current) => !current)}
-            type="button"
-          >
-            <Globe2 size={17} />
-            <span>
-              {t("nav.language")} {currentLanguage.short}
-            </span>
-            <ChevronDown size={14} />
-          </button>
-
-          {languageOpen ? (
-            <div className="project-language-switch__panel">
-              {selectableLanguages.map((item) => (
-                <button
-                  className={`project-language-switch__option${
-                    item.code === language ? " is-active" : ""
-                  }`}
-                  key={item.code}
-                  onClick={() => {
-                    setLanguage(item.code);
-                    setLanguageOpen(false);
-                  }}
-                  type="button"
-                >
-                  <span>{item.label}</span>
-                  <em>{item.short}</em>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <button
-          aria-label={t("dock.account")}
-          className="project-top-actions__icon"
-          onClick={() => navigate("/account")}
-          type="button"
-        >
-          <UserRound size={21} />
-        </button>
-        <button
-          aria-label={lt("每日运势")}
-          className="project-top-actions__icon"
-          onClick={() => navigate(getLiveProjectPath("zodiac-forecast"))}
-          type="button"
-        >
-          <Sparkles size={22} />
-        </button>
-      </div>
     </main>
   );
 }

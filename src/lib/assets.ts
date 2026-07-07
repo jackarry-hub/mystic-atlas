@@ -56,6 +56,7 @@ export const assets = {
     medallion: `${base}/products/crystal-medallion-gold.png`,
     talisman: `${base}/products/round-crystal-sigil.png`,
     burner: `${base}/products/bronze-incense-burner-tall.png`,
+    aromaDiffuser: `${base}/products/rejing-aroma-diffuser.png`,
     oracleWheel: `${base}/products/zodiac-oracle-wheel.png`
   }
 };
