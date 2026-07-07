@@ -278,7 +278,7 @@ body:not([data-stage="home"]) .home-ui{opacity:0;pointer-events:none;transform:t
 }
 .step span{display:block;color:var(--muted);font-size:13px;line-height:1.65;letter-spacing:.08em}
 
-.right-stack{
+.home-right-cluster{
   position:fixed;
   z-index:8;
   right:54px;
@@ -287,6 +287,10 @@ body:not([data-stage="home"]) .home-ui{opacity:0;pointer-events:none;transform:t
   display:grid;
   gap:18px;
   transition:.7s ease;
+}
+.right-stack{
+  display:grid;
+  gap:18px;
 }
 .feature{
   min-height:112px;
@@ -329,11 +333,9 @@ body:not([data-stage="home"]) .home-ui{opacity:0;pointer-events:none;transform:t
 }
 .daily p{color:var(--muted);font-size:15px;letter-spacing:.1em;line-height:1.7}
 .start-plaque{
-  position:fixed;
+  position:relative;
   z-index:8;
-  right:128px;
-  bottom:178px;
-  width:330px;
+  width:100%;
   height:76px;
   border:1px solid var(--line);
   color:#fff4cf;
@@ -349,11 +351,9 @@ body:not([data-stage="home"]) .home-ui{opacity:0;pointer-events:none;transform:t
 }
 .start-plaque:hover{transform:translateY(-2px);box-shadow:0 0 42px rgba(238,189,98,.52),inset 0 0 34px rgba(246,213,146,.12)}
 .quote{
-  position:fixed;
-  right:54px;
-  bottom:34px;
+  position:relative;
   z-index:8;
-  width:430px;
+  width:100%;
   padding:24px 30px;
   color:var(--gold-hi);
   font-size:21px;
@@ -766,9 +766,8 @@ body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
   .navside{gap:26px}.navside button{font-size:15px}
   .side-rail{left:20px;width:190px}
   .steps-card{left:232px;width:280px}
-  .right-stack{right:24px;width:390px}
+  .home-right-cluster{right:24px;width:390px}
   .feature{grid-template-columns:1fr 76px}
-  .start-plaque{right:110px}
 }
 @media (min-width:901px) and (max-height:940px){
   .side-rail{top:124px;padding-top:18px;padding-bottom:18px}
@@ -776,14 +775,27 @@ body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
   .steps-card{top:128px;padding:24px 26px}
   .step-list{gap:13px}
   .step{min-height:58px}
-  .right-stack{top:136px;gap:14px}
+  .home-right-cluster{top:118px;gap:14px}
+  .right-stack{gap:14px}
   .feature{min-height:104px;padding:18px 22px}
   .feature h3{font-size:25px;margin-bottom:5px}
   .feature p{font-size:13px;line-height:1.55}
   .feature-art{height:62px}
-  .start-plaque{bottom:166px;height:72px;font-size:36px}
-  .quote{bottom:28px;padding:22px 28px}
+  .start-plaque{height:66px;font-size:34px}
+  .quote{padding:18px 28px;font-size:19px}
+  .quote::first-letter{font-size:34px}
   .daily{bottom:28px;min-height:98px;padding:20px 24px}
+}
+@media (min-width:901px) and (max-height:760px){
+  .home-right-cluster{top:106px;gap:10px}
+  .right-stack{gap:10px}
+  .feature{min-height:84px;padding:13px 18px}
+  .feature h3{font-size:22px;margin-bottom:3px}
+  .feature p{font-size:12px;line-height:1.42}
+  .feature-art{height:52px}
+  .start-plaque{height:56px;font-size:29px}
+  .quote{padding:14px 22px;font-size:17px}
+  .quote::first-letter{font-size:30px}
 }
 @media (max-width:900px){
   body{overflow:hidden}
@@ -804,13 +816,13 @@ body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
   .step{grid-template-columns:30px 1fr;gap:9px;min-height:58px}
   .step-num{width:28px;height:28px;font-size:13px}
   .step strong{font-size:15px}.step span{font-size:12px}
-  .right-stack{left:14px;right:14px;top:auto;bottom:230px;width:auto;grid-template-columns:1fr;gap:10px}
+  .home-right-cluster{left:14px;right:14px;top:auto;bottom:16px;width:auto;gap:10px}
+  .right-stack{grid-template-columns:1fr;gap:10px}
   .feature{min-height:78px;padding:14px 16px;grid-template-columns:1fr 48px}
   .feature h3{font-size:21px}.feature p{display:none}.feature-art{height:48px}
   .daily{display:none}
-  .start-plaque{left:50%;right:auto;bottom:148px;width:min(310px,calc(100vw - 40px));height:66px;font-size:31px;transform:translateX(-50%)}
-  .start-plaque:hover{transform:translateX(-50%)}
-  .quote{left:14px;right:14px;bottom:18px;width:auto;padding:16px 18px;font-size:15px}
+  .start-plaque{height:66px;font-size:31px}
+  .quote{padding:16px 18px;font-size:15px}
   #ritualDock{bottom:14px;width:calc(100vw - 24px);padding:16px}
   .dock-body{grid-template-columns:1fr}
   .dock-actions{justify-content:flex-start}
@@ -911,7 +923,8 @@ body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
   </div>
 </section>
 
-<section class="right-stack home-ui" data-ui>
+<aside class="home-right-cluster home-ui" data-ui>
+<section class="right-stack" data-ui>
   <button class="feature panel" type="button" data-feature="fortune">
     <div><h3>运势启示</h3><p>以本卦看当前局势，以变卦看后续趋势。</p></div>
     <div class="feature-art"><svg viewBox="0 0 100 80"><circle cx="62" cy="35" r="24"/><path d="M20 60h62M32 49h38M40 38h22M50 11v48"/></svg></div>
@@ -930,8 +943,9 @@ body[data-stage="result"] #resultLayer{opacity:1;pointer-events:auto}
   <h3>今日提示</h3>
   <p id="dailyText">先定一问，再起六爻；心不二用，卦象自明。</p>
 </section>
-<button class="start-plaque home-ui" id="startBtn" type="button" data-ui>开始问卦</button>
-<div class="quote panel home-ui" data-ui>心有所问，天必有应。</div>
+<button class="start-plaque" id="startBtn" type="button" data-ui>开始问卦</button>
+<div class="quote panel" data-ui>心有所问，天必有应。</div>
+</aside>
 
 <section id="ritualDock" class="panel" data-ui>
   <div class="corner-top"></div><div class="corner-bottom"></div>

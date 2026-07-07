@@ -326,6 +326,17 @@ body[data-stage="reading"] #shade{opacity:.82}
   background:rgba(8,6,4,.42);outline:none;color:var(--ink);font-size:12px;letter-spacing:1px;
 }
 #subjectText:focus{border-color:rgba(240,212,149,.7);box-shadow:0 0 12px rgba(201,154,78,.18)}
+.birth-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field--wide{grid-column:1/3}
+.field label{color:var(--gold-hi);font-size:11px;letter-spacing:1.6px}
+.field input,.field select{
+  width:100%;height:32px;padding:0 9px;border:1px solid rgba(201,154,78,.3);
+  background:rgba(8,6,4,.46);outline:none;color:var(--ink);font-size:12px;letter-spacing:1px;
+}
+.field input:focus,.field select:focus{border-color:rgba(240,212,149,.7);box-shadow:0 0 12px rgba(201,154,78,.18)}
+.field input::placeholder{color:rgba(205,184,139,.58)}
+.birth-note{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.65;letter-spacing:1px}
 #continueBtn{
   align-self:center;width:112px;height:62px;border:1px solid rgba(240,212,149,.52);
   background:linear-gradient(180deg,rgba(127,80,28,.82),rgba(52,32,13,.9));
@@ -367,7 +378,7 @@ body[data-stage="reading"] #shade{opacity:.82}
   border:1px solid rgba(240,212,149,.6);background:rgba(28,19,10,.62);box-shadow:inset 0 0 28px rgba(201,154,78,.16);
 }
 .seal b{font-family:var(--f-display);font-size:36px;font-weight:400;letter-spacing:2px}
-#summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+#summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .summary-card{padding:14px 16px}
 .summary-card .k{font-size:12px;letter-spacing:4px;color:var(--muted);margin-bottom:8px}
 .summary-card .v{font-family:var(--f-display);font-size:22px;letter-spacing:4px;color:var(--gold-hi)}
@@ -441,14 +452,14 @@ body[data-stage="reading"] #shade{opacity:.82}
   #ritualMark::after{inset:22px}
   .mark-core{width:42px;height:42px;font-size:22px}
   #ritualPanel{
-    grid-template-columns:1fr 116px;width:100%;max-height:min(292px,34vh);overflow:auto;
+    grid-template-columns:1fr 116px;width:100%;max-height:min(540px,72vh);overflow:auto;
     gap:8px;padding:10px 12px;overscroll-behavior:contain;scrollbar-width:none;
   }
   #ritualPanel::-webkit-scrollbar{display:none}
   .ritual-copy{grid-column:1;padding:0;min-width:0}
   .ritual-head{margin-bottom:6px}
   .ritual-copy h2{font-size:20px}
-  #subjectText{display:none}
+  #subjectText{display:block}
   #ritualPanel .group{grid-column:1/3}
   .group{border-left:0;border-top:1px solid rgba(201,154,78,.2);padding-left:0;padding-top:8px}
   .group-title{margin-bottom:6px}
@@ -465,6 +476,11 @@ body[data-stage="reading"] #shade{opacity:.82}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;transition-duration:.12s!important}
 }
+
+/* unified 12-project menu */
+#projMenu,.project-menu{max-height:min(68vh,520px);overflow-y:auto;scrollbar-width:thin}
+#projMenu::-webkit-scrollbar,.project-menu::-webkit-scrollbar{width:6px}
+#projMenu::-webkit-scrollbar-thumb,.project-menu::-webkit-scrollbar-thumb{background:rgba(201,164,106,.42);border-radius:999px}
 </style>
 </head>
 <body data-stage="home">
@@ -572,16 +588,39 @@ body[data-stage="reading"] #shade{opacity:.82}
         <span class="mini-seal" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="6.5" r="2.6"/><path d="M8.2 17.8c.6-4 2-6.1 3.8-6.1s3.2 2.1 3.8 6.1M6.5 17.8h11"/></svg></span>
         <h2>定意择时</h2>
       </div>
-      <p>请选择本次测算的用途、五行取向与时间窗口。系统会以音形义、五行补偏和择日避忌生成一份沉浸式参考结果。</p>
-      <input id="subjectText" autocomplete="off" placeholder="可填姓氏 / 项目 / 事项（非必填）">
+      <p>请输入出生信息与本次用途。系统会先按四柱排盘估算五行强弱，再自动给出取名方向、候选名与可执行的择日建议。</p>
+      <input id="subjectText" autocomplete="off" placeholder="姓氏 / 品牌 / 事项，例如：林 / 新店开业">
     </div>
     <div class="group">
       <div class="group-title">服务类型</div>
       <div id="serviceChoices" class="choice-grid"></div>
     </div>
     <div class="group">
-      <div class="group-title">取向偏好</div>
-      <div id="focusChoices" class="choice-grid"></div>
+      <div class="group-title">出生信息</div>
+      <div class="birth-grid">
+        <div class="field">
+          <label for="birthDate">公历生日</label>
+          <input id="birthDate" type="date">
+        </div>
+        <div class="field">
+          <label for="birthTime">出生时间</label>
+          <input id="birthTime" type="time" value="12:00">
+        </div>
+        <div class="field">
+          <label for="genderHint">称谓风格</label>
+          <select id="genderHint">
+            <option value="neutral">不限定</option>
+            <option value="girl">偏柔雅</option>
+            <option value="boy">偏端正</option>
+            <option value="brand">偏品牌</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="knownBazi">已知八字</label>
+          <input id="knownBazi" autocomplete="off" placeholder="可选：甲子 丙寅 ...">
+        </div>
+      </div>
+      <div class="birth-note">不再手选“补木补火”，系统会根据生辰排盘自动判断需要扶助的五行，仅作传统文化体验参考。</div>
       <div class="group-title" style="margin-top:14px">时间窗口</div>
       <div id="windowChoices" class="choice-grid"></div>
     </div>
@@ -627,12 +666,18 @@ body[data-stage="reading"] #shade{opacity:.82}
 <script>
 /* stage flow: home -> intro -> burst -> reading */
 const PROJECTS = [
-  {key:'nameDate', label:'取名择日', icon:'brush', current:true},
   {key:'tarot', label:'塔罗互动占卜', icon:'star', href:'index_6.html'},
-  {key:'astrology', label:'星盘占星', icon:'wheel'},
-  {key:'bazi', label:'八字命理', icon:'bagua'},
-  {key:'fengshui', label:'风水堪舆', icon:'ring'},
-  {key:'healing', label:'灵性疗愈', icon:'petal'}
+  {key:'astrology', label:'星盘占星', icon:'wheel', href:'index_astrology.html'},
+  {key:'bazi', label:'八字命盘', icon:'bagua', href:'index_bazi.html'},
+  {key:'liuyao', label:'六爻问卦', icon:'ring', href:'index_liuyao.html'},
+  {key:'ziwei', label:'紫微斗数', icon:'wheel', href:'index_ziwei.html'},
+  {key:'lingqian', label:'灵签求问', icon:'petal', href:'index_lingqian.html'},
+  {key:'zhougong', label:'周公解梦', icon:'clock', href:'index_zhougong.html'},
+  {key:'zodiac', label:'生肖运势', icon:'calendar', href:'index_zodiac.html'},
+  {key:'fengshui', label:'风水堪舆', icon:'ring', href:'index_fengshui.html'},
+  {key:'palm', label:'手相解读', icon:'person', href:'index_palm.html'},
+  {key:'mianxiang', label:'面相解读', icon:'person', href:'index_mianxiang.html'},
+  {key:'nameDate', label:'取名择日', icon:'brush', current:true}
 ];
 const SERVICE_OPTIONS = [
   {key:'baby', label:'新生取名', tone:'清正、舒展、根基稳固'},
@@ -710,7 +755,19 @@ const RESULT_COPY = {
 
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-const state = { stage:'home', service:'baby', focus:'sound', dateWindow:'month', subjectText:'', result:null, burstDone:false };
+const state = {
+  stage:'home',
+  service:'baby',
+  focus:'sound',
+  dateWindow:'month',
+  subjectText:'',
+  birthDate:'',
+  birthTime:'12:00',
+  genderHint:'neutral',
+  knownBazi:'',
+  result:null,
+  burstDone:false
+};
 const V = { opening:$('#openingVid'), climax:$('#climaxVid') };
 let soundOn = true;
 let toastTimer = null;
@@ -745,7 +802,6 @@ function buildProjectMenu(){
 
 function buildChoices(){
   $('#serviceChoices').innerHTML = SERVICE_OPTIONS.map(o => choiceHTML('service', o)).join('');
-  $('#focusChoices').innerHTML = FOCUS_OPTIONS.map(o => choiceHTML('focus', o)).join('');
   $('#windowChoices').innerHTML = DATE_WINDOWS.map(o => choiceHTML('dateWindow', o)).join('');
   refreshChoices();
 }
@@ -844,7 +900,17 @@ function selectOption(kind, key){
 
 function toBurst(){
   if (state.stage !== 'intro') return;
-  state.subjectText = $('#subjectText').value.trim();
+  const input = collectBirthInput();
+  if (!input.birthDate) {
+    toast('请先填写公历生日，系统才能自动排盘取用。');
+    $('#birthDate').focus();
+    return;
+  }
+  state.subjectText = input.subjectText;
+  state.birthDate = input.birthDate;
+  state.birthTime = input.birthTime;
+  state.genderHint = input.genderHint;
+  state.knownBazi = input.knownBazi;
   state.burstDone = false;
   setStage('burst');
   sfx('gate');
@@ -853,6 +919,16 @@ function toBurst(){
   setTimeout(() => {
     if (!state.burstDone && state.stage === 'burst' && V.climax.paused) finishBurst();
   }, 1500);
+}
+
+function collectBirthInput(){
+  return {
+    subjectText: $('#subjectText').value.trim(),
+    birthDate: $('#birthDate').value,
+    birthTime: $('#birthTime').value || '12:00',
+    genderHint: $('#genderHint').value || 'neutral',
+    knownBazi: $('#knownBazi').value.trim()
+  };
 }
 
 function finishBurst(){
@@ -895,7 +971,194 @@ function pickOption(list, key){
   return list.find(item => item.key === key) || list[0];
 }
 
+const STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const STEM_ELEMENT = {甲:'wood',乙:'wood',丙:'fire',丁:'fire',戊:'earth',己:'earth',庚:'metal',辛:'metal',壬:'water',癸:'water'};
+const BRANCH_ELEMENT = {子:'water',丑:'earth',寅:'wood',卯:'wood',辰:'earth',巳:'fire',午:'fire',未:'earth',申:'metal',酉:'metal',戌:'earth',亥:'water'};
+const ELEMENT_ORDER = ['wood','fire','earth','metal','water'];
+const ELEMENT_LABELS = {wood:'木',fire:'火',earth:'土',metal:'金',water:'水',sound:'均衡'};
+const MONTH_STEM_START = [2,4,6,8,0,2,4,6,8,0];
+const HOUR_STEM_START = [0,2,4,6,8,0,2,4,6,8];
+const CLASH_BRANCH = {子:'午',丑:'未',寅:'申',卯:'酉',辰:'戌',巳:'亥',午:'子',未:'丑',申:'寅',酉:'卯',戌:'辰',亥:'巳'};
+const SOLAR_TERMS = [
+  {m:2,d:4,b:2},{m:3,d:6,b:3},{m:4,d:5,b:4},{m:5,d:6,b:5},{m:6,d:6,b:6},{m:7,d:7,b:7},
+  {m:8,d:8,b:8},{m:9,d:8,b:9},{m:10,d:8,b:10},{m:11,d:7,b:11},{m:12,d:7,b:0},{m:1,d:6,b:1}
+];
+
+function mod(n, size){
+  return ((n % size) + size) % size;
+}
+
+function ganzhi(index){
+  return `${STEMS[mod(index, 10)]}${BRANCHES[mod(index, 12)]}`;
+}
+
+function parseBirthDate(){
+  const [year, month, day] = state.birthDate.split('-').map(Number);
+  const [hour = 12, minute = 0] = state.birthTime.split(':').map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
+
+function julianDay(date){
+  let y = date.getFullYear();
+  let m = date.getMonth() + 1;
+  const d = date.getDate();
+  if (m <= 2) { y -= 1; m += 12; }
+  const a = Math.floor(y / 100);
+  const b = 2 - a + Math.floor(a / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + b - 1524;
+}
+
+function yearPillar(date){
+  const y = date.getFullYear();
+  const afterLiChun = date.getMonth() > 1 || (date.getMonth() === 1 && date.getDate() >= 4);
+  return ganzhi((afterLiChun ? y : y - 1) - 1984);
+}
+
+function solarMonthInfo(date){
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  let branchIndex = m === 1 && d < 6 ? 0 : 1;
+  SOLAR_TERMS.forEach(term => {
+    const pass = term.m === 1 ? (m === 1 && d >= term.d) : (m > term.m || (m === term.m && d >= term.d));
+    if (pass) branchIndex = term.b;
+  });
+  const branch = BRANCHES[branchIndex];
+  return { branch, monthFromYin: mod(branchIndex - 2, 12) };
+}
+
+function monthPillar(date, yearGan){
+  const info = solarMonthInfo(date);
+  const yearStemIndex = STEMS.indexOf(yearGan);
+  const stemIndex = mod(MONTH_STEM_START[yearStemIndex] + info.monthFromYin, 10);
+  return `${STEMS[stemIndex]}${info.branch}`;
+}
+
+function dayPillar(date){
+  return ganzhi(julianDay(date) + 49);
+}
+
+function hourPillar(date, dayGan){
+  const branchIndex = Math.floor(mod(date.getHours() + 1, 24) / 2);
+  const dayStemIndex = STEMS.indexOf(dayGan);
+  const stemIndex = mod(HOUR_STEM_START[dayStemIndex] + branchIndex, 10);
+  return `${STEMS[stemIndex]}${BRANCHES[branchIndex]}`;
+}
+
+function buildBaziProfile(){
+  const birth = parseBirthDate();
+  const year = yearPillar(birth);
+  const month = monthPillar(birth, year[0]);
+  const day = dayPillar(birth);
+  const hour = hourPillar(birth, day[0]);
+  const pillars = [year, month, day, hour];
+  const score = {wood:0, fire:0, earth:0, metal:0, water:0};
+  pillars.forEach(pillar => {
+    score[STEM_ELEMENT[pillar[0]]] += 1.15;
+    score[BRANCH_ELEMENT[pillar[1]]] += 1;
+  });
+  score[BRANCH_ELEMENT[month[1]]] += 0.7;
+  const sorted = ELEMENT_ORDER.map(key => ({key, score:score[key]})).sort((a, b) => a.score - b.score);
+  const useful = sorted[0].score + 0.35 < sorted[2].score ? sorted[0].key : 'sound';
+  const strongest = sorted[sorted.length - 1].key;
+  return {
+    pillars,
+    useful,
+    strongest,
+    yearBranch: year[1],
+    dayBranch: day[1],
+    score,
+    scoreText: ELEMENT_ORDER.map(key => `${ELEMENT_LABELS[key]}${score[key].toFixed(1)}`).join(' · '),
+    note: useful === 'sound'
+      ? '五行分布接近均衡，取名先看音形义、字义稳定度和使用场景，再做轻微五行修饰。'
+      : `盘面以${ELEMENT_LABELS[strongest]}气较显，宜扶${ELEMENT_LABELS[useful]}来补偏调候。`
+  };
+}
+
+function withSubjectPrefix(name){
+  const subject = state.subjectText.trim();
+  if (!subject || state.service === 'brand' || subject.length > 2) return name;
+  return `${subject}${name}`;
+}
+
+function buildAutoDays(windowOpt, service, profile){
+  const now = new Date();
+  const candidates = [];
+  for (let offset = 2; offset <= Math.max(windowOpt.days, 7); offset++) {
+    const date = new Date(now);
+    date.setDate(now.getDate() + offset);
+    const pillar = dayPillar(date);
+    const branch = pillar[1];
+    const dayElement = BRANCH_ELEMENT[branch];
+    let score = 60;
+    if (CLASH_BRANCH[profile.yearBranch] === branch) score -= 28;
+    if (CLASH_BRANCH[profile.dayBranch] === branch) score -= 24;
+    if (dayElement === profile.useful) score += 18;
+    if (dayElement === profile.strongest) score -= 6;
+    if (offset % 6 === 0) score += 7;
+    if (offset % 4 === 0) score += 4;
+    candidates.push({date, pillar, branch, dayElement, offset, score});
+  }
+  const rules = rotate(DAY_RULES, `${service.key}-${profile.useful}-${windowOpt.key}`);
+  return candidates.sort((a, b) => b.score - a.score || a.offset - b.offset).slice(0, 3).map((candidate, i) => {
+    const rule = rules[i % rules.length];
+    const clash = CLASH_BRANCH[profile.dayBranch] === candidate.branch || CLASH_BRANCH[profile.yearBranch] === candidate.branch;
+    const yiPrefix = candidate.dayElement === profile.useful ? `扶${ELEMENT_LABELS[profile.useful]}、` : '';
+    return {
+      date: formatDate(candidate.date),
+      weekday: ['日','一','二','三','四','五','六'][candidate.date.getDay()],
+      pillar: candidate.pillar,
+      hour: rule.hour,
+      yi: `${yiPrefix}${rule.yi}`,
+      avoid: clash ? `冲本命支，${rule.avoid}` : rule.avoid,
+      advice: `${rule.advice} 当日为${candidate.pillar}日，综合评分 ${candidate.score}。`
+    };
+  });
+}
+
+function buildAutoResult(){
+  const service = pickOption(SERVICE_OPTIONS, state.service);
+  const windowOpt = pickOption(DATE_WINDOWS, state.dateWindow);
+  const profile = buildBaziProfile();
+  state.focus = profile.useful;
+  const focus = profile.useful === 'sound'
+    ? {key:'sound', label:'自动均衡', element:'均衡', note:'音形义优先'}
+    : {key:profile.useful, label:`自动取${ELEMENT_LABELS[profile.useful]}`, element:ELEMENT_LABELS[profile.useful], note:'由四柱五行推导'};
+  const rule = ELEMENT_RULES[profile.useful] || ELEMENT_RULES.sound;
+  const bankKey = profile.useful === 'sound' ? 'sound' : profile.useful;
+  const names = rotate(NAME_BANK[bankKey], `${state.service}-${profile.useful}-${state.birthDate}-${state.birthTime}-${state.subjectText}`).slice(0,3)
+    .map((item, i) => ({
+      ...item,
+      name: withSubjectPrefix(item.name),
+      fit: i === 0 ? '首选' : i === 1 ? '稳妥' : '备选',
+      scene: state.genderHint === 'brand' || service.key === 'brand'
+        ? '适合品牌传播与门店招牌'
+        : state.genderHint === 'girl'
+          ? '偏柔雅、清朗、好入口'
+          : state.genderHint === 'boy'
+            ? '偏端正、稳健、有承接'
+            : service.key === 'adult'
+              ? '适合成人改名与社交名片'
+              : '适合正式取名与长期使用'
+    }));
+  const days = buildAutoDays(windowOpt, service, profile);
+  return {
+    service, focus, windowOpt, rule, names, days, profile,
+    subject: state.subjectText || '未填写姓氏或事项',
+    summary: [
+      {k:'服务类型', v:service.label},
+      {k:'四柱简盘', v:state.knownBazi || profile.pillars.join(' ')},
+      {k:'自动取向', v:focus.label},
+      {k:'时间窗口', v:windowOpt.label}
+    ],
+    namingText:`本次先按出生信息排出「${profile.pillars.join(' ')}」，五行计分为 ${profile.scoreText}。${profile.note}${rule.useful}${service.tone}，取名时先让字义立住，再用声调、字形和使用场景收束气口。`,
+    dateText:`择日以「${windowOpt.label}」为范围，避开与年支「${profile.yearBranch}」或日支「${profile.dayBranch}」相冲之日，再优先选择能扶${ELEMENT_LABELS[profile.useful] || '中和'}气、可执行、可确认、可留痕的时段。`,
+    adviceText:`建议先从三个候选中选出一个主名和一个备名，再把推荐吉日用于定稿、登记、发布或签署。若用于新生取名，需再核对户籍用字规范；若用于品牌命名，需同步检查商标、域名与行业禁限词。`
+  };
+}
+
 function buildResult(){
+  return buildAutoResult();
   const service = pickOption(SERVICE_OPTIONS, state.service);
   const focus = pickOption(FOCUS_OPTIONS, state.focus);
   const windowOpt = pickOption(DATE_WINDOWS, state.dateWindow);
