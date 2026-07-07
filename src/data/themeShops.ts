@@ -66,12 +66,14 @@ const defaultCategories = [
   "服务套餐"
 ] as const;
 
+const publicBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 function shopRoute(slug: ThemeShopSlug) {
   return `/shop/${slug}`;
 }
 
 function sceneBackground(slug: ThemeShopSlug) {
-  return `/immersive-shop/${slug}.jpg`;
+  return `${publicBase}/immersive-shop/${slug}.jpg`;
 }
 
 function product(draft: ThemeShopProductDraft): ThemeShopProduct {
