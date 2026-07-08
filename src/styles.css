@@ -2369,6 +2369,10 @@ html[data-lang="pt"] .home-page .hero-copy h1 {
   background: rgba(5, 7, 10, 0.34);
 }
 
+.shop-category-focus {
+  scroll-margin-top: 24px;
+}
+
 .shop-search {
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
@@ -30,6 +30,7 @@ import {
 import { themeShops } from "../data/themeShops";
 import type { CommerceItem, CommerceItemType } from "../lib/commerce";
 import { assets } from "../lib/assets";
+import { getProductsForCategory } from "../lib/shopCategoryNavigation";
 
 const categoryIcons: Record<ShopCategory, JSX.Element> = {
   护符: <Gem size={22} strokeWidth={1.35} />,
@@ -90,6 +91,7 @@ function commerceItemFromShopProduct(
 
 export function ShopPage() {
   const { addToCart, cartCount, startCheckout } = useCommerce();
+  const categoryShelfRef = useRef<HTMLDivElement | null>(null);
   const [activeCategory, setActiveCategory] = useState<ShopCategory>("护符");
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutConfirmed, setCheckoutConfirmed] = useState(false);
@@ -107,7 +109,7 @@ export function ShopPage() {
     (product) => product.type === "physical"
   );
   const filteredProducts = useMemo(
-    () => shopProducts.filter((product) => product.category === activeCategory),
+    () => getProductsForCategory(shopProducts, activeCategory),
     [activeCategory]
   );
   const searchResults = useMemo(() => {
@@ -147,6 +149,17 @@ export function ShopPage() {
     setSelectedProduct(null);
   };
 
+  const selectCategory = useCallback((category: ShopCategory) => {
+    setActiveCategory(category);
+    setSearchQuery("");
+    window.requestAnimationFrame(() => {
+      categoryShelfRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  }, []);
+
   const confirmCheckout = () => {
     if (!checkoutProduct) {
       return;
@@ -177,7 +190,8 @@ export function ShopPage() {
                   category === activeCategory ? "is-active" : ""
                 }`}
                 key={category}
-                onClick={() => setActiveCategory(category)}
+                aria-current={category === activeCategory ? "true" : undefined}
+                onClick={() => selectCategory(category)}
                 type="button"
               >
                 <span className="shop-menu-list__icon">{categoryIcons[category]}</span>
@@ -219,6 +233,17 @@ export function ShopPage() {
                 value={searchQuery}
               />
             </label>
+          </div>
+
+          <div className="shop-category-focus" ref={categoryShelfRef}>
+            <ShopShelf
+              onAdd={addProductToCart}
+              onBuy={buyProductNow}
+              onOpen={setSelectedProduct}
+              products={filteredProducts}
+              subtitle={`${filteredProducts.length} 件商品可浏览，点击商品可查看详情、加入购物车或立即购买。`}
+              title={activeCategory}
+            />
           </div>
 
           {searchQuery.trim() ? (
